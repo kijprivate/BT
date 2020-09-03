@@ -42,14 +42,25 @@ class RequestClient(object):
         method = method.upper()
         if method in ['GET', 'DELETE']:
             self.set_authorization(params)
-            result = http.request(method, url, fields=params, headers=self.headers)
+            try:
+                result = http.request(method, url, fields=params, headers=self.headers)
+                return result
+            except Exception as inst:
+                print(type(inst))
+                print("coinex")
+            
         else:
             if data:
                 json.update(complex_json.loads(data))
             self.set_authorization(json)
             encoded_data = complex_json.dumps(json).encode('utf-8')
-            result = http.request(method, url, body=encoded_data, headers=self.headers)
-        return result
+            try:
+                result = http.request(method, url, body=encoded_data, headers=self.headers)
+                return result
+            except Exception as inst:
+                print(type(inst))
+                print("coinex")
+        
     
 def get_pair(pair):
     request_client = RequestClient()
@@ -123,8 +134,11 @@ def withdraw_fee(pair):
             '{url}/v1/common/asset/config'.format(url=request_client.url),
             params=params
     )
-    var = complex_json.loads(response.data)
-    return (float)(var.get('data', {}).get(pair).get('withdraw_tx_fee'))
+    try:
+        var = complex_json.loads(response.data)
+        return (float)(var.get('data', {}).get(pair).get('withdraw_tx_fee'))
+    except:
+        return 0
 
 def get_amount(pair):
     request_client = RequestClient()

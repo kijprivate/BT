@@ -119,43 +119,30 @@ if __name__ == '__main__':
     
     lowBuyObj = None
     highSellObj = None
-    
-    print(coinex.can_deposit('KSMBTC'))
-    print(coinex.can_withdraw('KSMETH'))
 
     numbers = []
     stocks = []
     
-    starttime = datetime.now()
-    print(datetime.now())
-
+    print("START " + str(datetime.now()))
+    #TODO spread?
+    #TODO handle can deposit/withdraw
+    #TODO handle not active coins
     while True:
-#        try:
         for i in range(len(arrays)):
             for j in range(len(arrays[i])):
-                #if(len(arrays[i]) > 1):
-                time.sleep(2)
-                #ret = arrays[i][j][0].get_pair_sell(arrays[i][j][1])
-    
+
+                time.sleep(0.2)
+
                 ret = (float)(arrays[i][j][0].get_pair_sell(arrays[i][j][1]))
                 ret2 = (float)(arrays[i][j][0].get_pair_buy(arrays[i][j][1]))
-                #if((ret-ret2)/ret > 0.05):
-                #    print("duzy spread")
-                #    print((ret-ret2)/ret)
-                #    print(arrays[i][j][0])
-                #    print(arrays[i][j][1])
                     
                 numbers.append(ret)
-    
                 stocks.append((arrays[i][j][0]))
     
                 if(ret < lowBuy):
                     lowBuy = ret
                     lowBuyStr = str(arrays[i][j][0])
                     lowBuyObj = arrays[i][j][0]
-    
-                #if(len(arrays[i]) > 2):
-                #    numbers.append(ret)
                     
                 ret2 = arrays[i][j][0].get_pair_buy(arrays[i][j][1])
                 if(ret2 > highSell):
@@ -169,7 +156,7 @@ if __name__ == '__main__':
                     perc = dif / lowBuy
                     perc = perc*100
     
-                    if(perc > 3): #and lowBuyObj.can_deposit(arrays[i][j][1]) and lowBuyObj.can_withdraw(arrays[i][j][1]) and highSellObj.can_deposit(arrays[i][j][1]) and highSellObj.can_withdraw(arrays[i][j][1]):
+                    if(perc > 3):
                         
                         if(lowBuyObj == None or highSellObj == None):
                             continue
@@ -187,10 +174,14 @@ if __name__ == '__main__':
                             toBuy = lowBuyObj.withdraw_fee(arrays[i][j][1])*100
                             toSell = highSellObj.withdraw_fee(arrays[i][j][1])*100
                         
+                        if toBuy == 0 or toSell == 0:
+                            continue
+                        
                         boughts = []
                         sold = []
                         boughtsAm = []
                         soldAm = []
+                        toBuyFinal = toBuy
                         l = 0
                         outOfAsk = False
                         while(toBuy > 0):
@@ -240,7 +231,7 @@ if __name__ == '__main__':
                             roznica = sredniacenasprzedazy - sredniacenakupna
                             procent = roznica / sredniacenakupna
                         
-                            if(procent > 0.03):
+                            if(procent > 0.03) and lowBuyObj.can_withdraw(arrays[i][j][1]) == True and highSellObj.can_deposit(arrays[i][j][1]) == True:
                                 print("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%")
                                 print("Percentage difference: ")
                                 print(perc)
@@ -251,9 +242,10 @@ if __name__ == '__main__':
                                     print("out of ask")
                                 print(l)
                                 print(k)
+                                print("To buy amount: " + str(toBuyFinal))
+                                print("Withdraw fee: " + str(toBuyFinal/100))
                                 print("buy from: " + lowBuyStr)
                                 print("sell at: " + highSellStr)
-                                print(len(arrays[i]))
                                 print(datetime.now())
                                 print("Realny zysk")
                                 print(procent)
@@ -261,34 +253,15 @@ if __name__ == '__main__':
                         else:
                             print("no bid or ask")
                             print(len(arrays[i]))
-            
-            if False and (len(arrays[i]) > 1):
-                test = tuple_array2(numbers, stocks)
-                test.sort()
-                dif = (test[len(test) - 1][0] - test[0][0]) / test[len(test) - 1][0]
-                if(dif > 0.04) and dif < 0.5:
-                    print("Percentage difference: ")
-                    print(dif)
-                    print(arrays[i][j][1])
-                    print("Buyu")
-                    print(test[0][1])
-                    print(test[0][2].can_deposit(arrays[i][j][1]))
-                    print(test[0][2].can_withdraw(arrays[i][j][1]))
-                    print("sell")
-                    print(test[len(test) - 1][1])
-                    print(test[len(test) - 1][2].can_deposit(arrays[i][j][1]))
-                    print(test[len(test) - 1][2].can_withdraw(arrays[i][j][1]))
-                    print(datetime.now())
     
             if(len(arrays[i]) > 2):
                 test = tuple_array2(numbers, stocks)
                 test.sort()
                 numbers.sort()
                 med = count_med(numbers)
-                #val = (med - lowBuy)/med
                 val = (med - numbers[0])/med
                 
-                if(val > 0.03):
+                if(val > 0.03) and val < 0.5:
                     print("med")
                     print(val)
                     print(arrays[i][j][1])
@@ -296,14 +269,6 @@ if __name__ == '__main__':
                     print(test[0][2].can_deposit(arrays[i][j][1]))
                     print(test[0][2].can_withdraw(arrays[i][j][1]))
                     print(datetime.now())
-                    
-                if False and (val > 0.02) and lowBuyObj.can_deposit(arrays[i][j][1]) and lowBuyObj.can_withdraw(arrays[i][j][1]):
-                    print("perc mediana")
-                    print(val)
-                    print(arrays[i][j][1])
-                    print(lowBuyStr)
-                    print(lowBuyObj.can_deposit(arrays[i][j][1]))
-                    print(lowBuyObj.can_withdraw(arrays[i][j][1]))
        
                 
             lowBuy = 99999
@@ -314,9 +279,4 @@ if __name__ == '__main__':
             highSellStr = ""
             numbers = []
             stocks = []
-       # except:
-      #      print("finish")
     
-    endtime = datetime.now() - starttime
-    print(datetime.now())
-    print(endtime)
