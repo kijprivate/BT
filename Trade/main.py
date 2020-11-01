@@ -106,14 +106,84 @@ def count_numberToTrade(obj, currentArray, currentPair):
     return numberToTrade
 
 class TradesSimulation():
-    def __init__(self, toBuy, toSell):
+    def __init__(self, toBuy, askArray, toSell, bidArray):
         self.toBuy = toBuy
+        self.askArray = askArray
         self.outOfAsk = False
         self.askIndex = 0
         self.toSell = toSell
+        self.bidArray = bidArray
         self.outOfBid = False
         self.bidIndex = 0
-                           
+        self.averageAskPrice = 0
+        self.averageBidPrice = 0
+    
+    def count_Asks(self):
+        boughts = []
+        boughtsAm = []
+        
+        self.askIndex = 0
+        self.outOfAsk = False
+        while(self.toBuy > 0):
+            if self.askIndex < len(self.askArray) and (self.toBuy > (float)(self.askArray[self.askIndex][1])):
+                boughts.append((float)(self.askArray[self.askIndex][0]))
+                boughtsAm.append((float)(self.askArray[self.askIndex][1]))
+                self.toBuy -= (float)(self.askArray[self.askIndex][1])
+                self.askIndex += 1
+            elif self.askIndex < len(self.askArray) and (self.toBuy < (float)(self.askArray[self.askIndex][1])):
+                boughts.append((float)(self.askArray[self.askIndex][0]))
+                boughtsAm.append(self.toBuy)
+                self.toBuy = 0
+            elif(self.askIndex >= len(self.askArray)):
+                self.outOfAsk = True
+                self.toBuy = 0
+                
+        weightedBoughts = 0
+        totalBoughtsAmount = 0
+        for x in range(len(boughts)):
+            weightedBoughts += boughts[x]*boughtsAm[x]
+            totalBoughtsAmount += boughtsAm[x]
+        
+        if(totalBoughtsAmount > 0):
+            self.averageAskPrice = weightedBoughts / totalBoughtsAmount
+        else:
+            self.averageAskPrice = 0
+            
+    def count_Bids(self):
+        sold = []
+        soldAm = []
+        
+        self.bidIndex = 0   
+        self.outOfBid = False
+        while(self.toSell > 0):
+            if self.bidIndex < len(self.bidArray) and (self.toSell > (float)(self.bidArray[self.bidIndex][1])):
+                sold.append((float)(self.bidArray[self.bidIndex][0]))
+                soldAm.append((float)(self.bidArray[self.bidIndex][1]))
+                self.toSell -= (float)(self.bidArray[self.bidIndex][1])
+                self.bidIndex += 1
+            elif self.bidIndex < len(self.bidArray) and (self.toSell < (float)(bid[self.bidIndex][1])):
+                sold.append((float)(self.bidArray[self.bidIndex][0]))
+                soldAm.append(self.toSell)
+                self.toSell = 0
+            elif self.bidIndex >= len(self.bidArray):
+                self.outOfBid = True
+                self.toSell = 0
+        
+        weightedSells = 0
+        totalSellsAmount = 0
+        for x in range(len(sold)):
+            weightedSells += sold[x]*soldAm[x]
+            totalSellsAmount += soldAm[x]
+        
+        if(totalSellsAmount > 0):
+            self.averageBidPrice =  weightedSells / totalSellsAmount
+        else:
+            self.averageBidPrice = 0;
+
+    def count_Percent(self):
+        substract = self.averageBidPrice - self.averageAskPrice
+        return substract / self.averageAskPrice
+    
 if __name__ == '__main__':
     # get all symbols from market
     coinexSymbols = coinex.get_symbols()
@@ -167,19 +237,12 @@ if __name__ == '__main__':
 
     numbers = []
     stocks = []
-    currentArray = []
-    currentPair = ''
     
     print("START " + str(datetime.now()))
     #TODO spread?
-    #TODO handle can deposit/withdraw
     #TODO handle not active coins
     while True:
         for i in range(len(arrays)):
-            #for j in range(len(arrays[i])):
-           #     stocks.append((arrays[i][j][0]))
-            #    currentArray.append(arrays[i][j])
-            
             currentPair = arrays[i][0][1]
             highSellObj = get_highSellObj(arrays[i], currentPair)
             highSell = highSellObj.get_pair_sell(currentPair)
@@ -189,7 +252,7 @@ if __name__ == '__main__':
             if (len(arrays[i]) > 1) and lowBuy > 0:
                 dif = highSell - lowBuy
                 perc = dif / lowBuy
-                if(perc > 0.01):
+                if(perc > 0.03):
                     
                     if(lowBuyObj == None or highSellObj == None):
                         continue
@@ -207,91 +270,37 @@ if __name__ == '__main__':
                     if toBuy == 0 or toSell == 0:
                         continue
                     
-                    boughts = []
-                    sold = []
-                    boughtsAm = []
-                    soldAm = []
+                    tradesSim = TradesSimulation(toBuy, ask, toSell, bid)
+                    print(tradesSim.averageAskPrice)
+                    tradesSim.count_Asks()
+                    print(tradesSim.averageAskPrice)
+                    tradesSim.count_Bids()
                     
-                    l = 0
-                    outOfAsk = False
-                    while(toBuy > 0):
-                        if l < len(ask) and (toBuy > (float)(ask[l][1])):
-                            boughts.append((float)(ask[l][0]))
-                            boughtsAm.append((float)(ask[l][1]))
-                            toBuy -= (float)(ask[l][1])
-                            l += 1
-                        elif l < len(ask) and (toBuy < (float)(ask[l][1])):
-                            boughts.append((float)(ask[l][0]))
-                            boughtsAm.append(toBuy)
-                            toBuy = 0
-                        elif( l >= len(ask)):
-                            outOfAsk = True
-                            toBuy = 0
-                    k = 0   
-                    outOfBid = False
-                    while(toSell > 0):
-                        if k < len(bid) and (toSell > (float)(bid[k][1])):
-                            sold.append((float)(bid[k][0]))
-                            soldAm.append((float)(bid[k][1]))
-                            toSell -= (float)(bid[k][1])
-                            k += 1
-                        elif k < len(bid) and (toSell < (float)(bid[k][1])):
-                            sold.append((float)(bid[k][0]))
-                            soldAm.append(toSell)
-                            toSell = 0
-                        elif k >= len(bid):
-                            outOfBid = True
-                            toSell = 0
-                    
-                    wb = 0
-                    srb = 0
-                    for x in range(len(boughts)):
-                        wb += boughts[x]*boughtsAm[x]
-                        srb += boughtsAm[x]
-                    
-                    ws = 0
-                    srs = 0
-                    for x in range(len(sold)):
-                        ws += sold[x]*soldAm[x]
-                        srs += soldAm[x]
+                    if(tradesSim.averageAskPrice <= 0 and tradesSim.averageBidPrice <= 0):
+                        continue
                       
-                    if(srs > 0) and (srb > 0):
-                        sredniacenakupna = wb / srb
-                        sredniacenasprzedazy = ws / srs
-                        roznica = sredniacenasprzedazy - sredniacenakupna
-                        procent = roznica / sredniacenakupna
-                    
-                        if(procent > 0.03) and ((lowBuyObj.has_WD_def() and highSellObj.has_WD_def() and highSellObj.can_deposit(currentPair) and lowBuyObj.can_withdraw(currentPair)) or (lowBuyObj.has_WD_def() and not(highSellObj.has_WD_def()) and lowBuyObj.can_withdraw(currentPair)) or (highSellObj.has_WD_def() and not(lowBuyObj.has_WD_def()) and highSellObj.can_deposit(currentPair))):
-                            print("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%")
-                            print("Percentage difference: ")
-                            print(perc)
-                            print(currentPair)
-                            if(outOfBid == True):
-                                print("out of bid")
-                            if(outOfAsk == True):
-                                print("out of ask")
-                            print(l)
-                            print(k)
-                            print("To buy amount: " + str(toBuyFinal))
-                            print("Withdraw fee: " + str(toBuyFinal/100))
-                            print("buy from: " + (str)(lowBuyObj))
-                            if(lowBuyObj.has_WD_def()):
-                                print(lowBuyObj.can_withdraw(currentPair))
-                            else:
-                                print("dont know if lowbuyobj can withdraw")
-                            print("sell at: " + (str)(highSellObj))
-                            if(highSellObj.has_WD_def()):
-                                print(highSellObj.can_deposit(currentPair))
-                            else:
-                                print("dont know if highSellObj can deposit")
-                            print(datetime.now())
-                            print("Realny zysk")
-                            print(procent)
-                            print("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%")
-                    else:
-                        print("no bid or ask")
-                        print(len(arrays[i]))
-    
+                    finalPercent = tradesSim.count_Percent() 
+                
+                    if(finalPercent > 0.03) and ((lowBuyObj.has_WD_def() and highSellObj.has_WD_def() and highSellObj.can_deposit(currentPair) and lowBuyObj.can_withdraw(currentPair)) or (lowBuyObj.has_WD_def() and not(highSellObj.has_WD_def()) and lowBuyObj.can_withdraw(currentPair)) or (highSellObj.has_WD_def() and not(lowBuyObj.has_WD_def()) and highSellObj.can_deposit(currentPair))):
+                        print("%%%%%%%%%%%%%%%%%%%%%%%%%%\nPercentage difference: \n" + (str)(perc) + (str)(currentPair))
+                        if(tradesSim.outOfBid == True):
+                            print("out of bid")
+                        if(tradesSim.outOfAsk == True):
+                            print("out of ask")
+                        print(tradesSim.askIndex)
+                        print(tradesSim.bidIndex)
+                        print("To buy amount: " + str(toBuyFinal) + "\nWithdraw fee: " + str(toBuyFinal/100) + "\nbuy from: " + (str)(lowBuyObj))
+                        if(lowBuyObj.has_WD_def()):
+                            print(lowBuyObj.can_withdraw(currentPair))
+                        else:
+                            print("dont know if lowbuyobj can withdraw")
+                        print("sell at: " + (str)(highSellObj))
+                        if(highSellObj.has_WD_def()):
+                            print(highSellObj.can_deposit(currentPair))
+                        else:
+                            print("dont know if highSellObj can deposit")
+                        print((str)(datetime.now()) + "\nRealny zysk\n" + (str)(finalPercent) + "\n%%%%%%%%%%%%%%%%%%%%%%%%%%")
+
             if False and (len(arrays[i]) > 2):
                 test = tuple_array2(numbers, stocks)
                 test.sort()
@@ -311,5 +320,4 @@ if __name__ == '__main__':
         
             numbers = []
             stocks = []
-            currentArray = []
     
