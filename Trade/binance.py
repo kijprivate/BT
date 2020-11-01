@@ -116,7 +116,7 @@ def can_withdraw(pair):
     return True
 
 def has_fee_def():
-    return True
+    return False
 
 def withdraw_fee(pair):
     request_client = RequestClient()

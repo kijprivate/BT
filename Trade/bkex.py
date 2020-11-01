@@ -93,15 +93,21 @@ def get_pair_sell(pair):
     pair = start + "_" + end
     s = get_pair(pair).get('data', {})
     #print(pair)
-    return (float)(s.get('asks')[0].get('price'))
+    if(len(s.get('asks')) > 0):
+        return (float)(s.get('asks')[0].get('price'))
+    else:
+        return 0 
 
 def get_pair_buy(pair):
     end = pair[-3:]
     start = pair[:-3]
     pair = start + "_" + end
     s = get_pair(pair).get('data', {})
-    return (float)(s.get('bids')[0].get('price'))
-
+    if(len(s.get('bids')) > 0):
+        return (float)(s.get('bids')[0].get('price'))
+    else:
+        return 99999999999999999999999999 
+    
 def get_orders(pair, limit):
     end = pair[-3:]
     start = pair[:-3]

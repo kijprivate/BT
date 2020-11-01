@@ -94,10 +94,16 @@ def get_orders(pair, limit):
     return var.get('data', {})
 
 def get_orders_asks(pair, limit):
-    return get_orders(pair, limit).get('s')
+    orders = get_orders(pair, limit)
+    if(orders != None):
+        return orders.get('s')
+    return None
 
 def get_orders_bids(pair, limit):
-    return get_orders(pair, limit).get('b')
+    orders = get_orders(pair, limit)
+    if(orders != None):
+        return orders.get('b')
+    return None
 
 def has_WD_def():
     return True

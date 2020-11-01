@@ -58,7 +58,11 @@ def add_same_elements(inArray, arrayToAdd):
     return inArray
 
 def count_med(numbers):
-    if len(numbers)%2 == 1:
+    if len(numbers) == 0:
+        return 0
+    elif len(numbers) == 1:
+        return numbers[0]
+    elif len(numbers)%2 == 1:
         return numbers[math.floor(len(numbers)/2)]
     elif len(numbers)%2 == 0:
         return (numbers[(int)(len(numbers)/2)] + numbers[(int)(len(numbers)/2) - 1]) / 2
@@ -68,30 +72,30 @@ if __name__ == '__main__':
     coinexSymbols = coinex.get_symbols()
     mxcSymbols = mxc.get_symbols()
     kucoinSymbols = kucoin.get_symbols()
-    #bkexSymbols = bkex.get_symbols()
-    #binanceSymbols = binance.get_symbols()
+    bkexSymbols = bkex.get_symbols()
+    binanceSymbols = binance.get_symbols()
     bithumbSymbols = bithumb.get_symbols()
     bilaxySymbols = bilaxy.get_symbols()
-    #liquidSymbols = liquid.get_symbols()
+    liquidSymbols = liquid.get_symbols()
     
     # group as pair of values - name of market and currency pair
     initTuple = tuple_array(coinex, coinexSymbols)
     mxcTuple = tuple_array(mxc, mxcSymbols)
     kucoinTuple = tuple_array(kucoin, kucoinSymbols)
-    #bkexTuple = tuple_array(bkex, bkexSymbols)
-    #binanceTuple = tuple_array(binance, binanceSymbols)
+    bkexTuple = tuple_array(bkex, bkexSymbols)
+    binanceTuple = tuple_array(binance, binanceSymbols)
     bithumbTuple = tuple_array(bithumb, bithumbSymbols)
     bilaxyTuple = tuple_array(bilaxy, bilaxySymbols)
-    #liquidTuple = tuple_array(liquid, liquidSymbols)
+    liquidTuple = tuple_array(liquid, liquidSymbols)
     
     # add uniques to array
     initTuple = add_uniques_to_array(initTuple, mxcTuple)
     initTuple = add_uniques_to_array(initTuple, kucoinTuple)
-    #initTuple = add_uniques_to_array(initTuple, bkexTuple)
-    #initTuple = add_uniques_to_array(initTuple, binanceTuple)
+    initTuple = add_uniques_to_array(initTuple, bkexTuple)
+    initTuple = add_uniques_to_array(initTuple, binanceTuple)
     initTuple = add_uniques_to_array(initTuple, bithumbTuple)
     initTuple = add_uniques_to_array(initTuple, bilaxyTuple)
-    #initTuple = add_uniques_to_array(initTuple, liquidTuple)
+    initTuple = add_uniques_to_array(initTuple, liquidTuple)
     
     # create 3d array        
     arrays = [[initTuple[i]] for i in range(len(initTuple))]
@@ -100,11 +104,11 @@ if __name__ == '__main__':
     arrays = add_same_elements(arrays, initTuple)
     arrays = add_same_elements(arrays, mxcTuple)
     arrays = add_same_elements(arrays, kucoinTuple)
-    #arrays = add_same_elements(arrays, bkexTuple)
-    #arrays = add_same_elements(arrays, binanceTuple)
+    arrays = add_same_elements(arrays, bkexTuple)
+    arrays = add_same_elements(arrays, binanceTuple)
     arrays = add_same_elements(arrays, bithumbTuple)
     arrays = add_same_elements(arrays, bilaxyTuple)
-    #arrays = add_same_elements(arrays, liquidTuple)
+    arrays = add_same_elements(arrays, liquidTuple)
     
     toRemove = []
     for i in range(len(arrays)):
@@ -116,9 +120,6 @@ if __name__ == '__main__':
 
     lowBuy = 99999
     highSell = 0
-    
-    lowBuyStr = ""
-    highSellStr = ""
     
     lowBuyObj = None
     highSellObj = None
@@ -135,7 +136,6 @@ if __name__ == '__main__':
             for j in range(len(arrays[i])):
 
                 time.sleep(0.2)
-
                 ret = (float)(arrays[i][j][0].get_pair_sell(arrays[i][j][1]))
                 ret2 = (float)(arrays[i][j][0].get_pair_buy(arrays[i][j][1]))
                     
@@ -144,13 +144,10 @@ if __name__ == '__main__':
     
                 if(ret < lowBuy):
                     lowBuy = ret
-                    lowBuyStr = str(arrays[i][j][0])
                     lowBuyObj = arrays[i][j][0]
                     
-                ret2 = arrays[i][j][0].get_pair_buy(arrays[i][j][1])
                 if(ret2 > highSell):
                     highSell = ret2
-                    highSellStr = str(arrays[i][j][0])
                     highSellObj = arrays[i][j][0]
     
             if (len(arrays[i]) > 1) and lowBuy > 0:
@@ -167,15 +164,31 @@ if __name__ == '__main__':
                         ask = lowBuyObj.get_orders_asks(arrays[i][j][1], 20) #buy from
                         bid = highSellObj.get_orders_bids(arrays[i][j][1], 20) #sell at
                         
-                        if lowBuyObj == mxc or lowBuyObj == binance:
-                            toBuy = highSellObj.withdraw_fee(arrays[i][j][1])*100
-                            toSell = highSellObj.withdraw_fee(arrays[i][j][1])*100
-                        elif highSellObj == mxc or highSellObj == binance:
+                        if(ask == None or bid == None):
+                            continue
+                        
+                        if(lowBuyObj.has_fee_def()):
                             toBuy = lowBuyObj.withdraw_fee(arrays[i][j][1])*100
-                            toSell = lowBuyObj.withdraw_fee(arrays[i][j][1])*100
                         else:
-                            toBuy = lowBuyObj.withdraw_fee(arrays[i][j][1])*100
+                            stocksArray = []
+                            for z in range(len(arrays[i])):
+                                if(arrays[i][z][0].has_fee_def()):
+                                    stocksArray.append(arrays[i][z][0].withdraw_fee(arrays[i][z][1]))
+                                
+                            countedMed = count_med(stocksArray)
+                            toBuy = countedMed*100
+
+                        if(highSellObj.has_fee_def()):
                             toSell = highSellObj.withdraw_fee(arrays[i][j][1])*100
+                        else:
+                            stocksArray = []
+                            for z in range(len(arrays[i])):
+                                if(arrays[i][z][0].has_fee_def()):
+                                    stocksArray.append(arrays[i][z][0].withdraw_fee(arrays[i][z][1]))
+                                
+                            countedMed = count_med(stocksArray)
+                            toSell = countedMed*100
+                            
                         
                         if toBuy == 0 or toSell == 0:
                             continue
@@ -234,7 +247,7 @@ if __name__ == '__main__':
                             roznica = sredniacenasprzedazy - sredniacenakupna
                             procent = roznica / sredniacenakupna
                         
-                            if(procent > 0.03) and lowBuyObj.can_withdraw(arrays[i][j][1]) == True and highSellObj.can_deposit(arrays[i][j][1]) == True:
+                            if(procent > 0.03) and ((lowBuyObj.has_WD_def() and highSellObj.has_WD_def() and highSellObj.can_deposit(arrays[i][j][1]) and lowBuyObj.can_withdraw(arrays[i][j][1])) or (lowBuyObj.has_WD_def() and not(highSellObj.has_WD_def()) and lowBuyObj.can_withdraw(arrays[i][j][1])) or (highSellObj.has_WD_def() and not(lowBuyObj.has_WD_def()) and highSellObj.can_deposit(arrays[i][j][1]))):
                                 print("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%")
                                 print("Percentage difference: ")
                                 print(perc)
@@ -247,8 +260,16 @@ if __name__ == '__main__':
                                 print(k)
                                 print("To buy amount: " + str(toBuyFinal))
                                 print("Withdraw fee: " + str(toBuyFinal/100))
-                                print("buy from: " + lowBuyStr)
-                                print("sell at: " + highSellStr)
+                                print("buy from: " + (str)(lowBuyObj))
+                                if(lowBuyObj.has_WD_def()):
+                                    print(lowBuyObj.can_withdraw(arrays[i][j][1]))
+                                else:
+                                    print("dont know if lowbuyobj can withdraw")
+                                print("sell at: " + (str)(highSellObj))
+                                if(highSellObj.has_WD_def()):
+                                    print(highSellObj.can_deposit(arrays[i][j][1]))
+                                else:
+                                    print("dont know if highSellObj can deposit")
                                 print(datetime.now())
                                 print("Realny zysk")
                                 print(procent)
@@ -278,8 +299,6 @@ if __name__ == '__main__':
             highSell = 0
             lowBuyObj = None
             highSellObj = None
-            lowBuyStr = ""
-            highSellStr = ""
             numbers = []
             stocks = []
     
