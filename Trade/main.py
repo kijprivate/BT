@@ -4,10 +4,14 @@ import kucoin as kucoin
 import bkex as bkex
 import bilaxy as bilaxy
 import liquid as liquid
-import huobi as huobi
 import binance as binance
 import bithumb as bithumb
-import coinsuper as coinsuper
+
+#not working
+#import coinsuper as coinsuper #connection timeout? maybe easy fix
+#import huobi as huobi #signature
+#import okex as okex #problems with signature even with api sample
+
 from datetime import datetime
 import time
 import math
@@ -60,35 +64,34 @@ def count_med(numbers):
         return (numbers[(int)(len(numbers)/2)] + numbers[(int)(len(numbers)/2) - 1]) / 2
     
 if __name__ == '__main__':
-    
     # get all symbols from market
     coinexSymbols = coinex.get_symbols()
     mxcSymbols = mxc.get_symbols()
     kucoinSymbols = kucoin.get_symbols()
-  #  bkexSymbols = bkex.get_symbols()
-    binanceSymbols = binance.get_symbols()
-    #bithumbSymbols = bithumb.get_symbols()
-   # bilaxySymbols = bilaxy.get_symbols()
-   # liquidSymbols = liquid.get_symbols()
+    #bkexSymbols = bkex.get_symbols()
+    #binanceSymbols = binance.get_symbols()
+    bithumbSymbols = bithumb.get_symbols()
+    bilaxySymbols = bilaxy.get_symbols()
+    #liquidSymbols = liquid.get_symbols()
     
     # group as pair of values - name of market and currency pair
     initTuple = tuple_array(coinex, coinexSymbols)
     mxcTuple = tuple_array(mxc, mxcSymbols)
     kucoinTuple = tuple_array(kucoin, kucoinSymbols)
-  #  bkexTuple = tuple_array(bkex, bkexSymbols)
-    binanceTuple = tuple_array(binance, binanceSymbols)
-    #bithumbTuple = tuple_array(bithumb, bithumbSymbols)
-   # bilaxyTuple = tuple_array(bilaxy, bilaxySymbols)
-   # liquidTuple = tuple_array(liquid, liquidSymbols)
+    #bkexTuple = tuple_array(bkex, bkexSymbols)
+    #binanceTuple = tuple_array(binance, binanceSymbols)
+    bithumbTuple = tuple_array(bithumb, bithumbSymbols)
+    bilaxyTuple = tuple_array(bilaxy, bilaxySymbols)
+    #liquidTuple = tuple_array(liquid, liquidSymbols)
     
     # add uniques to array
     initTuple = add_uniques_to_array(initTuple, mxcTuple)
     initTuple = add_uniques_to_array(initTuple, kucoinTuple)
     #initTuple = add_uniques_to_array(initTuple, bkexTuple)
-    initTuple = add_uniques_to_array(initTuple, binanceTuple)
-    #initTuple = add_uniques_to_array(initTuple, bithumbTuple)
-    #initTuple = add_uniques_to_array(initTuple, bilaxyTuple)
-   # initTuple = add_uniques_to_array(initTuple, liquidTuple)
+    #initTuple = add_uniques_to_array(initTuple, binanceTuple)
+    initTuple = add_uniques_to_array(initTuple, bithumbTuple)
+    initTuple = add_uniques_to_array(initTuple, bilaxyTuple)
+    #initTuple = add_uniques_to_array(initTuple, liquidTuple)
     
     # create 3d array        
     arrays = [[initTuple[i]] for i in range(len(initTuple))]
@@ -97,11 +100,11 @@ if __name__ == '__main__':
     arrays = add_same_elements(arrays, initTuple)
     arrays = add_same_elements(arrays, mxcTuple)
     arrays = add_same_elements(arrays, kucoinTuple)
-   # arrays = add_same_elements(arrays, bkexTuple)
-    arrays = add_same_elements(arrays, binanceTuple)
-    #arrays = add_same_elements(arrays, bithumbTuple)
-   # arrays = add_same_elements(arrays, bilaxyTuple)
-   # arrays = add_same_elements(arrays, liquidTuple)
+    #arrays = add_same_elements(arrays, bkexTuple)
+    #arrays = add_same_elements(arrays, binanceTuple)
+    arrays = add_same_elements(arrays, bithumbTuple)
+    arrays = add_same_elements(arrays, bilaxyTuple)
+    #arrays = add_same_elements(arrays, liquidTuple)
     
     toRemove = []
     for i in range(len(arrays)):
@@ -254,7 +257,7 @@ if __name__ == '__main__':
                             print("no bid or ask")
                             print(len(arrays[i]))
     
-            if(len(arrays[i]) > 2):
+            if False and (len(arrays[i]) > 2):
                 test = tuple_array2(numbers, stocks)
                 test.sort()
                 numbers.sort()

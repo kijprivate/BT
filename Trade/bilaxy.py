@@ -52,7 +52,28 @@ class RequestClient(object):
             result = http.request(method, url, body=encoded_data, headers=self.headers)
         return result
     
-    
+def get_symbols():
+    request_client = RequestClient()
+    params = {}
+    response = request_client.request(
+            'GET',
+            '{url}/v1/pairs'.format(url=request_client.url),
+            params=params
+    )
+    var = complex_json.loads(response.data)
+    s = (str)(var)
+
+    array = []
+    while True:
+        sAppend = find_between(s, '\'', '\': {')
+        sAppend = sAppend.replace('_',"")
+        s = s.split("closed\': ",1)[1]
+        if("USD" in sAppend) or ("HOT" in sAppend) or ("ONG" in sAppend) or ("GRINBTC" in sAppend) or ("COMP" in sAppend) or ("HOT" in sAppend):
+            continue
+        array.append(sAppend)
+        if find_between(s, '\'', '\': {') == '':
+            return array
+        
 def get_pair(pair):
     request_client = RequestClient()
     params = {
@@ -108,6 +129,9 @@ def get_orders_asks(pair, limit):
 def get_orders_bids(pair, limit):
     return get_orders(pair, limit).get('bids')
 
+def has_WD_def():
+    return True
+
 def can_deposit(pair):
     request_client = RequestClient()
     pair = pair[:-3]
@@ -136,6 +160,9 @@ def can_withdraw(pair):
     var = complex_json.loads(response.data)
     return (bool)(var.get(pair).get('withdraw_enabled'))
 
+def has_fee_def():
+    return True
+
 def withdraw_fee(pair):
     request_client = RequestClient()
     pair = pair[:-3]
@@ -150,27 +177,7 @@ def withdraw_fee(pair):
     var = complex_json.loads(response.data)
     return (float)(var.get(pair).get('fixed_withdraw_fee'))
 
-def get_symbols():
-    request_client = RequestClient()
-    params = {}
-    response = request_client.request(
-            'GET',
-            '{url}/v1/pairs'.format(url=request_client.url),
-            params=params
-    )
-    var = complex_json.loads(response.data)
-    s = (str)(var)
 
-    array = []
-    while True:
-        sAppend = find_between(s, '\'', '\': {')
-        sAppend = sAppend.replace('_',"")
-        s = s.split("closed\': ",1)[1]
-        if("USD" in sAppend) or ("HOT" in sAppend) or ("ONG" in sAppend) or ("GRINBTC" in sAppend) or ("COMP" in sAppend) or ("HOT" in sAppend):
-            continue
-        array.append(sAppend)
-        if find_between(s, '\'', '\': {') == '':
-            return array
 
 def find_between( s, first, last ):
     try:

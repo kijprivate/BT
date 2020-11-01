@@ -3,7 +3,6 @@ import time
 import hashlib
 import json as complex_json
 import urllib3
-import re
 
 from urllib3.exceptions import InsecureRequestWarning
 
@@ -52,7 +51,29 @@ class RequestClient(object):
             result = http.request(method, url, body=encoded_data, headers=self.headers)
         return result
     
-    
+def get_symbols():
+    request_client = RequestClient()
+    params = {}
+    response = request_client.request(
+            'GET',
+            '{url}/v1/exchangeInfo'.format(url=request_client.url),
+            params=params
+    )
+    var = complex_json.loads(response.data).get('data', {}).get('pairs')
+    s = (str)(var)
+
+    array = []
+    while True:
+        sAppend = find_between(s, 'pair\': \'', '\', \'supportTrade')
+        sAppend = sAppend.replace('_',"")
+        s = s.split(":",1)[1]
+        if("USD" in sAppend) or ("GRINBTC" in sAppend) or ("HOT" in sAppend) or ("ONG" in sAppend) or ("ZEL" in sAppend) or ("DOCK" in sAppend) or ("TRTL" in sAppend) or ("NRG" in sAppend) or ("XTZ" in sAppend) or (len(array) > 0 and array[-1] == sAppend):
+            continue
+        array.append(sAppend)
+        if find_between(s, 'pair\': \'', '\', \'supportTrade') == '':
+            del array[-1]
+            return array
+        
 def get_pair(pair):
     request_client = RequestClient()
     params = {
@@ -80,23 +101,6 @@ def get_pair_buy(pair):
     pair = start + "_" + end
     s = get_pair(pair).get('data', {})
     return (float)(s.get('bids')[0].get('price'))
-
-def get_pair_last(pair):
-    end = pair[-3:]
-    start = pair[:-3]
-    pair = start + "_" + end
-    request_client = RequestClient()
-    params = {
-        'pair': pair
-    }
-    response = request_client.request(
-            'GET',
-            '{url}/v1/q/ticker/price'.format(url=request_client.url),
-            params=params
-    )
-    var = complex_json.loads(response.data)
-    s = var.get('data', {})
-    return (float)(s.get('price'))
 
 def get_orders(pair, limit):
     end = pair[-3:]
@@ -137,6 +141,9 @@ def can_deposit(pair):
     sAppend = find_between(s, 'currency\': \'' + pair + '\'', 'supportTrade')
     sAppend = find_between(sAppend, 'supportDeposit\': ', ', \'')
     return (bool)(sAppend)
+
+def has_WD_def():
+    return True
     
 def can_withdraw(pair):
     request_client = RequestClient()
@@ -155,6 +162,9 @@ def can_withdraw(pair):
     sAppend = find_between(sAppend, 'supportWithdraw\': ', ', \'')
     return (bool)(sAppend)
 
+def has_fee_def():
+    return True
+
 def withdraw_fee(pair):
     request_client = RequestClient()
     pair = pair[:-3]
@@ -171,28 +181,7 @@ def withdraw_fee(pair):
     sAppend = find_between(sAppend, 'withdrawFee\': ', '},')
     return (float)(sAppend)
 
-def get_symbols():
-    request_client = RequestClient()
-    params = {}
-    response = request_client.request(
-            'GET',
-            '{url}/v1/exchangeInfo'.format(url=request_client.url),
-            params=params
-    )
-    var = complex_json.loads(response.data).get('data', {}).get('pairs')
-    s = (str)(var)
 
-    array = []
-    while True:
-        sAppend = find_between(s, 'pair\': \'', '\', \'supportTrade')
-        sAppend = sAppend.replace('_',"")
-        s = s.split(":",1)[1]
-        if("USD" in sAppend) or ("GRINBTC" in sAppend) or ("HOT" in sAppend) or ("ONG" in sAppend) or ("ZEL" in sAppend) or ("DOCK" in sAppend) or ("TRTL" in sAppend) or ("NRG" in sAppend) or ("XTZ" in sAppend) or (len(array) > 0 and array[-1] == sAppend):
-            continue
-        array.append(sAppend)
-        if find_between(s, 'pair\': \'', '\', \'supportTrade') == '':
-            del array[-1]
-            return array
 
 def find_between( s, first, last ):
     try:

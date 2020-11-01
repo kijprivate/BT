@@ -54,123 +54,6 @@ class RequestClient(object):
             result = http.request(method, url, body=encoded_data, headers=self.headers)
         return result
     
-
-def get_id(pair):
-    request_client = RequestClient()
-    params = {
-
-    }
-    response = request_client.request(
-            'GET',
-            '{url}/products'.format(url=request_client.url),
-            params=params
-    )
-    
-    var = (str)(complex_json.loads(response.data))
-    while True:
-        sAppend = find_between(var, '\'id\': \'', '\', \'symbol')
-        var = var.split("symbol",1)[1]
-        if(pair in sAppend):
-            pid = find_between(sAppend, '', '\',')
-            return pid
-
-def can_deposit(pair):
-    print("no def")
-    return True
-    
-def can_withdraw(pair):
-    print("no def")
-    return True
-
-def get_pair_sell(pair):
-    pid = get_id(pair)
-    request_client = RequestClient()
-    params = {
-
-    }
-    response = request_client.request(
-            'GET',
-            '{url}/products/{i}'.format(url=request_client.url, i = pid),
-            params=params
-    )
-    
-    var = complex_json.loads(response.data)
-    #print(pair)
-    return (float)(var.get('market_ask'))
-
-def get_pair_buy(pair):
-    pid = get_id(pair)
-    request_client = RequestClient()
-    params = {
-
-    }
-    response = request_client.request(
-            'GET',
-            '{url}/products/{i}'.format(url=request_client.url, i = pid),
-            params=params
-    )
-    
-    var = complex_json.loads(response.data)
-    return (float)(var.get('market_bid'))
-
-def get_pair_last(pair):
-    pid = get_id(pair)
-    request_client = RequestClient()
-    params = {
-
-    }
-    response = request_client.request(
-            'GET',
-            '{url}/products/{i}'.format(url=request_client.url, i = pid),
-            params=params
-    )
-    
-    var = complex_json.loads(response.data)
-    return (float)(var.get('last_traded_price'))
-
-def get_orders(pair, limit):
-    pid = get_id(pair)
-    request_client = RequestClient()
-    params = {
-
-    }
-    response = request_client.request(
-            'GET',
-            '{url}/products/{i}/price_levels'.format(url=request_client.url, i = pid),
-            params=params
-    )
-    var = complex_json.loads(response.data)
-    return var
-
-def get_orders_asks(pair, limit):
-    return get_orders(pair, limit).get('sell_price_levels')
-
-def get_orders_bids(pair, limit):
-    return get_orders(pair, limit).get('buy_price_levels')
-
-def get_pair_volume(pair):
-    pid = get_id(pair)
-    request_client = RequestClient()
-    params = {
-
-    }
-    response = request_client.request(
-            'GET',
-            '{url}/products/{i}'.format(url=request_client.url, i = pid),
-            params=params
-    )
-    
-    var = complex_json.loads(response.data)
-    return (float)(var.get('volume_24h'))
-
-def withdraw_fee(pair):
-    if(coinex.withdraw_fee(pair) != None):
-        return coinex.withdraw_fee(pair)
-    elif(mxc.withdraw_fee(pair) != None):
-        return mxc.withdraw_fee(pair)
-    else:
-        return kucoin.withdraw_fee(pair)
-
 def get_symbols():
     request_client = RequestClient()
     params = {
@@ -207,6 +90,100 @@ def get_symbols():
                     
             return newarr2
         
+def get_id(pair):
+    request_client = RequestClient()
+    params = {
+
+    }
+    response = request_client.request(
+            'GET',
+            '{url}/products'.format(url=request_client.url),
+            params=params
+    )
+    
+    var = (str)(complex_json.loads(response.data))
+    while True:
+        sAppend = find_between(var, '\'id\': \'', '\', \'symbol')
+        var = var.split("symbol",1)[1]
+        if(pair in sAppend):
+            pid = find_between(sAppend, '', '\',')
+            return pid
+
+def get_pair_sell(pair):
+    pid = get_id(pair)
+    request_client = RequestClient()
+    params = {
+
+    }
+    response = request_client.request(
+            'GET',
+            '{url}/products/{i}'.format(url=request_client.url, i = pid),
+            params=params
+    )
+    
+    var = complex_json.loads(response.data)
+    #print(pair)
+    return (float)(var.get('market_ask'))
+
+def get_pair_buy(pair):
+    pid = get_id(pair)
+    request_client = RequestClient()
+    params = {
+
+    }
+    response = request_client.request(
+            'GET',
+            '{url}/products/{i}'.format(url=request_client.url, i = pid),
+            params=params
+    )
+    
+    var = complex_json.loads(response.data)
+    return (float)(var.get('market_bid'))
+
+def get_orders(pair, limit):
+    pid = get_id(pair)
+    request_client = RequestClient()
+    params = {
+
+    }
+    response = request_client.request(
+            'GET',
+            '{url}/products/{i}/price_levels'.format(url=request_client.url, i = pid),
+            params=params
+    )
+    var = complex_json.loads(response.data)
+    return var
+
+def get_orders_asks(pair, limit):
+    return get_orders(pair, limit).get('sell_price_levels')
+
+def get_orders_bids(pair, limit):
+    return get_orders(pair, limit).get('buy_price_levels')
+
+def has_WD_def():
+    return False
+
+def can_deposit(pair):
+    print("no def")
+    return True
+    
+def can_withdraw(pair):
+    print("no def")
+    return True
+
+def has_fee_def():
+    return False
+
+def withdraw_fee(pair):
+    if(coinex.withdraw_fee(pair) != None):
+        return coinex.withdraw_fee(pair)
+    elif(mxc.withdraw_fee(pair) != None):
+        return mxc.withdraw_fee(pair)
+    else:
+        return kucoin.withdraw_fee(pair)
+
+
+        
    
 def str_to_bool(s):
     if s == 'True':
@@ -225,3 +202,34 @@ def find_between( s, first, last ):
         return ""
 
 
+
+
+def get_pair_last(pair):
+    pid = get_id(pair)
+    request_client = RequestClient()
+    params = {
+
+    }
+    response = request_client.request(
+            'GET',
+            '{url}/products/{i}'.format(url=request_client.url, i = pid),
+            params=params
+    )
+    
+    var = complex_json.loads(response.data)
+    return (float)(var.get('last_traded_price'))
+
+def get_pair_volume(pair):
+    pid = get_id(pair)
+    request_client = RequestClient()
+    params = {
+
+    }
+    response = request_client.request(
+            'GET',
+            '{url}/products/{i}'.format(url=request_client.url, i = pid),
+            params=params
+    )
+    
+    var = complex_json.loads(response.data)
+    return (float)(var.get('volume_24h'))

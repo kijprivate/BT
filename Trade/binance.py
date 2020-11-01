@@ -50,6 +50,22 @@ class RequestClient(object):
             encoded_data = complex_json.dumps(json).encode('utf-8')
             result = http.request(method, url, body=encoded_data, headers=self.headers)
         return result
+
+def get_symbols():
+    request_client = RequestClient()
+    params = {}
+    response = request_client.request(
+            'GET',
+            '{url}/api/v3/exchangeInfo'.format(url=request_client.url)
+    )
+    var = complex_json.loads(response.data).get("symbols")
+    newarr = []
+    for x in range(len(var)):
+        if("USDT" in var[x].get("symbol")) or ("BTCRUB" in var[x].get("symbol")) or ("BNB" in var[x].get("symbol")) or ("EUR" in var[x].get("symbol")) or ("USD" in var[x].get("symbol")) or ("GRINBTC" in var[x].get("symbol")) or ("HOT" in var[x].get("symbol")) or ("NRG" in var[x].get("symbol")):
+            continue
+        newarr.append(var[x].get("symbol"))
+
+    return newarr
     
 def get_pair(pair):
     request_client = RequestClient()
@@ -63,6 +79,12 @@ def get_pair(pair):
     )
     var = complex_json.loads(response.data)
     return var
+
+def get_pair_sell(pair):
+    return (float)(get_pair(pair).get('askPrice'))
+
+def get_pair_buy(pair):
+    return (float)(get_pair(pair).get('bidPrice'))
 
 def get_orders(pair, limit):
     request_client = RequestClient()
@@ -84,10 +106,16 @@ def get_orders_asks(pair, limit):
 def get_orders_bids(pair, limit):
     return get_orders(pair, limit).get('bids')
 
+def has_WD_def():
+    return False
+
 def can_deposit(pair):
     return True
 
 def can_withdraw(pair):
+    return True
+
+def has_fee_def():
     return True
 
 def withdraw_fee(pair):
@@ -103,49 +131,11 @@ def withdraw_fee(pair):
     var = complex_json.loads(response.data)
     return (float)(var.get('data', {}).get(pair).get('withdraw_tx_fee'))
 
-#not set
-def get_amount(pair):
-    request_client = RequestClient()
-    pair = pair[:-3]
-    params = {
-    }
-    response = request_client.request(
-            'GET',
-            '{url}/v1/balance/info'.format(url=request_client.url),
-            params=params
-    )
-    var = complex_json.loads(response.data)
-    p = var.get('data', {}).get(pair)
-    if p is None:
-        return 0 
-    else:
-        return (float)(p.get('available'))
 
-def get_pair_sell(pair):
-    return (float)(get_pair(pair).get('askPrice'))
 
-def get_pair_buy(pair):
-    return (float)(get_pair(pair).get('bidPrice'))
 
-#not set
-def get_pair_last(pair):
-    return (float)(get_pair(pair).get('last'))
 
-def get_symbols():
-    request_client = RequestClient()
-    params = {}
-    response = request_client.request(
-            'GET',
-            '{url}/api/v3/exchangeInfo'.format(url=request_client.url)
-    )
-    var = complex_json.loads(response.data).get("symbols")
-    newarr = []
-    for x in range(len(var)):
-        if("USDT" in var[x].get("symbol")) or ("BTCRUB" in var[x].get("symbol")) or ("BNB" in var[x].get("symbol")) or ("EUR" in var[x].get("symbol")) or ("USD" in var[x].get("symbol")) or ("GRINBTC" in var[x].get("symbol")) or ("HOT" in var[x].get("symbol")) or ("NRG" in var[x].get("symbol")):
-            continue
-        newarr.append(var[x].get("symbol"))
 
-    return newarr
 
 def find_between( s, first, last ):
     try:

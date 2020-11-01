@@ -52,7 +52,30 @@ class RequestClient(object):
             result = http.request(method, url, body=encoded_data, headers=self.headers)
         return result
     
-    
+
+def get_symbols():
+    request_client = RequestClient()
+    params = {}
+    response = request_client.request(
+            'GET',
+            '{url}/api/v1/symbols'.format(url=request_client.url),
+            params=params
+    )
+    var = complex_json.loads(response.data)
+    s = (str)(var.get('data', {}))
+    array = []
+    while True:
+        sAppend = find_between(s, 'symbol\': \'', '\', \'name')
+        sAppend = sAppend.replace('-',"")
+        s = s.split(":",1)[1]
+        if("USD" in sAppend) or ("DGTX" in sAppend) or ("COTI" in sAppend) or ("AMBBTC" in sAppend) or ("QKC" in sAppend) or ("GRINBTC" in sAppend) or ("HOT" in sAppend) or ("TRTL" in sAppend) or ("NRG" in sAppend) or (sAppend in array):
+            continue
+        
+        array.append(sAppend)
+        if find_between(s, 'symbol\': \'', '\', \'name') == '':
+            del array[-1]
+            return array
+        
 def get_pair(pair):
     request_client = RequestClient()
     params = {
@@ -84,17 +107,31 @@ def get_pair_buy(pair):
     result = re.search('bestBid\': \'(.*)\', \'bestBidSize', s)
     return (float)(result.group(1))
 
-def get_pair_last(pair):
+def get_orders(pair, limit):
     end = pair[-3:]
     start = pair[:-3]
     pair = start + "-" + end
+    
+    request_client = RequestClient()
+    params = {
+        'symbol': pair
+    }
+    response = request_client.request(
+            'GET',
+            '{url}/api/v1/market/orderbook/level2_20'.format(url=request_client.url),
+            params=params
+    )
+    var = complex_json.loads(response.data)
+    return var.get('data', {})
 
-    s = (str)(get_pair(pair).get('data', {}))
-    result = re.search('price\': \'(.*)\', \'size', s)
-    return (float)(result.group(1))
+def get_orders_asks(pair, limit):
+    return get_orders(pair, limit).get('asks')
 
-def get_pair_volume(pair):
-    return (float)(5)
+def get_orders_bids(pair, limit):
+    return get_orders(pair, limit).get('bids')
+
+def has_WD_def():
+    return True
 
 def can_deposit(pair):
     request_client = RequestClient()
@@ -124,6 +161,9 @@ def can_withdraw(pair):
     var = complex_json.loads(response.data)
     return (bool)(var.get('data', {}).get('isWithdrawEnabled'))
 
+def has_fee_def():
+    return True
+
 def withdraw_fee(pair):
     request_client = RequestClient()
     pair = pair[:-3]
@@ -138,52 +178,6 @@ def withdraw_fee(pair):
     var = complex_json.loads(response.data)
     return (float)(var.get('data', {}).get('withdrawalMinFee'))
 
-def get_orders(pair, limit):
-    end = pair[-3:]
-    start = pair[:-3]
-    pair = start + "-" + end
-    
-    request_client = RequestClient()
-    params = {
-        'symbol': pair
-    }
-    response = request_client.request(
-            'GET',
-            '{url}/api/v1/market/orderbook/level2_20'.format(url=request_client.url),
-            params=params
-    )
-    var = complex_json.loads(response.data)
-    return var.get('data', {})
-
-def get_orders_asks(pair, limit):
-    return get_orders(pair, limit).get('asks')
-
-def get_orders_bids(pair, limit):
-    return get_orders(pair, limit).get('bids')
-
-def get_symbols():
-    request_client = RequestClient()
-    params = {}
-    response = request_client.request(
-            'GET',
-            '{url}/api/v1/symbols'.format(url=request_client.url),
-            params=params
-    )
-    var = complex_json.loads(response.data)
-    s = (str)(var.get('data', {}))
-    array = []
-    while True:
-        sAppend = find_between(s, 'symbol\': \'', '\', \'name')
-        sAppend = sAppend.replace('-',"")
-        s = s.split(":",1)[1]
-        if("USD" in sAppend) or ("DGTX" in sAppend) or ("COTI" in sAppend) or ("AMBBTC" in sAppend) or ("QKC" in sAppend) or ("GRINBTC" in sAppend) or ("HOT" in sAppend) or ("TRTL" in sAppend) or ("NRG" in sAppend) or (sAppend in array):
-            continue
-        
-        array.append(sAppend)
-        if find_between(s, 'symbol\': \'', '\', \'name') == '':
-            del array[-1]
-            return array
-
 def find_between( s, first, last ):
     try:
         start = s.index( first ) + len( first )
@@ -193,3 +187,14 @@ def find_between( s, first, last ):
         return ""
 
 
+
+
+
+def get_pair_last(pair):
+    end = pair[-3:]
+    start = pair[:-3]
+    pair = start + "-" + end
+
+    s = (str)(get_pair(pair).get('data', {}))
+    result = re.search('price\': \'(.*)\', \'size', s)
+    return (float)(result.group(1))

@@ -51,6 +51,31 @@ class RequestClient(object):
             result = http.request(method, url, body=encoded_data, headers=self.headers)
         return result
     
+def get_symbols():
+    request_client = RequestClient()
+    params = {}
+    response = request_client.request(
+            'GET',
+            '{url}/spot/config'.format(url=request_client.url),
+            params=params
+    )
+    var = complex_json.loads(response.data).get("data").get("spotConfig")
+
+    newarr = []
+    for x in range(len(var)):
+        if("USDT" in var[x].get("symbol")) or ("BNB" in var[x].get("symbol")) or ("EUR" in var[x].get("symbol")) or ("USD" in var[x].get("symbol")) or ("GRINBTC" in var[x].get("symbol")) or ("HOT" in var[x].get("symbol")) or ("NRG" in var[x].get("symbol")):
+            continue
+        p = var[x].get("symbol")
+        p = p.replace('-',"")
+        newarr.append(p)
+
+    return newarr
+
+def get_pair_sell(pair):
+    return (float)(get_orders_asks(pair, 10)[0][0])
+
+def get_pair_buy(pair):
+    return (float)(get_orders_bids(pair, 10)[0][0])
 
 def get_orders(pair, limit):
     end = pair[-3:]
@@ -73,6 +98,9 @@ def get_orders_asks(pair, limit):
 
 def get_orders_bids(pair, limit):
     return get_orders(pair, limit).get('b')
+
+def has_WD_def():
+    return True
 
 def can_deposit(pair):
     request_client = RequestClient()
@@ -110,6 +138,9 @@ def can_withdraw(pair):
             else:
                 return True
 
+def has_fee_def():
+    return True
+
 def withdraw_fee(pair):
     request_client = RequestClient()
     pair = pair[:-3]
@@ -125,31 +156,9 @@ def withdraw_fee(pair):
         if var[x].get("name") == pair:
             return (float)(var[x].get("withdrawFee"))
 
-def get_pair_sell(pair):
-    return (float)(get_orders_asks(pair, 10)[0][0])
 
-def get_pair_buy(pair):
-    return (float)(get_orders_bids(pair, 10)[0][0])
 
-def get_symbols():
-    request_client = RequestClient()
-    params = {}
-    response = request_client.request(
-            'GET',
-            '{url}/spot/config'.format(url=request_client.url),
-            params=params
-    )
-    var = complex_json.loads(response.data).get("data").get("spotConfig")
 
-    newarr = []
-    for x in range(len(var)):
-        if("USDT" in var[x].get("symbol")) or ("BNB" in var[x].get("symbol")) or ("EUR" in var[x].get("symbol")) or ("USD" in var[x].get("symbol")) or ("GRINBTC" in var[x].get("symbol")) or ("HOT" in var[x].get("symbol")) or ("NRG" in var[x].get("symbol")):
-            continue
-        p = var[x].get("symbol")
-        p = p.replace('-',"")
-        newarr.append(p)
-
-    return newarr
 
 def find_between( s, first, last ):
     try:

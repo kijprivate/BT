@@ -1,8 +1,10 @@
 from __future__ import unicode_literals
 import time
 import hashlib
+import hmac
 import json as complex_json
 import urllib3
+import base64
 
 from urllib3.exceptions import InsecureRequestWarning
 
@@ -17,59 +19,79 @@ class RequestClient(object):
     }
 
     def __init__(self, headers={}):
-        self.access_id = '49B5C9BEF8534CB4BACC60414279ED69'      # replace
-        self.secret_key = '1B551E901CB646809EB6526483BEEE866DB5AE10589881C1'     # replace
-        self.url = 'https://api.coinex.com'
+        self.access_id = '18293940-b2d8-494b-80ec-136554706ca9'      # replace
+        self.secret_key = '311FEEAE5C99C6590FD9ED03C8A45D63'     # replace
+        self.url = 'https://www.okex.com/'
         self.headers = self.__headers
         self.headers.update(headers)
 
     @staticmethod
     def get_sign(params, secret_key):
-        sort_params = sorted(params)
-        data = []
-        for item in sort_params:
-            data.append(item + '=' + str(params[item]))
-        str_params = "{0}&secret_key={1}".format('&'.join(data), secret_key)
-        token = hashlib.md5(str_params.encode('utf-8')).hexdigest().upper()
-        return token
+        request_path = '/api/account/v3/currencies'
+        body = ''
+        message = str(params) + str.upper('GET') + request_path + str(body)
+        mac = hmac.new(bytes(secret_key, encoding='utf8'), bytes(message, encoding='utf-8'), digestmod='sha256')
+        d = mac.digest()
+        return base64.b64encode(d)
+    
+        str_params = params + 'GET' + '/users/self/verify/orders?before=2&limit=3' 
+
+        print(str_params)
+        signature = base64.b64encode(hmac.new(bytes(secret_key, encoding = 'utf-8'), msg=bytes(str_params, encoding = 'utf-8'), digestmod='sha256').digest())
+        print((str)(signature))
+        #token = hashlib.sha256(str_params.encode('utf-8')).hexdigest().upper()
+       # t = base64.b64encode(signature)
+       # print(t)
+        return (str)(signature)
 
     def set_authorization(self, params):
-        params['access_id'] = self.access_id
-        params['tonce'] = int(time.time()*1000)
-        self.headers['AUTHORIZATION'] = self.get_sign(params, self.secret_key)
+        #params['tonce'] = get_server_time()
+        test = get_server_time()
+        self.headers['OK-ACCESS-KEY'] = self.access_id
+        self.headers['OK-ACCESS-TIMESTAMP'] = test
+        self.headers['OK-ACCESS-PASSPHRASE'] = 'passphrase'
+        self.headers['OK-ACCESS-SIGN'] = self.get_sign(test, self.secret_key)
 
     def request(self, method, url, params={}, data='', json={}):
         method = method.upper()
         if method in ['GET', 'DELETE']:
             self.set_authorization(params)
-            try:
-                result = http.request(method, url, fields=params, headers=self.headers)
-                return result
-            except Exception as inst:
-                print(type(inst))
-                print("coinex")
+            result = http.request(method, url, fields=params, headers=self.headers)
+            return result
             
         else:
             if data:
                 json.update(complex_json.loads(data))
             self.set_authorization(json)
             encoded_data = complex_json.dumps(json).encode('utf-8')
-            try:
-                result = http.request(method, url, body=encoded_data, headers=self.headers)
-                return result
-            except Exception as inst:
-                print(type(inst))
-                print("coinex")
+            result = http.request(method, url, body=encoded_data, headers=self.headers)
+            return result
+    def request2(self, method, url, params={}, data='', json={}):
+        method = method.upper()
+        if method in ['GET', 'DELETE']:
+            result = http.request(method, url, fields=params, headers=self.headers)
+            return result
         
+def get_server_time():
+    request_client = RequestClient()
+    params = {}
+    response = request_client.request2(
+            'GET',
+            '{url}api/general/v3/time'.format(url=request_client.url),
+            params=params
+    )
+    print(complex_json.loads(response.data).get('epoch'))
+    return complex_json.loads(response.data).get('epoch')
 
 def get_symbols():
     request_client = RequestClient()
     params = {}
     response = request_client.request(
             'GET',
-            '{url}/v1/market/list'.format(url=request_client.url),
+            '{url}api/account/v3/wallet'.format(url=request_client.url),
             params=params
     )
+    return response.data
     var = []
     var = complex_json.loads(response.data).get('data', {})
     newarr = []
@@ -120,9 +142,6 @@ def get_orders_asks(pair, limit):
 def get_orders_bids(pair, limit):
     return get_orders(pair, limit).get('bids')
 
-def has_WD_def():
-    return True
-
 def can_deposit(pair):
     request_client = RequestClient()
     pair = pair[:-3]
@@ -151,9 +170,6 @@ def can_withdraw(pair):
     var = complex_json.loads(response.data)
     return (bool)(var.get('data', {}).get(pair).get('can_withdraw'))
 
-def has_fee_def():
-    return True
-
 def withdraw_fee(pair):
     request_client = RequestClient()
     pair = pair[:-3]
@@ -178,26 +194,3 @@ def find_between( s, first, last ):
         return s[start:end]
     except ValueError:
         return ""
-
-
-
-
-def get_amount(pair):
-    request_client = RequestClient()
-    pair = pair[:-3]
-    params = {
-    }
-    response = request_client.request(
-            'GET',
-            '{url}/v1/balance/info'.format(url=request_client.url),
-            params=params
-    )
-    var = complex_json.loads(response.data)
-    p = var.get('data', {}).get(pair)
-    if p is None:
-        return 0 
-    else:
-        return (float)(p.get('available'))
-    
-def get_pair_last(pair):
-    return (float)(get_pair(pair).get('data', {}).get('ticker').get('last'))
