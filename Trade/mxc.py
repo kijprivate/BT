@@ -125,7 +125,7 @@ def get_orders_asks(pair, limit):
     pair = start + "_" + end
     arr = [[0 for i in range(2)] for i in range(limit)]
     asks = get_orders(pair, limit).get('asks')
-    for x in range(limit):
+    for x in range(len(asks)):
         arr[x][0] = asks[x].get('price')
         arr[x][1] = asks[x].get('quantity')
 
@@ -137,7 +137,7 @@ def get_orders_bids(pair, limit):
     pair = start + "_" + end
     arr = [[0 for i in range(2)] for i in range(limit)]
     asks = get_orders(pair, limit).get('bids')
-    for x in range(limit):
+    for x in range(len(asks)):
         arr[x][0] = asks[x].get('price')
         arr[x][1] = asks[x].get('quantity')
 

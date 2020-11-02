@@ -6,7 +6,7 @@ import bilaxy as bilaxy
 import liquid as liquid
 import binance as binance
 import bithumb as bithumb
-
+import json
 #not working
 #import coinsuper as coinsuper #connection timeout? maybe easy fix
 #import huobi as huobi #signature
@@ -88,6 +88,30 @@ def get_lowBuyObj(currentArray, currentPair):
             lowBuyObj = currentArray[i][0]
 
     return lowBuyObj
+
+def get_highestSpread(currentArray, currentPair):
+    highSell = 0
+    for i in range(len(currentArray)):
+        if((currentArray[i][0].get_pair_sell(currentPair) == 0) or currentArray[i][0].get_pair_buy(currentPair)):
+            continue
+        val = (currentArray[i][0].get_pair_sell(currentPair) - currentArray[i][0].get_pair_buy(currentPair)) / currentArray[i][0].get_pair_sell(currentPair)
+        if(val > highSell):
+            highSell = val
+            
+    return highSell
+
+def get_lowestSpread(currentArray, currentPair):
+    lowBuy = 9999999
+    for i in range(len(currentArray)):
+        if((currentArray[i][0].get_pair_sell(currentPair) == 0) or currentArray[i][0].get_pair_buy(currentPair)):
+            continue
+        val = (currentArray[i][0].get_pair_sell(currentPair) - currentArray[i][0].get_pair_buy(currentPair)) / currentArray[i][0].get_pair_sell(currentPair)
+        if(val < lowBuy):
+            lowBuy = val
+    if(lowBuy == 9999999):
+        return 0
+    
+    return lowBuy
 
 def count_numberToTrade(obj, currentArray, currentPair):
     numberToTrade = 0
@@ -186,32 +210,33 @@ class TradesSimulation():
     
 if __name__ == '__main__':
     # get all symbols from market
-    coinexSymbols = coinex.get_symbols()
+    #coinexSymbols = coinex.get_symbols()
     mxcSymbols = mxc.get_symbols()
     kucoinSymbols = kucoin.get_symbols()
     bkexSymbols = bkex.get_symbols()
     binanceSymbols = binance.get_symbols()
     bithumbSymbols = bithumb.get_symbols()
-    bilaxySymbols = bilaxy.get_symbols()
+    #bilaxySymbols = bilaxy.get_symbols()
     liquidSymbols = liquid.get_symbols()
     
     # group as pair of values - name of market and currency pair
-    initTuple = tuple_array(coinex, coinexSymbols)
-    mxcTuple = tuple_array(mxc, mxcSymbols)
+    #initTuple = tuple_array(coinex, coinexSymbols)
+    #mxcTuple = tuple_array(mxc, mxcSymbols)
+    initTuple = tuple_array(mxc, mxcSymbols)
     kucoinTuple = tuple_array(kucoin, kucoinSymbols)
     bkexTuple = tuple_array(bkex, bkexSymbols)
     binanceTuple = tuple_array(binance, binanceSymbols)
     bithumbTuple = tuple_array(bithumb, bithumbSymbols)
-    bilaxyTuple = tuple_array(bilaxy, bilaxySymbols)
+   # bilaxyTuple = tuple_array(bilaxy, bilaxySymbols)
     liquidTuple = tuple_array(liquid, liquidSymbols)
     
     # add uniques to array
-    initTuple = add_uniques_to_array(initTuple, mxcTuple)
+    #initTuple = add_uniques_to_array(initTuple, mxcTuple)
     initTuple = add_uniques_to_array(initTuple, kucoinTuple)
     initTuple = add_uniques_to_array(initTuple, bkexTuple)
     initTuple = add_uniques_to_array(initTuple, binanceTuple)
     initTuple = add_uniques_to_array(initTuple, bithumbTuple)
-    initTuple = add_uniques_to_array(initTuple, bilaxyTuple)
+    #initTuple = add_uniques_to_array(initTuple, bilaxyTuple)
     initTuple = add_uniques_to_array(initTuple, liquidTuple)
     
     # create 3d array        
@@ -219,12 +244,12 @@ if __name__ == '__main__':
 
     # add elements to arrays
     arrays = add_same_elements(arrays, initTuple)
-    arrays = add_same_elements(arrays, mxcTuple)
+   # arrays = add_same_elements(arrays, mxcTuple)
     arrays = add_same_elements(arrays, kucoinTuple)
     arrays = add_same_elements(arrays, bkexTuple)
     arrays = add_same_elements(arrays, binanceTuple)
     arrays = add_same_elements(arrays, bithumbTuple)
-    arrays = add_same_elements(arrays, bilaxyTuple)
+   # arrays = add_same_elements(arrays, bilaxyTuple)
     arrays = add_same_elements(arrays, liquidTuple)
     
     toRemove = []
@@ -239,16 +264,26 @@ if __name__ == '__main__':
     stocks = []
     
     print("START " + str(datetime.now()))
-    #TODO spread?
+
+    #10 mins without coinex
+    #jutro 2 gieldy
+    
     #TODO handle not active coins
     while True:
         for i in range(len(arrays)):
             currentPair = arrays[i][0][1]
             highSellObj = get_highSellObj(arrays[i], currentPair)
+            if highSellObj == None:
+                continue
             highSell = highSellObj.get_pair_sell(currentPair)
             lowBuyObj = get_lowBuyObj(arrays[i], currentPair)
+            if lowBuyObj == None:
+                continue
             lowBuy = lowBuyObj.get_pair_buy(currentPair)
-
+            
+            if(get_highestSpread(arrays[i], currentPair) > 0.1 and get_lowestSpread(arrays[i], currentPair) < 0.02):
+                print("Spread \n " + str(arrays[i]))
+            
             if (len(arrays[i]) > 1) and lowBuy > 0:
                 dif = highSell - lowBuy
                 perc = dif / lowBuy
@@ -271,18 +306,18 @@ if __name__ == '__main__':
                         continue
                     
                     tradesSim = TradesSimulation(toBuy, ask, toSell, bid)
-                    print(tradesSim.averageAskPrice)
+                   # print(tradesSim.averageAskPrice)
                     tradesSim.count_Asks()
-                    print(tradesSim.averageAskPrice)
+                   # print(tradesSim.averageAskPrice)
                     tradesSim.count_Bids()
                     
-                    if(tradesSim.averageAskPrice <= 0 and tradesSim.averageBidPrice <= 0):
+                    if(tradesSim.averageAskPrice <= 0 or tradesSim.averageBidPrice <= 0):
                         continue
                       
                     finalPercent = tradesSim.count_Percent() 
                 
                     if(finalPercent > 0.03) and ((lowBuyObj.has_WD_def() and highSellObj.has_WD_def() and highSellObj.can_deposit(currentPair) and lowBuyObj.can_withdraw(currentPair)) or (lowBuyObj.has_WD_def() and not(highSellObj.has_WD_def()) and lowBuyObj.can_withdraw(currentPair)) or (highSellObj.has_WD_def() and not(lowBuyObj.has_WD_def()) and highSellObj.can_deposit(currentPair))):
-                        print("%%%%%%%%%%%%%%%%%%%%%%%%%%\nPercentage difference: \n" + (str)(perc) + (str)(currentPair))
+                        print("%%%%%%%%%%%%%%%%%%%%%%%%%%\nPercentage difference: \n" + (str)(perc) + "\n" + (str)(currentPair))
                         if(tradesSim.outOfBid == True):
                             print("out of bid")
                         if(tradesSim.outOfAsk == True):
@@ -320,4 +355,4 @@ if __name__ == '__main__':
         
             numbers = []
             stocks = []
-    
+        #print("End " + str(datetime.now()))

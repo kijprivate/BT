@@ -61,18 +61,15 @@ def get_symbols():
             params=params
     )
     var = complex_json.loads(response.data)
-    s = (str)(var)
-
+    keyList = list(var.keys())
+    valueList = list(var.values())
     array = []
-    while True:
-        sAppend = find_between(s, '\'', '\': {')
-        sAppend = sAppend.replace('_',"")
-        s = s.split("closed\': ",1)[1]
-        if("USD" in sAppend) or ("HOT" in sAppend) or ("ONG" in sAppend) or ("GRINBTC" in sAppend) or ("COMP" in sAppend) or ("HOT" in sAppend):
+    for x in range(len(keyList)):
+        sAppend = keyList[x]
+        if("USD" in sAppend) or ("HOT" in sAppend) or ("ONG" in sAppend) or ("GRINBTC" in sAppend) or ("COMP" in sAppend) or ("HOT" in sAppend) or valueList[x].get('trade_enabled') == False:
             continue
         array.append(sAppend)
-        if find_between(s, '\'', '\': {') == '':
-            return array
+    return array
         
 def get_pair(pair):
     request_client = RequestClient()
@@ -130,7 +127,7 @@ def get_orders_bids(pair, limit):
     return get_orders(pair, limit).get('bids')
 
 def has_WD_def():
-    return True
+    return False
 
 def can_deposit(pair):
     request_client = RequestClient()
@@ -161,7 +158,7 @@ def can_withdraw(pair):
     return (bool)(var.get(pair).get('withdraw_enabled'))
 
 def has_fee_def():
-    return True
+    return False
 
 def withdraw_fee(pair):
     request_client = RequestClient()
