@@ -61,7 +61,7 @@ def get_symbols():
     var = complex_json.loads(response.data).get("symbols")
     newarr = []
     for x in range(len(var)):
-        if("USDT" in var[x].get("symbol")) or ("BTCRUB" in var[x].get("symbol")) or ("BNB" in var[x].get("symbol")) or ("EUR" in var[x].get("symbol")) or ("USD" in var[x].get("symbol")) or ("GRINBTC" in var[x].get("symbol")) or ("HOT" in var[x].get("symbol")) or ("NRG" in var[x].get("symbol")):
+        if("BTCRUB" in var[x].get("symbol")) or ("BNB" in var[x].get("symbol")) or ("EUR" in var[x].get("symbol")) or ("USD" in var[x].get("symbol")) or ("GRINBTC" in var[x].get("symbol")) or ("HOT" in var[x].get("symbol")) or ("NRG" in var[x].get("symbol")):
             continue
         newarr.append(var[x].get("symbol"))
 

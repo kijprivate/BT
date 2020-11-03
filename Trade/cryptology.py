@@ -17,9 +17,9 @@ class RequestClient(object):
     }
 
     def __init__(self, headers={}):
-        self.access_id = '49B5C9BEF8534CB4BACC60414279ED69'      # replace
-        self.secret_key = '1B551E901CB646809EB6526483BEEE866DB5AE10589881C1'     # replace
-        self.url = 'https://api.coinex.com'
+        self.access_id = 'cfxoWsU+RO2NzdbQF6FhrA=='      # replace
+        self.secret_key = 'lOX/jIcKVhIaAcpHzhdK4ydqCqOyDOHzTzNcPhv3gWU='     # replace
+        self.url = 'https://api.cryptology.com'
         self.headers = self.__headers
         self.headers.update(headers)
 
@@ -34,8 +34,8 @@ class RequestClient(object):
         return token
 
     def set_authorization(self, params):
-        params['access_id'] = self.access_id
-        params['tonce'] = int(time.time()*1000)
+        #params['Access-Key'] = self.access_id
+        #params['Nonce'] = int(time.time()*1000)
         self.headers['AUTHORIZATION'] = self.get_sign(params, self.secret_key)
 
     def request(self, method, url, params={}, data='', json={}):
@@ -67,61 +67,85 @@ def get_symbols():
     params = {}
     response = request_client.request(
             'GET',
-            '{url}/v1/market/list'.format(url=request_client.url),
+            '{url}/v1/public/get-trade-pairs'.format(url=request_client.url),
             params=params
     )
-    var = []
-    var = complex_json.loads(response.data).get('data', {})
+    var = complex_json.loads(response.data).get('data')
     newarr = []
-    for x in var:
-        if("GRINBTC" in x) or ("HOT" in x) or ("NRG" in x):
+    for x in range(len(var)):
+        sAppend = var[x].get('trade_pair')
+        if("EUR" in sAppend):
             continue
-        newarr.append(x)
+        newarr.append(sAppend)
 
     return newarr
-    
-def get_pair(pair):
-    request_client = RequestClient()
-    params = {
-        'market': pair
-    }
-    response = request_client.request(
-            'GET',
-            '{url}/v1/market/ticker'.format(url=request_client.url),
-            params=params
-    )
-    var = complex_json.loads(response.data)
-    return var
 
 def get_pair_sell(pair):
-    return (float)(get_pair(pair).get('data', {}).get('ticker').get('sell'))
-
-def get_pair_buy(pair):
-    return (float)(get_pair(pair).get('data', {}).get('ticker').get('buy'))
-
-def get_orders(pair, limit):
+    end = pair[-3:]
+    start = pair[:-3]
+    pair = start + "_" + end
     request_client = RequestClient()
     params = {
-        'market': pair,
-        'merge': 0,
-        'limit': limit
+        'trade_pair': pair
     }
     response = request_client.request(
             'GET',
-            '{url}/v1/market/depth'.format(url=request_client.url),
+            '{url}/v1/public/get-order-book'.format(url=request_client.url),
             params=params
     )
-    var = complex_json.loads(response.data)
-    return var.get('data', {})
+    var = complex_json.loads(response.data).get("data").get("asks")[0][0]
+    return var
+
+def get_pair_buy(pair):
+    end = pair[-3:]
+    start = pair[:-3]
+    pair = start + "_" + end
+    request_client = RequestClient()
+    params = {
+        'trade_pair': pair
+    }
+    response = request_client.request(
+            'GET',
+            '{url}/v1/public/get-order-book'.format(url=request_client.url),
+            params=params
+    )
+    var = complex_json.loads(response.data).get("data").get("bids")[0][0]
+    return var
 
 def get_orders_asks(pair, limit):
-    return get_orders(pair, limit).get('asks')
+    end = pair[-3:]
+    start = pair[:-3]
+    pair = start + "_" + end
+    request_client = RequestClient()
+    params = {
+        'trade_pair': pair
+    }
+    response = request_client.request(
+            'GET',
+            '{url}/v1/public/get-order-book'.format(url=request_client.url),
+            params=params
+    )
+    var = complex_json.loads(response.data).get("data").get("asks")
+    return var
 
 def get_orders_bids(pair, limit):
-    return get_orders(pair, limit).get('bids')
+    end = pair[-3:]
+    start = pair[:-3]
+    pair = start + "_" + end
+    request_client = RequestClient()
+    params = {
+        'trade_pair': pair
+    }
+    response = request_client.request(
+            'GET',
+            '{url}/v1/public/get-order-book'.format(url=request_client.url),
+            params=params
+    )
+    var = complex_json.loads(response.data).get("data").get("bids")
+    return var
 
 def has_WD_def():
-    return True
+    return False
 
 def can_deposit(pair):
     request_client = RequestClient()
@@ -152,7 +176,7 @@ def can_withdraw(pair):
     return (bool)(var.get('data', {}).get(pair).get('can_withdraw'))
 
 def has_fee_def():
-    return True
+    return False
 
 def withdraw_fee(pair):
     request_client = RequestClient()
@@ -179,25 +203,3 @@ def find_between( s, first, last ):
     except ValueError:
         return ""
 
-
-
-
-def get_amount(pair):
-    request_client = RequestClient()
-    pair = pair[:-3]
-    params = {
-    }
-    response = request_client.request(
-            'GET',
-            '{url}/v1/balance/info'.format(url=request_client.url),
-            params=params
-    )
-    var = complex_json.loads(response.data)
-    p = var.get('data', {}).get(pair)
-    if p is None:
-        return 0 
-    else:
-        return (float)(p.get('available'))
-    
-def get_pair_last(pair):
-    return (float)(get_pair(pair).get('data', {}).get('ticker').get('last'))

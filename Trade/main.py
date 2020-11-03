@@ -6,7 +6,7 @@ import bilaxy as bilaxy
 import liquid as liquid
 import binance as binance
 import bithumb as bithumb
-import json
+import cryptology as cryptology
 #not working
 #import coinsuper as coinsuper #connection timeout? maybe easy fix
 #import huobi as huobi #signature
@@ -209,6 +209,7 @@ class TradesSimulation():
         return substract / self.averageAskPrice
     
 if __name__ == '__main__':
+
     # get all symbols from market
     #coinexSymbols = coinex.get_symbols()
     mxcSymbols = mxc.get_symbols()
@@ -218,6 +219,7 @@ if __name__ == '__main__':
     bithumbSymbols = bithumb.get_symbols()
     #bilaxySymbols = bilaxy.get_symbols()
     liquidSymbols = liquid.get_symbols()
+    cryptologySymbols = cryptology.get_symbols()
     
     # group as pair of values - name of market and currency pair
     #initTuple = tuple_array(coinex, coinexSymbols)
@@ -229,6 +231,7 @@ if __name__ == '__main__':
     bithumbTuple = tuple_array(bithumb, bithumbSymbols)
    # bilaxyTuple = tuple_array(bilaxy, bilaxySymbols)
     liquidTuple = tuple_array(liquid, liquidSymbols)
+    cryptologyTuple = tuple_array(cryptology, cryptologySymbols)
     
     # add uniques to array
     #initTuple = add_uniques_to_array(initTuple, mxcTuple)
@@ -238,6 +241,7 @@ if __name__ == '__main__':
     initTuple = add_uniques_to_array(initTuple, bithumbTuple)
     #initTuple = add_uniques_to_array(initTuple, bilaxyTuple)
     initTuple = add_uniques_to_array(initTuple, liquidTuple)
+    initTuple = add_uniques_to_array(initTuple, cryptologyTuple)
     
     # create 3d array        
     arrays = [[initTuple[i]] for i in range(len(initTuple))]
@@ -251,6 +255,7 @@ if __name__ == '__main__':
     arrays = add_same_elements(arrays, bithumbTuple)
    # arrays = add_same_elements(arrays, bilaxyTuple)
     arrays = add_same_elements(arrays, liquidTuple)
+    arrays = add_same_elements(arrays, cryptologyTuple)
     
     toRemove = []
     for i in range(len(arrays)):
@@ -265,9 +270,9 @@ if __name__ == '__main__':
     
     print("START " + str(datetime.now()))
 
-    #10 mins without coinex
-    #jutro 2 gieldy
-    
+    #10,17 mins without coinex
+    #TODO replace USD with smth that omit USDT
+    #TODO handle '-' and '_' in 4 digit pairs (USDT)
     #TODO handle not active coins
     while True:
         for i in range(len(arrays)):
@@ -281,7 +286,7 @@ if __name__ == '__main__':
                 continue
             lowBuy = lowBuyObj.get_pair_buy(currentPair)
             
-            if(get_highestSpread(arrays[i], currentPair) > 0.1 and get_lowestSpread(arrays[i], currentPair) < 0.02):
+            if(get_highestSpread(arrays[i], currentPair) > 0.05 and get_lowestSpread(arrays[i], currentPair) < 0.02):
                 print("Spread \n " + str(arrays[i]))
             
             if (len(arrays[i]) > 1) and lowBuy > 0:
