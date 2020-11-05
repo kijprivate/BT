@@ -2,15 +2,18 @@ import coinex as coinex
 import mxc as mxc
 import kucoin as kucoin
 import bkex as bkex
-import bilaxy as bilaxy
-import liquid as liquid
 import binance as binance
 import bithumb as bithumb
 import cryptology as cryptology
+import bitrue as bitrue
 #not working
 #import coinsuper as coinsuper #connection timeout? maybe easy fix
 #import huobi as huobi #signature
 #import okex as okex #problems with signature even with api sample
+
+#verification required
+#import bilaxy as bilaxy
+#import liquid as liquid
 
 from datetime import datetime
 import time
@@ -92,7 +95,7 @@ def get_lowBuyObj(currentArray, currentPair):
 def get_highestSpread(currentArray, currentPair):
     highSell = 0
     for i in range(len(currentArray)):
-        if((currentArray[i][0].get_pair_sell(currentPair) == 0) or currentArray[i][0].get_pair_buy(currentPair)):
+        if((currentArray[i][0].get_pair_sell(currentPair) == 0) or currentArray[i][0].get_pair_buy(currentPair) == 0):
             continue
         val = (currentArray[i][0].get_pair_sell(currentPair) - currentArray[i][0].get_pair_buy(currentPair)) / currentArray[i][0].get_pair_sell(currentPair)
         if(val > highSell):
@@ -103,7 +106,7 @@ def get_highestSpread(currentArray, currentPair):
 def get_lowestSpread(currentArray, currentPair):
     lowBuy = 9999999
     for i in range(len(currentArray)):
-        if((currentArray[i][0].get_pair_sell(currentPair) == 0) or currentArray[i][0].get_pair_buy(currentPair)):
+        if((currentArray[i][0].get_pair_sell(currentPair) == 0) or currentArray[i][0].get_pair_buy(currentPair) == 0):
             continue
         val = (currentArray[i][0].get_pair_sell(currentPair) - currentArray[i][0].get_pair_buy(currentPair)) / currentArray[i][0].get_pair_sell(currentPair)
         if(val < lowBuy):
@@ -209,38 +212,37 @@ class TradesSimulation():
         return substract / self.averageAskPrice
     
 if __name__ == '__main__':
-
+   # print(bitrue.get_symbols())
+    print("START " + str(datetime.now()))
+    #print(bitrue.get_pair_sell("ETCBTC"))
+    print("START " + str(datetime.now()))
+    print("START " + str(datetime.now()))
+    #print(coinex.get_pair_sell("ETCBTC"))
+    print("START " + str(datetime.now()))
     # get all symbols from market
-    #coinexSymbols = coinex.get_symbols()
+    coinexSymbols = coinex.get_symbols()
     mxcSymbols = mxc.get_symbols()
     kucoinSymbols = kucoin.get_symbols()
     bkexSymbols = bkex.get_symbols()
     binanceSymbols = binance.get_symbols()
     bithumbSymbols = bithumb.get_symbols()
-    #bilaxySymbols = bilaxy.get_symbols()
-    liquidSymbols = liquid.get_symbols()
     cryptologySymbols = cryptology.get_symbols()
     
     # group as pair of values - name of market and currency pair
-    #initTuple = tuple_array(coinex, coinexSymbols)
-    #mxcTuple = tuple_array(mxc, mxcSymbols)
-    initTuple = tuple_array(mxc, mxcSymbols)
+    initTuple = tuple_array(coinex, coinexSymbols)
+    mxcTuple = tuple_array(mxc, mxcSymbols)
     kucoinTuple = tuple_array(kucoin, kucoinSymbols)
     bkexTuple = tuple_array(bkex, bkexSymbols)
     binanceTuple = tuple_array(binance, binanceSymbols)
     bithumbTuple = tuple_array(bithumb, bithumbSymbols)
-   # bilaxyTuple = tuple_array(bilaxy, bilaxySymbols)
-    liquidTuple = tuple_array(liquid, liquidSymbols)
     cryptologyTuple = tuple_array(cryptology, cryptologySymbols)
     
     # add uniques to array
-    #initTuple = add_uniques_to_array(initTuple, mxcTuple)
+    initTuple = add_uniques_to_array(initTuple, mxcTuple)
     initTuple = add_uniques_to_array(initTuple, kucoinTuple)
     initTuple = add_uniques_to_array(initTuple, bkexTuple)
     initTuple = add_uniques_to_array(initTuple, binanceTuple)
     initTuple = add_uniques_to_array(initTuple, bithumbTuple)
-    #initTuple = add_uniques_to_array(initTuple, bilaxyTuple)
-    initTuple = add_uniques_to_array(initTuple, liquidTuple)
     initTuple = add_uniques_to_array(initTuple, cryptologyTuple)
     
     # create 3d array        
@@ -248,13 +250,11 @@ if __name__ == '__main__':
 
     # add elements to arrays
     arrays = add_same_elements(arrays, initTuple)
-   # arrays = add_same_elements(arrays, mxcTuple)
+    arrays = add_same_elements(arrays, mxcTuple)
     arrays = add_same_elements(arrays, kucoinTuple)
     arrays = add_same_elements(arrays, bkexTuple)
     arrays = add_same_elements(arrays, binanceTuple)
     arrays = add_same_elements(arrays, bithumbTuple)
-   # arrays = add_same_elements(arrays, bilaxyTuple)
-    arrays = add_same_elements(arrays, liquidTuple)
     arrays = add_same_elements(arrays, cryptologyTuple)
     
     toRemove = []
@@ -286,8 +286,8 @@ if __name__ == '__main__':
                 continue
             lowBuy = lowBuyObj.get_pair_buy(currentPair)
             
-            if(get_highestSpread(arrays[i], currentPair) > 0.05 and get_lowestSpread(arrays[i], currentPair) < 0.02):
-                print("Spread \n " + str(arrays[i]))
+            #if(get_highestSpread(arrays[i], currentPair) > 0.1 and get_lowestSpread(arrays[i], currentPair) < 0.02):
+            #    print("Spread \n " + str(arrays[i]))
             
             if (len(arrays[i]) > 1) and lowBuy > 0:
                 dif = highSell - lowBuy
@@ -360,4 +360,4 @@ if __name__ == '__main__':
         
             numbers = []
             stocks = []
-        #print("End " + str(datetime.now()))
+        print("End " + str(datetime.now()))

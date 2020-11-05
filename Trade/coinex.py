@@ -42,24 +42,16 @@ class RequestClient(object):
         method = method.upper()
         if method in ['GET', 'DELETE']:
             self.set_authorization(params)
-            try:
-                result = http.request(method, url, fields=params, headers=self.headers)
-                return result
-            except Exception as inst:
-                print(type(inst))
-                print("coinex")
+            result = http.request(method, url, fields=params, headers=self.headers)
+            return result
             
         else:
             if data:
                 json.update(complex_json.loads(data))
             self.set_authorization(json)
             encoded_data = complex_json.dumps(json).encode('utf-8')
-            try:
-                result = http.request(method, url, body=encoded_data, headers=self.headers)
-                return result
-            except Exception as inst:
-                print(type(inst))
-                print("coinex")
+            result = http.request(method, url, body=encoded_data, headers=self.headers)
+            return result
         
 
 def get_symbols():
