@@ -74,8 +74,12 @@ def get_pair_sell(pair):
             '{url}/api/v1/depth'.format(url=request_client.url),
             params=params
     )
-    var = complex_json.loads(response.data).get("asks")[0][0]
-    return var
+    ask = complex_json.loads(response.data).get("asks")
+    
+    if(len(ask) > 0):
+        return (float)(ask[0][0])
+    else:
+        return 0
 
 def get_pair_buy(pair):
     request_client = RequestClient()
@@ -87,8 +91,12 @@ def get_pair_buy(pair):
             '{url}/api/v1/depth'.format(url=request_client.url),
             params=params
     )
-    var = complex_json.loads(response.data).get("bids")[0][0]
-    return var
+    bid = complex_json.loads(response.data).get("bids")
+    
+    if(len(bid) > 0):
+        return (float)(bid[0][0])
+    else:
+        return 999999999
 
 def get_orders_asks(pair, limit):
     request_client = RequestClient()

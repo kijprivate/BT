@@ -6,10 +6,11 @@ import binance as binance
 import bithumb as bithumb
 import cryptology as cryptology
 import bitrue as bitrue
+import bibox as bibox
 #not working
 #import coinsuper as coinsuper #connection timeout? maybe easy fix
 #import huobi as huobi #signature
-#import okex as okex #problems with signature even with api sample
+#import okex as okex #SCAM ALERT???? #problems with signature even with api sample
 
 #verification required
 #import bilaxy as bilaxy
@@ -152,6 +153,7 @@ class TradesSimulation():
         self.askIndex = 0
         self.outOfAsk = False
         while(self.toBuy > 0):
+            #print("LOOP BUY")
             if self.askIndex < len(self.askArray) and (self.toBuy > (float)(self.askArray[self.askIndex][1])):
                 boughts.append((float)(self.askArray[self.askIndex][0]))
                 boughtsAm.append((float)(self.askArray[self.askIndex][1]))
@@ -183,6 +185,7 @@ class TradesSimulation():
         self.bidIndex = 0   
         self.outOfBid = False
         while(self.toSell > 0):
+            #print("LOOP SELL")
             if self.bidIndex < len(self.bidArray) and (self.toSell > (float)(self.bidArray[self.bidIndex][1])):
                 sold.append((float)(self.bidArray[self.bidIndex][0]))
                 soldAm.append((float)(self.bidArray[self.bidIndex][1]))
@@ -209,16 +212,10 @@ class TradesSimulation():
 
     def count_Percent(self):
         substract = self.averageBidPrice - self.averageAskPrice
-        return substract / self.averageAskPrice
-    
+        return substract / self.averageAskPrice   
+        
 if __name__ == '__main__':
-   # print(bitrue.get_symbols())
-    print("START " + str(datetime.now()))
-    #print(bitrue.get_pair_sell("ETCBTC"))
-    print("START " + str(datetime.now()))
-    print("START " + str(datetime.now()))
-    #print(coinex.get_pair_sell("ETCBTC"))
-    print("START " + str(datetime.now()))
+
     # get all symbols from market
     coinexSymbols = coinex.get_symbols()
     mxcSymbols = mxc.get_symbols()
@@ -226,7 +223,9 @@ if __name__ == '__main__':
     bkexSymbols = bkex.get_symbols()
     binanceSymbols = binance.get_symbols()
     bithumbSymbols = bithumb.get_symbols()
-    cryptologySymbols = cryptology.get_symbols()
+    #cryptologySymbols = cryptology.get_symbols()
+    bitrueSymbols = bitrue.get_symbols()
+    biboxSymbols = bibox.get_symbols()
     
     # group as pair of values - name of market and currency pair
     initTuple = tuple_array(coinex, coinexSymbols)
@@ -235,7 +234,9 @@ if __name__ == '__main__':
     bkexTuple = tuple_array(bkex, bkexSymbols)
     binanceTuple = tuple_array(binance, binanceSymbols)
     bithumbTuple = tuple_array(bithumb, bithumbSymbols)
-    cryptologyTuple = tuple_array(cryptology, cryptologySymbols)
+    #cryptologyTuple = tuple_array(cryptology, cryptologySymbols)
+    bitrueTuple = tuple_array(bitrue, bitrueSymbols)
+    biboxTuple = tuple_array(bibox, biboxSymbols)
     
     # add uniques to array
     initTuple = add_uniques_to_array(initTuple, mxcTuple)
@@ -243,7 +244,9 @@ if __name__ == '__main__':
     initTuple = add_uniques_to_array(initTuple, bkexTuple)
     initTuple = add_uniques_to_array(initTuple, binanceTuple)
     initTuple = add_uniques_to_array(initTuple, bithumbTuple)
-    initTuple = add_uniques_to_array(initTuple, cryptologyTuple)
+    #initTuple = add_uniques_to_array(initTuple, cryptologyTuple)
+    initTuple = add_uniques_to_array(initTuple, bitrueTuple)
+    initTuple = add_uniques_to_array(initTuple, biboxTuple)
     
     # create 3d array        
     arrays = [[initTuple[i]] for i in range(len(initTuple))]
@@ -255,7 +258,9 @@ if __name__ == '__main__':
     arrays = add_same_elements(arrays, bkexTuple)
     arrays = add_same_elements(arrays, binanceTuple)
     arrays = add_same_elements(arrays, bithumbTuple)
-    arrays = add_same_elements(arrays, cryptologyTuple)
+    #arrays = add_same_elements(arrays, cryptologyTuple)
+    arrays = add_same_elements(arrays, bitrueTuple)
+    arrays = add_same_elements(arrays, biboxTuple)
     
     toRemove = []
     for i in range(len(arrays)):
@@ -268,13 +273,14 @@ if __name__ == '__main__':
     numbers = []
     stocks = []
     
-    print("START " + str(datetime.now()))
+    #print("START " + str(datetime.now()))
 
     #10,17 mins without coinex
     #TODO replace USD with smth that omit USDT
-    #TODO handle '-' and '_' in 4 digit pairs (USDT)
+    #TODO handle '-' and '_' in 4 digit pairs (USDT), can depo/withd
     #TODO handle not active coins
     while True:
+        print("START " + str(datetime.now()))
         for i in range(len(arrays)):
             currentPair = arrays[i][0][1]
             highSellObj = get_highSellObj(arrays[i], currentPair)
@@ -288,7 +294,7 @@ if __name__ == '__main__':
             
             #if(get_highestSpread(arrays[i], currentPair) > 0.1 and get_lowestSpread(arrays[i], currentPair) < 0.02):
             #    print("Spread \n " + str(arrays[i]))
-            
+            #print("P " + str(datetime.now()))
             if (len(arrays[i]) > 1) and lowBuy > 0:
                 dif = highSell - lowBuy
                 perc = dif / lowBuy
@@ -360,4 +366,5 @@ if __name__ == '__main__':
         
             numbers = []
             stocks = []
+            #print("TU " + str(datetime.now()))
         print("End " + str(datetime.now()))

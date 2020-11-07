@@ -41,7 +41,7 @@ class RequestClient(object):
     def request(self, method, url, params={}, data='', json={}):
         method = method.upper()
         if method in ['GET', 'DELETE']:
-            self.set_authorization(params)
+            #self.set_authorization(params)
             result = http.request(method, url, fields=params, headers=self.headers)
             return result
             

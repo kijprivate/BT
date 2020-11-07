@@ -76,6 +76,7 @@ def get_symbols():
         sAppend = var[x].get('trade_pair')
         if("EUR" in sAppend):
             continue
+        sAppend = sAppend.replace('_',"")
         newarr.append(sAppend)
 
     return newarr
@@ -93,8 +94,12 @@ def get_pair_sell(pair):
             '{url}/v1/public/get-order-book'.format(url=request_client.url),
             params=params
     )
-    var = complex_json.loads(response.data).get("data").get("asks")[0][0]
-    return var
+    print(pair)
+    ask = complex_json.loads(response.data).get("data").get("asks")
+    if(len(ask) > 0):
+        return (float)(ask[0][0])
+    else:
+        return 0
 
 def get_pair_buy(pair):
     end = pair[-3:]
@@ -109,8 +114,11 @@ def get_pair_buy(pair):
             '{url}/v1/public/get-order-book'.format(url=request_client.url),
             params=params
     )
-    var = complex_json.loads(response.data).get("data").get("bids")[0][0]
-    return var
+    bid = complex_json.loads(response.data).get("data").get("bids")
+    if(len(bid) > 0):
+        return (float)(bid[0][0])
+    else:
+        return 999999999
 
 def get_orders_asks(pair, limit):
     end = pair[-3:]
