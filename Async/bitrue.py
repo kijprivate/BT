@@ -64,6 +64,27 @@ def get_symbols():
 
     return newarr
 
+def getSymbolsEndpoint():
+    return 'https://www.bitrue.com/api/v1/exchangeInfo'
+
+def getSymbolResponse(response):
+    newArr = []
+    for pair in response.get("symbols"):
+        if ("USD" in pair.get("symbol")) or pair.get('status') != 'TRADING':
+            continue
+        toAdd = pair.get("symbol")
+        newArr.append(toAdd)
+    return newArr
+
+def getPairPriceEndpoint(pair):
+    return '{url}/api/v1/depth?symbol={p}'.format(url='https://www.bitrue.com', p = pair)
+
+def getAsksResponse(response):
+    return response.get("asks")
+
+def getBidsResponse(response):
+    return response.get("bids")
+
 def get_pair_sell(pair):
     request_client = RequestClient()
     params = {

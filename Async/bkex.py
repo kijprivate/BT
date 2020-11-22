@@ -73,7 +73,32 @@ def get_symbols():
         if find_between(s, 'pair\': \'', '\', \'supportTrade') == '':
             del array[-1]
             return array
-        
+
+def getSymbolsEndpoint():
+    return 'https://api.bkex.com/v1/exchangeInfo'
+
+def getSymbolResponse(response):
+    newArr = []
+    for pair in response.get("data").get("pairs"):
+        if ("USD" in pair.get("pair")) or pair.get('supportTrade') == False:
+            continue
+        toAdd = pair.get("pair")
+        toAdd = toAdd.replace('_',"")
+        newArr.append(toAdd)
+    return newArr
+
+def getPairPriceEndpoint(pair):
+    end = pair[-3:]
+    start = pair[:-3]
+    pair = start + "_" + end
+    return '{url}/v2/q/depth?symbol={p}&depth=20'.format(url='https://api.bkex.com', p = pair)
+
+def getAsksResponse(response):
+    return response.get("data").get("ask")
+
+def getBidsResponse(response):
+    return response.get("data").get("bid")
+
 def get_pair(pair):
     request_client = RequestClient()
     params = {

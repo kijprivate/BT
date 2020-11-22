@@ -75,7 +75,59 @@ def get_symbols():
         array.append(sAppend)
         if find_between(s, 'symbol\': \'', '\', \'state') == '':
             return array
-        
+
+def getSymbolsEndpoint():
+    return 'https://www.mxc.co/open/api/v2/market/symbols?api_key=mx0ivWxFZE2Bxg3y9y'
+
+def getSymbolResponse(response):
+    newArr = []
+    for pair in response.get("data"):
+        if ("USD" in pair.get("symbol")) or pair.get('state') != "ENABLED":
+            continue
+        toAdd = pair.get("symbol")
+        toAdd = toAdd.replace('_',"")
+        newArr.append(toAdd)
+    return newArr
+
+def getPairPriceEndpoint(pair):
+    end = pair[-3:]
+    start = pair[:-3]
+    pair = start + "_" + end
+    return '{url}/open/api/v2/market/depth?api_key=mx0ivWxFZE2Bxg3y9y&symbol={p}&depth=20'.format(url='https://www.mxc.co', p = pair)
+
+def getAsksResponse(response):
+    #print(response)
+    if(response.get("code") == 429):
+        arr = [[0 for i in range(2)] for i in range(20)]
+        for x in range(20):
+            arr[x][0] = 0
+            arr[x][1] = 0
+        return arr
+    asks = response.get("data").get("asks")
+
+    arr = [[0 for i in range(2)] for i in range(20)]
+    for x in range(len(asks)):
+        arr[x][0] = (float)(asks[x].get('price'))
+        arr[x][1] = (float)(asks[x].get('quantity'))
+    return arr
+
+def getBidsResponse(response):
+    #print(response)
+    if(response.get("code") == 429):
+        arr = [[0 for i in range(2)] for i in range(20)]
+        for x in range(20):
+            arr[x][0] = 0
+            arr[x][1] = 0
+        return arr
+
+    bids = response.get("data").get("bids")
+
+    arr = [[0 for i in range(2)] for i in range(20)]
+    for x in range(len(bids)):
+        arr[x][0] = (float)(bids[x].get('price'))
+        arr[x][1] = (float)(bids[x].get('quantity'))
+    return arr
+
 def get_pair(pair):
     request_client = RequestClient()
     params = {

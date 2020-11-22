@@ -8,6 +8,11 @@ import coinex as coinex
 import binance as binance
 import kucoin as kucoin
 import bithumb as bithumb
+import bitrue as bitrue
+import bibox as bibox
+import bkex as bkex
+import mxc as mxc
+import probit as probit
 
 class TradesSimulation():
     def __init__(self, toBuy, askArray, toSell, bidArray):
@@ -145,7 +150,7 @@ toRemoveFromArrays = []
 
 async def fetchSymbols(session, url, stock):
     async with session.get(url) as response:
-        json_response = await response.json()
+        json_response = await response.json(content_type=None)
         symbolResponses.append(Response(stock, json_response))
 
 async def taskSymbols():
@@ -154,6 +159,11 @@ async def taskSymbols():
         tasks.append(fetchSymbols(session, binance.getSymbolsEndpoint(), binance))
         tasks.append(fetchSymbols(session, kucoin.getSymbolsEndpoint(), kucoin))
         tasks.append(fetchSymbols(session, bithumb.getSymbolsEndpoint(), bithumb))
+        tasks.append(fetchSymbols(session, bitrue.getSymbolsEndpoint(), bitrue))
+        tasks.append(fetchSymbols(session, bibox.getSymbolsEndpoint(), bibox))
+        tasks.append(fetchSymbols(session, bkex.getSymbolsEndpoint(), bkex))
+        tasks.append(fetchSymbols(session, mxc.getSymbolsEndpoint(), mxc))
+        #tasks.append(fetchSymbols(session, probit.getSymbolsEndpoint(), probit))
         await asyncio.gather(*tasks)
 
 async def fetchAsks(session, url, stock, marketPair):
@@ -198,6 +208,7 @@ def takeBid(elem):
 
 if __name__ == "__main__":
     startTime = time.time()
+    allTime = time.time()
     asyncio.run(taskSymbols())
     print(time.time() - startTime)
 
@@ -250,7 +261,6 @@ if __name__ == "__main__":
     for i in range(len(arrays)):
         currentPair = arrays[i][0].pair
 
-        #print(arrays[i][0].bestBid)
         arrays[i].sort(key = takeBid, reverse = True)
         highSellObj = arrays[i][0]
         highSell = (float)(arrays[i][0].bestBid)
@@ -259,6 +269,9 @@ if __name__ == "__main__":
         lowBuyObj = arrays[i][0]
         lowBuy = (float)(arrays[i][0].bestAsk)
         
+        if(lowBuy == 0 or highSell == 0):
+            continue
+
         dif = highSell - lowBuy
         perc = dif / lowBuy
         if(perc > 0.03):
@@ -305,3 +318,4 @@ if __name__ == "__main__":
                 print((str)(datetime.now()) + "\nRealny zysk\n" + (str)(finalPercent) + "\n%%%%%%%%%%%%%%%%%%%%%%%%%%")
     
     test()
+    print(time.time() - allTime)

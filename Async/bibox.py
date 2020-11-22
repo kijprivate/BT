@@ -71,6 +71,43 @@ def get_symbols():
 
     return newarr
 
+def getSymbolsEndpoint():
+    return 'https://api.bibox.com/v3/mdata/pairList'
+
+def getSymbolResponse(response):
+    newArr = []
+    for pair in response.get("result"):
+        if ("USD" in pair.get("pair")) or (int)(pair.get('is_hide')) == 1:
+            continue
+        toAdd = pair.get("pair")
+        toAdd = toAdd.replace('_',"")
+        newArr.append(toAdd)
+    return newArr
+
+def getPairPriceEndpoint(pair):
+    end = pair[-3:]
+    start = pair[:-3]
+    pair = start + "_" + end
+    return '{url}/v3/mdata/depth?pair={p}&size=20'.format(url='https://api.bibox.com', p = pair)
+
+def getAsksResponse(response):
+    asks = response.get("result").get("asks")
+
+    arr = [[0 for i in range(2)] for i in range(20)]
+    for x in range(len(asks)):
+        arr[x][0] = (float)(asks[x].get('price'))
+        arr[x][1] = (float)(asks[x].get('volume'))
+    return arr
+
+def getBidsResponse(response):
+    bids = response.get("result").get("bids")
+
+    arr = [[0 for i in range(2)] for i in range(20)]
+    for x in range(len(bids)):
+        arr[x][0] = (float)(bids[x].get('price'))
+        arr[x][1] = (float)(bids[x].get('volume'))
+    return arr
+
 def get_pair_sell(pair):
     end = pair[-3:]
     start = pair[:-3]
