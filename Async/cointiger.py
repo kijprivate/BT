@@ -17,9 +17,9 @@ class RequestClient(object):
     }
 
     def __init__(self, headers={}):
-        self.access_id = '49B5C9BEF8534CB4BACC60414279ED69'      # replace
-        self.secret_key = '1B551E901CB646809EB6526483BEEE866DB5AE10589881C1'     # replace
-        self.url = 'https://api.coinex.com'
+        self.access_id = '5f8a5ac1-cfe3-4ee4-8e55-13015d05787a'      # replace
+        self.secret_key = 'NDIzOTcxZjY4ZWJlYTA1MzBkODM4YzNjYmUzZTRjMzE2YjRmY2UxYjc3OGFiNWZjMDRlYzg1Zjk0Mzg1MjQ0ZQ=='     # replace
+        self.url = 'https://www.cointiger.com/exchange/api'
         self.headers = self.__headers
         self.headers.update(headers)
 
@@ -73,27 +73,35 @@ def get_symbols():
     return newarr
 
 def getSymbolsEndpoint():
-    return "https://cex.io/api/currency_limits"
+    return "https://www.cointiger.com/exchange/api/public/market/detail"
 
 def getSymbolResponse(response):
-    newArr = []
-    for pair in response.get("data").get("pairs"):
-        if ("USD" in pair.get("symbol1")) or ("USD" in pair.get("symbol2")):
-            continue
-        toAdd = pair.get("symbol1") + pair.get("symbol2")
-        newArr.append(toAdd)
-    return newArr
+    resp = list(response.keys())
+    return resp
 
 def getPairPriceEndpoint(pair):
-    end = pair[-3:]
-    start = pair[:-3]
-    return '{url}/api/order_book/{s}/{e}'.format(url='https://cex.io', s = start, e = end)
+    pair = pair.lower()
+    return '{url}/depth?api_key=5f8a5ac1-cfe3-4ee4-8e55-13015d05787a&symbol={p}&type=step0'.format(url='https://api.cointiger.com/exchange/trading/api/market', p = pair)
 
 def getAsksResponse(response):
-    return response.get("asks")
+    if(response.get("data") == None):
+        arr = [[0 for i in range(2)] for i in range(20)]
+        for x in range(20):
+            arr[x][0] = 0
+            arr[x][1] = 0
+        return arr
+    #print(response.get("data"))
+    return response.get("data").get("depth_data").get("tick").get("asks")
 
 def getBidsResponse(response):
-    return response.get("bids")
+    if(response.get("data") == None):
+        arr = [[0 for i in range(2)] for i in range(20)]
+        for x in range(20):
+            arr[x][0] = 0
+            arr[x][1] = 0
+        return arr
+    #print(response.get("data"))
+    return response.get("data").get("depth_data").get("tick").get("buys")
 
 def get_pair(pair):
     request_client = RequestClient()

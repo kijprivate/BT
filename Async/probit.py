@@ -92,14 +92,35 @@ def getPairPriceEndpoint(pair):
     return '{url}/exchange/v1/order_book?market_id={p}'.format(url='https://api.probit.com/api', p = pair)
 
 def getAsksResponse(response):
+    arr = []
     for p in response.get("data"):
-        print(p)
-    return response.get("data").get("asks")
+        if(p.get("side")=="sell"):
+            arr.append(p)
+    #print(arr)
+    arr.sort(key=takePrice)
+
+    finalArr = [[0 for i in range(2)] for i in range(len(arr))]
+    for x in range(len(arr)):
+        finalArr[x][0] = (float)(arr[x].get('price'))
+        finalArr[x][1] = (float)(arr[x].get('quantity'))
+    return finalArr
+
+def takePrice(elem):
+    return elem.get("price")
 
 def getBidsResponse(response):
+    arr = []
     for p in response.get("data"):
-        print(p)
-    return response.get("data").get("bids")
+        if(p.get("side")=="buy"):
+            arr.append(p)
+    #print(arr)
+    arr.sort(key=takePrice, reverse=True)
+
+    finalArr = [[0 for i in range(2)] for i in range(len(arr))]
+    for x in range(len(arr)):
+        finalArr[x][0] = (float)(arr[x].get('price'))
+        finalArr[x][1] = (float)(arr[x].get('quantity'))
+    return finalArr
 
 def get_pair(pair):
     request_client = RequestClient()
@@ -142,7 +163,7 @@ def get_orders_bids(pair, limit):
     return get_orders(pair, limit).get('bids')
 
 def has_WD_def():
-    return True
+    return False
 
 def can_deposit(pair):
     request_client = RequestClient()
@@ -173,7 +194,7 @@ def can_withdraw(pair):
     return (bool)(var.get('data', {}).get(pair).get('can_withdraw'))
 
 def has_fee_def():
-    return True
+    return False
 
 def withdraw_fee(pair):
     request_client = RequestClient()

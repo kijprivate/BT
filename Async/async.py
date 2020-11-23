@@ -13,6 +13,8 @@ import bibox as bibox
 import bkex as bkex
 import mxc as mxc
 import probit as probit
+import cexio as cexio
+import cointiger as cointiger
 
 class TradesSimulation():
     def __init__(self, toBuy, askArray, toSell, bidArray):
@@ -36,8 +38,7 @@ class TradesSimulation():
         testIndex = 0
         while(self.toBuy > 0) and testIndex < 50:
             testIndex += 1
-            if(testIndex > 48):
-                print("Infinite loop " + str(testIndex))
+
             #print("LOOP BUY")
             if self.askIndex < len(self.askArray) and (self.toBuy > (float)(self.askArray[self.askIndex][1])):
                 boughts.append((float)(self.askArray[self.askIndex][0]))
@@ -72,8 +73,7 @@ class TradesSimulation():
         testIndex = 0
         while(self.toSell > 0) and testIndex < 50:
             testIndex += 1
-            if(testIndex > 48):
-                print("Infinite loop " + str(testIndex))
+
             #print("LOOP SELL")
             if self.bidIndex < len(self.bidArray) and (self.toSell > (float)(self.bidArray[self.bidIndex][1])):
                 sold.append((float)(self.bidArray[self.bidIndex][0]))
@@ -163,12 +163,14 @@ async def taskSymbols():
         tasks.append(fetchSymbols(session, bibox.getSymbolsEndpoint(), bibox))
         tasks.append(fetchSymbols(session, bkex.getSymbolsEndpoint(), bkex))
         tasks.append(fetchSymbols(session, mxc.getSymbolsEndpoint(), mxc))
-        #tasks.append(fetchSymbols(session, probit.getSymbolsEndpoint(), probit))
+        tasks.append(fetchSymbols(session, probit.getSymbolsEndpoint(), probit))
+        tasks.append(fetchSymbols(session, cexio.getSymbolsEndpoint(), cexio))
+        tasks.append(fetchSymbols(session, cointiger.getSymbolsEndpoint(), cointiger))
         await asyncio.gather(*tasks)
 
 async def fetchAsks(session, url, stock, marketPair):
     async with session.get(url) as response:
-        json_response = await response.json()
+        json_response = await response.json(content_type=None)
 
         marketPair.asks = marketPair.stock.getAsksResponse(json_response)
         if(len(marketPair.asks) > 1):
@@ -179,7 +181,7 @@ async def fetchAsks(session, url, stock, marketPair):
 
 async def fetchBids(session, url, stock, marketPair):
     async with session.get(url) as response:
-        json_response = await response.json()
+        json_response = await response.json(content_type=None)
 
         marketPair.bids = marketPair.stock.getBidsResponse(json_response)
         if(len(marketPair.bids) > 1):
