@@ -15,6 +15,7 @@ import mxc as mxc
 import probit as probit
 import cexio as cexio
 import cointiger as cointiger
+import digifinex as digifinex
 
 class TradesSimulation():
     def __init__(self, toBuy, askArray, toSell, bidArray):
@@ -150,26 +151,33 @@ toRemoveFromArrays = []
 
 async def fetchSymbols(session, url, stock):
     async with session.get(url) as response:
+        if(response == None):
+            print(stock)
         json_response = await response.json(content_type=None)
         symbolResponses.append(Response(stock, json_response))
 
 async def taskSymbols():
     async with aiohttp.ClientSession() as session:
-        tasks = [fetchSymbols(session, coinex.getSymbolsEndpoint(), coinex)]
+        #tasks = [fetchSymbols(session, coinex.getSymbolsEndpoint(), coinex)]
+        tasks = []
         tasks.append(fetchSymbols(session, binance.getSymbolsEndpoint(), binance))
         tasks.append(fetchSymbols(session, kucoin.getSymbolsEndpoint(), kucoin))
         tasks.append(fetchSymbols(session, bithumb.getSymbolsEndpoint(), bithumb))
         tasks.append(fetchSymbols(session, bitrue.getSymbolsEndpoint(), bitrue))
+        tasks.append(fetchSymbols(session, coinex.getSymbolsEndpoint(), coinex))
         tasks.append(fetchSymbols(session, bibox.getSymbolsEndpoint(), bibox))
         tasks.append(fetchSymbols(session, bkex.getSymbolsEndpoint(), bkex))
         tasks.append(fetchSymbols(session, mxc.getSymbolsEndpoint(), mxc))
         tasks.append(fetchSymbols(session, probit.getSymbolsEndpoint(), probit))
         tasks.append(fetchSymbols(session, cexio.getSymbolsEndpoint(), cexio))
-        tasks.append(fetchSymbols(session, cointiger.getSymbolsEndpoint(), cointiger))
+        #tasks.append(fetchSymbols(session, cointiger.getSymbolsEndpoint(), cointiger))
+        tasks.append(fetchSymbols(session, digifinex.getSymbolsEndpoint(), digifinex))
         await asyncio.gather(*tasks)
 
 async def fetchAsks(session, url, stock, marketPair):
     async with session.get(url) as response:
+        if(response == None or marketPair == None):
+            print(stock)
         json_response = await response.json(content_type=None)
 
         marketPair.asks = marketPair.stock.getAsksResponse(json_response)
@@ -181,6 +189,8 @@ async def fetchAsks(session, url, stock, marketPair):
 
 async def fetchBids(session, url, stock, marketPair):
     async with session.get(url) as response:
+        if(response == None or marketPair == None):
+            print(stock)
         json_response = await response.json(content_type=None)
 
         marketPair.bids = marketPair.stock.getBidsResponse(json_response)
