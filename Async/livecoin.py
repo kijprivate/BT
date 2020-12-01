@@ -19,7 +19,7 @@ class RequestClient(object):
     def __init__(self, headers={}):
         self.access_id = '49B5C9BEF8534CB4BACC60414279ED69'      # replace
         self.secret_key = '1B551E901CB646809EB6526483BEEE866DB5AE10589881C1'     # replace
-        self.url = 'https://api.probit.com/api'
+        self.url = 'https://api.livecoin.net'
         self.headers = self.__headers
         self.headers.update(headers)
 
@@ -73,54 +73,32 @@ def get_symbols():
     return newarr
 
 def getSymbolsEndpoint():
-    return "https://api.probit.com/api/exchange/v1/market"
+    return "https://api.livecoin.net/exchange/ticker"
 
 def getSymbolResponse(response):
     newArr = []
-    for pair in response.get("data"):
-        if ("USD" in pair.get("id")) or ("ULT" in pair.get("id")):
+    for pair in response:
+        if ("USD" in pair.get("symbol")):
             continue
-        toAdd = pair.get("id")
-        toAdd = toAdd.replace('-',"")
+        toAdd = pair.get("symbol")
+        toAdd = toAdd.replace('/',"")
         newArr.append(toAdd)
+    print(newArr)
     return newArr
 
 def getPairPriceEndpoint(pair):
     end = pair[-3:]
     start = pair[:-3]
-    pair = start + "-" + end
-    return '{url}/exchange/v1/order_book?market_id={p}'.format(url='https://api.probit.com/api', p = pair)
+    pair = start + "/" + end
+    return '{url}/exchange/all/order_book'.format(url='https://api.livecoin.net')
 
 def getAsksResponse(response):
-    arr = []
-    for p in response.get("data"):
-        if(p.get("side")=="sell"):
-            arr.append(p)
-    #print(arr)
-    arr.sort(key=takePrice)
-
-    finalArr = [[0 for i in range(2)] for i in range(len(arr))]
-    for x in range(len(arr)):
-        finalArr[x][0] = (float)(arr[x].get('price'))
-        finalArr[x][1] = (float)(arr[x].get('quantity'))
-    return finalArr
-
-def takePrice(elem):
-    return elem.get("price")
+    print(response)
+    return response.get("asks")
 
 def getBidsResponse(response):
-    arr = []
-    for p in response.get("data"):
-        if(p.get("side")=="buy"):
-            arr.append(p)
-    #print(arr)
-    arr.sort(key=takePrice, reverse=True)
-
-    finalArr = [[0 for i in range(2)] for i in range(len(arr))]
-    for x in range(len(arr)):
-        finalArr[x][0] = (float)(arr[x].get('price'))
-        finalArr[x][1] = (float)(arr[x].get('quantity'))
-    return finalArr
+    print(response)
+    return response.get("bids")
 
 def get_pair(pair):
     request_client = RequestClient()
@@ -163,7 +141,7 @@ def get_orders_bids(pair, limit):
     return get_orders(pair, limit).get('bids')
 
 def has_WD_def():
-    return False
+    return True
 
 def can_deposit(pair):
     request_client = RequestClient()
@@ -194,7 +172,7 @@ def can_withdraw(pair):
     return (bool)(var.get('data', {}).get(pair).get('can_withdraw'))
 
 def has_fee_def():
-    return False
+    return True
 
 def withdraw_fee(pair):
     request_client = RequestClient()

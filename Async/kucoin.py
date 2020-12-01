@@ -82,7 +82,7 @@ def getSymbolsEndpoint():
 def getSymbolResponse(response):
     newArr = []
     for pair in response.get("data"):
-        if pair.get("enableTrading") == False or ("USD" in pair.get("symbol")):
+        if pair.get("enableTrading") == False or ("USD" in pair.get("symbol")) or ("AKRO" in pair.get("symbol")):
             continue
         toAdd = pair.get("symbol")
         toAdd = toAdd.replace('-',"")

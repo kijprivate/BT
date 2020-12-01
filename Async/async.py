@@ -16,6 +16,9 @@ import probit as probit
 import cexio as cexio
 import cointiger as cointiger
 import digifinex as digifinex
+import bitmax as bitmax
+import livecoin as livecoin
+import bw as bw
 
 class TradesSimulation():
     def __init__(self, toBuy, askArray, toSell, bidArray):
@@ -166,22 +169,26 @@ async def taskSymbols():
         tasks.append(fetchSymbols(session, bitrue.getSymbolsEndpoint(), bitrue))
         tasks.append(fetchSymbols(session, coinex.getSymbolsEndpoint(), coinex))
         tasks.append(fetchSymbols(session, bibox.getSymbolsEndpoint(), bibox))
-        tasks.append(fetchSymbols(session, bkex.getSymbolsEndpoint(), bkex))
+        #tasks.append(fetchSymbols(session, bkex.getSymbolsEndpoint(), bkex))
         tasks.append(fetchSymbols(session, mxc.getSymbolsEndpoint(), mxc))
         tasks.append(fetchSymbols(session, probit.getSymbolsEndpoint(), probit))
         tasks.append(fetchSymbols(session, cexio.getSymbolsEndpoint(), cexio))
         #tasks.append(fetchSymbols(session, cointiger.getSymbolsEndpoint(), cointiger))
         tasks.append(fetchSymbols(session, digifinex.getSymbolsEndpoint(), digifinex))
+        tasks.append(fetchSymbols(session, bitmax.getSymbolsEndpoint(), bitmax))
+        #tasks.append(fetchSymbols(session, livecoin.getSymbolsEndpoint(), livecoin))
+        tasks.append(fetchSymbols(session, bw.getSymbolsEndpoint(), bw))
         await asyncio.gather(*tasks)
 
 async def fetchAsks(session, url, stock, marketPair):
     async with session.get(url) as response:
         if(response == None or marketPair == None):
             print(stock)
+        await asyncio.sleep(1)
         json_response = await response.json(content_type=None)
 
         marketPair.asks = marketPair.stock.getAsksResponse(json_response)
-        if(len(marketPair.asks) > 1):
+        if marketPair.asks != None and (len(marketPair.asks) > 1):
             marketPair.bestAsk = (float)(marketPair.asks[0][0])
         else:
             toRemoveFromArrays.append(marketPair)
@@ -191,10 +198,11 @@ async def fetchBids(session, url, stock, marketPair):
     async with session.get(url) as response:
         if(response == None or marketPair == None):
             print(stock)
+        await asyncio.sleep(1)
         json_response = await response.json(content_type=None)
 
         marketPair.bids = marketPair.stock.getBidsResponse(json_response)
-        if(len(marketPair.bids) > 1):
+        if marketPair.bids != None and (len(marketPair.bids) > 1):
             marketPair.bestBid = (float)(marketPair.bids[0][0])
         else:
             toRemoveFromArrays.append(marketPair)
@@ -252,6 +260,9 @@ if __name__ == "__main__":
     for i in range(len(toRemove)):
         arrays.remove(toRemove[i])
 
+    #Whiletrue
+    #while(True):
+    #    try:
     print(len(arrays))
     startTime = time.time()
     asyncio.run(taskPrices())
@@ -331,3 +342,5 @@ if __name__ == "__main__":
     
     test()
     print(time.time() - allTime)
+    #    except:
+    #        print("smth wrong")
