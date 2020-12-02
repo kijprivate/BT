@@ -83,7 +83,6 @@ def getSymbolResponse(response):
         toAdd = pair.get("symbol")
         toAdd = toAdd.replace('/',"")
         newArr.append(toAdd)
-    print(newArr)
     return newArr
 
 def getPairPriceEndpoint(pair):
@@ -93,11 +92,9 @@ def getPairPriceEndpoint(pair):
     return '{url}/exchange/all/order_book'.format(url='https://api.livecoin.net')
 
 def getAsksResponse(response):
-    print(response)
     return response.get("asks")
 
 def getBidsResponse(response):
-    print(response)
     return response.get("bids")
 
 def get_pair(pair):
@@ -141,7 +138,7 @@ def get_orders_bids(pair, limit):
     return get_orders(pair, limit).get('bids')
 
 def has_WD_def():
-    return True
+    return False
 
 def can_deposit(pair):
     request_client = RequestClient()
@@ -172,7 +169,7 @@ def can_withdraw(pair):
     return (bool)(var.get('data', {}).get(pair).get('can_withdraw'))
 
 def has_fee_def():
-    return True
+    return False
 
 def withdraw_fee(pair):
     request_client = RequestClient()

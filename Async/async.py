@@ -19,6 +19,7 @@ import digifinex as digifinex
 import bitmax as bitmax
 import livecoin as livecoin
 import bw as bw
+import zb as zb
 
 class TradesSimulation():
     def __init__(self, toBuy, askArray, toSell, bidArray):
@@ -161,23 +162,23 @@ async def fetchSymbols(session, url, stock):
 
 async def taskSymbols():
     async with aiohttp.ClientSession() as session:
-        #tasks = [fetchSymbols(session, coinex.getSymbolsEndpoint(), coinex)]
         tasks = []
+        tasks.append(fetchSymbols(session, coinex.getSymbolsEndpoint(), coinex))
         tasks.append(fetchSymbols(session, binance.getSymbolsEndpoint(), binance))
         tasks.append(fetchSymbols(session, kucoin.getSymbolsEndpoint(), kucoin))
         tasks.append(fetchSymbols(session, bithumb.getSymbolsEndpoint(), bithumb))
         tasks.append(fetchSymbols(session, bitrue.getSymbolsEndpoint(), bitrue))
-        tasks.append(fetchSymbols(session, coinex.getSymbolsEndpoint(), coinex))
         tasks.append(fetchSymbols(session, bibox.getSymbolsEndpoint(), bibox))
         #tasks.append(fetchSymbols(session, bkex.getSymbolsEndpoint(), bkex))
         tasks.append(fetchSymbols(session, mxc.getSymbolsEndpoint(), mxc))
         tasks.append(fetchSymbols(session, probit.getSymbolsEndpoint(), probit))
         tasks.append(fetchSymbols(session, cexio.getSymbolsEndpoint(), cexio))
-        #tasks.append(fetchSymbols(session, cointiger.getSymbolsEndpoint(), cointiger))
+        #tasks.append(fetchSymbols(session, cointiger.getSymbolsEndpoint(), cointiger)) # sometimes suck
         tasks.append(fetchSymbols(session, digifinex.getSymbolsEndpoint(), digifinex))
         tasks.append(fetchSymbols(session, bitmax.getSymbolsEndpoint(), bitmax))
-        #tasks.append(fetchSymbols(session, livecoin.getSymbolsEndpoint(), livecoin))
+        #tasks.append(fetchSymbols(session, livecoin.getSymbolsEndpoint(), livecoin)) try less calls
         tasks.append(fetchSymbols(session, bw.getSymbolsEndpoint(), bw))
+        tasks.append(fetchSymbols(session, zb.getSymbolsEndpoint(), zb))
         await asyncio.gather(*tasks)
 
 async def fetchAsks(session, url, stock, marketPair):

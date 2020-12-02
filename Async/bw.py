@@ -152,7 +152,7 @@ def get_orders_bids(pair, limit):
     return get_orders(pair, limit).get('bids')
 
 def has_WD_def():
-    return True
+    return False
 
 def can_deposit(pair):
     request_client = RequestClient()
@@ -183,7 +183,7 @@ def can_withdraw(pair):
     return (bool)(var.get('data', {}).get(pair).get('can_withdraw'))
 
 def has_fee_def():
-    return True
+    return False
 
 def withdraw_fee(pair):
     request_client = RequestClient()

@@ -19,7 +19,7 @@ class RequestClient(object):
     def __init__(self, headers={}):
         self.access_id = '49B5C9BEF8534CB4BACC60414279ED69'      # replace
         self.secret_key = '1B551E901CB646809EB6526483BEEE866DB5AE10589881C1'     # replace
-        self.url = 'https://openapi.digifinex.com/v3'
+        self.url = 'http://api.zb.center'
         self.headers = self.__headers
         self.headers.update(headers)
 
@@ -73,30 +73,46 @@ def get_symbols():
     return newarr
 
 def getSymbolsEndpoint():
-    return "https://openapi.digifinex.com/v3/markets"
+    return "http://api.zb.center/data/v1/allTicker"
 
 def getSymbolResponse(response):
+    resp = list(response.keys())
     newArr = []
-    for pair in response.get("data"):
-        if ("usd" in pair.get("market")):
+    for pair in resp:
+        if("qc" in pair):
             continue
-        toAdd = pair.get("market")
-        toAdd = toAdd.replace('_',"")
+        toAdd = pair
         toAdd = toAdd.upper()
         newArr.append(toAdd)
     return newArr
 
 def getPairPriceEndpoint(pair):
     pair = pair.lower()
-    end = pair[-3:]
-    start = pair[:-3]
+    if("usd" in pair):
+        end = pair[-4:]
+        start = pair[:-4]
+    else:
+        end = pair[-3:]
+        start = pair[:-3]
     pair = start + "_" + end
-    return '{url}/order_book?symbol={p}&limit=20'.format(url='https://openapi.digifinex.com/v3', p = pair)
+    return '{url}/data/v1/depth?market={p}&size=20'.format(url='http://api.zb.center', p = pair)
 
 def getAsksResponse(response):
+    if(response == None):
+        arr = [[0 for i in range(2)] for i in range(20)]
+        for x in range(20):
+            arr[x][0] = 0
+            arr[x][1] = 0
+        return arr
     return response.get("asks")
 
 def getBidsResponse(response):
+    if(response == None):
+        arr = [[0 for i in range(2)] for i in range(20)]
+        for x in range(20):
+            arr[x][0] = 0
+            arr[x][1] = 0
+        return arr
     return response.get("bids")
 
 def get_pair(pair):
