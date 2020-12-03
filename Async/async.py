@@ -20,6 +20,7 @@ import bitmax as bitmax
 import livecoin as livecoin
 import bw as bw
 import zb as zb
+import gateio as gateio
 
 class TradesSimulation():
     def __init__(self, toBuy, askArray, toSell, bidArray):
@@ -179,6 +180,7 @@ async def taskSymbols():
         #tasks.append(fetchSymbols(session, livecoin.getSymbolsEndpoint(), livecoin)) try less calls
         tasks.append(fetchSymbols(session, bw.getSymbolsEndpoint(), bw))
         tasks.append(fetchSymbols(session, zb.getSymbolsEndpoint(), zb))
+        tasks.append(fetchSymbols(session, gateio.getSymbolsEndpoint(), gateio))
         await asyncio.gather(*tasks)
 
 async def fetchAsks(session, url, stock, marketPair):

@@ -19,7 +19,7 @@ class RequestClient(object):
     def __init__(self, headers={}):
         self.access_id = '49B5C9BEF8534CB4BACC60414279ED69'      # replace
         self.secret_key = '1B551E901CB646809EB6526483BEEE866DB5AE10589881C1'     # replace
-        self.url = 'http://api.zb.center'
+        self.url = 'https://api.gateio.ws/api/v4'
         self.headers = self.__headers
         self.headers.update(headers)
 
@@ -73,29 +73,27 @@ def get_symbols():
     return newarr
 
 def getSymbolsEndpoint():
-    return "http://api.zb.center/data/v1/allTicker"
+    return "https://api.gateio.ws/api/v4/spot/currency_pairs"
 
 def getSymbolResponse(response):
-    resp = list(response.keys())
     newArr = []
-    for pair in resp:
-        if("qc" in pair):
+    for pair in response:
+        if(pair.get("trade_status") != "tradable"):
             continue
-        toAdd = pair
-        toAdd = toAdd.upper()
+        toAdd = pair.get("id")
+        toAdd = toAdd.replace('_',"")
         newArr.append(toAdd)
     return newArr
 
 def getPairPriceEndpoint(pair):
-    pair = pair.lower()
-    if("usdt" in pair):
+    if("USDT" in pair):
         end = pair[-4:]
         start = pair[:-4]
     else:
         end = pair[-3:]
         start = pair[:-3]
     pair = start + "_" + end
-    return '{url}/data/v1/depth?market={p}&size=20'.format(url='http://api.zb.center', p = pair)
+    return '{url}/spot/order_book?currency_pair={p}&limit=20'.format(url='https://api.gateio.ws/api/v4', p = pair)
 
 def getAsksResponse(response):
     if(response == None):
