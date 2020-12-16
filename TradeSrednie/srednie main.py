@@ -25,8 +25,8 @@ class RequestClient(object):
     }
 
     def __init__(self, headers={}):
-        self.access_id = '775446676BED476D8BACCDFBBBCF910E'      # replace
-        self.secret_key = 'C627ADFDBD20E38D4E59163AA161AD02E93B796ED9578F67'     # replace
+        self.access_id = '92D0E39AF1634EA9B7D037EDDBECD261'      # replace
+        self.secret_key = 'B7B13884C89347FE86E6E34A7C9FE7DD28A43B301CB70611'     # replace
         self.url = 'https://api.coinex.com'
         self.headers = self.__headers
         self.headers.update(headers)
@@ -49,7 +49,7 @@ class RequestClient(object):
     def request(self, method, url, params={}, data='', json={}):
         method = method.upper()
         if method in ['GET', 'DELETE']:
-            self.set_authorization(params)
+            #self.set_authorization(params)
             result = http.request(method, url, fields=params, headers=self.headers)
         else:
             if data:
@@ -72,6 +72,11 @@ def get_account_balance(currency):
         return 0
 
 def get_pair_perpetual(pair):
+    robot = CoinexPerpetualApi(access_id, secret_key)
+    response = robot.get_market_state(pair)
+    #var = complex_json.loads(response.data)
+    return response
+
     request_client = RequestClient()
     params = {
         'market': pair
@@ -113,6 +118,39 @@ def get_price(data, index, priceType):
 def get_price_old(data, index, priceType):
     return (float)(data.get('data', {})[index][priceType])
 
+ORDER_DIRECTION_SELL = 1
+ORDER_DIRECTION_BUY = 2
+def putMarketOrder(vp, side, leverage):
+    robot = CoinexPerpetualApi(access_id, secret_key)
+    robot.adjust_leverage(vp.pair, 1, leverage)
+    robot.adjust_leverage(vp.pair, 2, leverage)
+    result = robot.put_market_order(
+        vp.pair,
+        side,
+        contractAmount
+    )
+    print(json.dumps(result, indent=4))
+    return result
+
+def handleResultAfterClose(vp, result):
+    if(result.get("code") == 0):
+        vp.resetAfterClose()
+    else:
+        print("FAIL")
+
+def handleResultAfterSold(vp, result):
+    if(result.get("code") == 0):
+        vp.setAfterSold()
+    else:
+        print("FAIL")
+        
+def handleResultAfterBought(vp, result):
+    if(result.get("code") == 0):
+        vp.setAfterBought()
+    else:
+        print("FAIL")
+
+REAL_TRADE = False     
 openOrder = 10
 stopLoss = 8
 takeProfit1 = 10
@@ -123,170 +161,52 @@ takeProfit3 = 50
 takeProfitStop3 = 20
 takeProfitNOW = 100
 contractAmount = 100
-access_id = '775446676BED476D8BACCDFBBBCF910E'
-secret_key = 'C627ADFDBD20E38D4E59163AA161AD02E93B796ED9578F67'
+access_id = '92D0E39AF1634EA9B7D037EDDBECD261'
+secret_key = 'B7B13884C89347FE86E6E34A7C9FE7DD28A43B301CB70611'
 
 def new_check2(vp):
     time.sleep(1)
     
-    try:
-        vp.kline = get_kline_perpetual(vp.pair, "1min", 1000)
-        
-        sr1 = get_price(vp.kline, 0, vp.priceType)
-        #sr2 = get_price(vp.kline, 0, 1)
-        last1 = get_price(vp.kline, 1, vp.priceType)
-        #last2 = get_price(vp.kline, 1, 1)
-        openOrder = 0.00125*sr1
-        stopLoss = 0.00125*sr1
-        takeProfit1 = 0.002*sr1
-        takeProfitStop1 = 0.001*sr1
-        takeProfit2 = 0.004*sr1
-        takeProfitStop2 = 0.002*sr1
-        takeProfit3 = 0.007*sr1
-        takeProfitStop3 = 0.0035*sr1
-        #oc1 = abs(sr1-sr2)
-        #oc2 = abs(last1-last2)
-        diff = (last1 - sr1)#/sr
-        spread = abs(get_pair_buy(get_pair_perpetual(vp.pair)) - get_pair_sell(get_pair_perpetual(vp.pair)))
-        
-        #stoploss
-        if(vp.isBought) and spread < 4 and vp.minuteBought != datetime.now().minute:
-            cur = get_price(vp.kline, 0, vp.priceType)
-            diff2 = (cur - vp.priceBought)#/vp.priceBought
-            if(diff2 > takeProfit3):
-                vp.priceBoughtTP = cur
-                vp.tp3 = True
-            elif(diff2 > takeProfit2):
-                vp.priceBoughtTP = cur
-                vp.tp2 = True
-            elif(diff2 > takeProfit1):
-                vp.priceBoughtTP = cur
-                vp.tp1 = True
-                
-            if(vp.priceBoughtTP != 0) and vp.tp3 == True:
-                diff3 = (cur - vp.priceBoughtTP)#/vp.priceBoughtTP
-                if(diff3 < -takeProfitStop3):
-                    print("&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&")
-                    print("TP " + vp.pair + " od longa")
-                    print(datetime.now())
-                    ps = get_pair_sell(get_pair_perpetual(vp.pair))
-                    print(ps)#praw
-                    print(get_pair_buy(get_pair_perpetual(vp.pair)))
-                    earn = (ps - vp.priceBought)/vp.priceBought
-                    vp.totalEarn += earn
-                    print(earn)
-                    print(vp.totalEarn)
-                    
-                    
-                    robot = CoinexPerpetualApi(access_id, secret_key)
-                    robot.adjust_leverage(vp.pair, 1, 10)
-                    robot.adjust_leverage(vp.pair, 2, 10)
-                    result = robot.put_market_order(
-                        vp.pair,
-                        robot.ORDER_DIRECTION_SELL,
-                        contractAmount
-                    )
-                    print(json.dumps(result, indent=4))
-
-                    
-                    if(result.get("code") == 0):
-                        vp.isBought = False
-                        vp.priceBoughtTP = 0
-                        vp.minuteBought = -1
-                    else:
-                        print("FAIL")
-                                      
-                    #vp.isBought = False
-                    #vp.priceBoughtTP = 0
-                    #vp.minuteBought = -1
-                    vp.tp1 = False
-                    vp.tp2 = False
-                    vp.tp3 = False
-                    print("&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&")
-            elif(vp.priceBoughtTP != 0) and vp.tp2 == True:
-                diff3 = (cur - vp.priceBoughtTP)#/vp.priceBoughtTP
-                if(diff3 < -takeProfitStop2):
-                    print("&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&")
-                    print("TP " + vp.pair + " od longa")
-                    print(datetime.now())
-                    ps = get_pair_sell(get_pair_perpetual(vp.pair))
-                    print(ps)#praw
-                    print(get_pair_buy(get_pair_perpetual(vp.pair)))
-                    earn = (ps - vp.priceBought)/vp.priceBought
-                    vp.totalEarn += earn
-                    print(earn)
-                    print(vp.totalEarn)
-                    
-                    
-                    robot = CoinexPerpetualApi(access_id, secret_key)
-                    robot.adjust_leverage(vp.pair, 1, 10)
-                    robot.adjust_leverage(vp.pair, 2, 10)
-                    result = robot.put_market_order(
-                        vp.pair,
-                        robot.ORDER_DIRECTION_SELL,
-                        contractAmount
-                    )
-                    print(json.dumps(result, indent=4))
-
-                    
-                    if(result.get("code") == 0):
-                        vp.isBought = False
-                        vp.priceBoughtTP = 0
-                        vp.minuteBought = -1
-                    else:
-                        print("FAIL")
-                                    
-                    #vp.isBought = False
-                    #vp.priceBoughtTP = 0
-                    #vp.minuteBought = -1
-                    vp.tp1 = False
-                    vp.tp2 = False
-                    vp.tp3 = False
-                    print("&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&")
-            elif(vp.priceBoughtTP != 0) and vp.tp1 == True:
-                diff3 = (cur - vp.priceBoughtTP)#/vp.priceBoughtTP
-                if(diff3 < -takeProfitStop1):
-                    print("&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&")
-                    print("TP " + vp.pair + " od longa")
-                    print(datetime.now())
-                    ps = get_pair_sell(get_pair_perpetual(vp.pair))
-                    print(ps)#praw
-                    print(get_pair_buy(get_pair_perpetual(vp.pair)))
-                    earn = (ps - vp.priceBought)/vp.priceBought
-                    vp.totalEarn += earn
-                    print(earn)
-                    print(vp.totalEarn)
-                    
-                    
-                    robot = CoinexPerpetualApi(access_id, secret_key)
-                    robot.adjust_leverage(vp.pair, 1, 10)
-                    robot.adjust_leverage(vp.pair, 2, 10)
-                    result = robot.put_market_order(
-                        vp.pair,
-                        robot.ORDER_DIRECTION_SELL,
-                        contractAmount
-                    )
-                    print(json.dumps(result, indent=4))
-
-                    
-                    if(result.get("code") == 0):
-                        vp.isBought = False
-                        vp.priceBoughtTP = 0
-                        vp.minuteBought = -1
-                    else:
-                        print("FAIL")
-                                     
-                    #vp.isBought = False
-                    #vp.priceBoughtTP = 0
-                    #vp.minuteBought = -1
-                    vp.tp1 = False
-                    vp.tp2 = False
-                    vp.tp3 = False
-                    print("&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&")
-                
-            if(diff2 < -stopLoss):
+    #try:
+    robot = CoinexPerpetualApi(access_id, secret_key)
+    vp.kline = robot.kline(vp.pair, vp.time, vp.limit)
+    
+    sr1 = get_price(vp.kline, 0, vp.priceType)
+    #sr2 = get_price(vp.kline, 0, 1)
+    last1 = get_price(vp.kline, 1, vp.priceType)
+    #last2 = get_price(vp.kline, 1, 1)
+    openOrder = 0.00125*sr1
+    stopLoss = 0.00125*sr1
+    takeProfit1 = 0.002*sr1
+    takeProfitStop1 = 0.001*sr1
+    takeProfit2 = 0.004*sr1
+    takeProfitStop2 = 0.002*sr1
+    takeProfit3 = 0.007*sr1
+    takeProfitStop3 = 0.0035*sr1
+    #oc1 = abs(sr1-sr2)
+    #oc2 = abs(last1-last2)
+    diff = (last1 - sr1)#/sr
+    spread = abs(get_pair_buy(get_pair_perpetual(vp.pair)) - get_pair_sell(get_pair_perpetual(vp.pair)))
+    
+    #stoploss
+    if(vp.isBought) and spread < 4 and vp.minuteBought != datetime.now().minute:
+        cur = get_price(vp.kline, 0, vp.priceType)
+        diff2 = (cur - vp.priceBought)#/vp.priceBought
+        if(diff2 > takeProfit3):
+            vp.priceBoughtTP = cur
+            vp.tp3 = True
+        elif(diff2 > takeProfit2):
+            vp.priceBoughtTP = cur
+            vp.tp2 = True
+        elif(diff2 > takeProfit1):
+            vp.priceBoughtTP = cur
+            vp.tp1 = True
+            
+        if(vp.priceBoughtTP != 0) and vp.tp3 == True:
+            diff3 = (cur - vp.priceBoughtTP)#/vp.priceBoughtTP
+            if(diff3 < -takeProfitStop3):
                 print("&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&")
-                print("stop loss " + vp.pair + " od longa")
+                print("TP " + vp.pair + " od longa")
                 print(datetime.now())
                 ps = get_pair_sell(get_pair_perpetual(vp.pair))
                 print(ps)#praw
@@ -296,165 +216,94 @@ def new_check2(vp):
                 print(earn)
                 print(vp.totalEarn)
                 
-                robot = CoinexPerpetualApi(access_id, secret_key)
-                robot.adjust_leverage(vp.pair, 1, 10)
-                robot.adjust_leverage(vp.pair, 2, 10)
-                result = robot.put_market_order(
-                        vp.pair,
-                        robot.ORDER_DIRECTION_SELL,
-                        contractAmount
-                )
-                print(json.dumps(result, indent=4))
-                
-                if(result.get("code") == 0):
-                    vp.isBought = False
-                    vp.priceBoughtTP = 0
-                    vp.minuteBought = -1
+                if(REAL_TRADE == True):
+                    result = putMarketOrder(vp, ORDER_DIRECTION_SELL, vp.leverage)
+                    handleResultAfterClose(vp, result)
                 else:
-                    print("FAIL")
+                    vp.resetAfterClose()
                 
-                #vp.isBought = False
-                #vp.priceBoughtTP = 0
-                #vp.minuteBought = -1
-                vp.tp1 = False
-                vp.tp2 = False
-                vp.tp3 = False
                 print("&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&")
-                
-        if(vp.isSold) and spread < 4 and vp.minuteSold != datetime.now().minute:
-            cur = get_price(vp.kline, 0, vp.priceType)
-            diff2 = (cur - vp.priceSold)#/vp.priceSold
-            if(diff2 < -takeProfit3):
-                vp.priceSoldTP = cur
-                vp.tp3 = True
-            elif(diff2 < -takeProfit2):
-                vp.priceSoldTP = cur
-                vp.tp2 = True
-            elif(diff2 < -takeProfit1):
-                vp.priceSoldTP = cur
-                vp.tp1 = True
-                
-            if(vp.priceSoldTP != 0) and vp.tp3 == True:
-                diff3 = (cur - vp.priceSoldTP)#/vp.priceSoldTP
-                if(diff3 > takeProfitStop3):
-                    print("&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&")
-                    print("TP " + vp.pair + " od shorta")
-                    print(datetime.now())
-                    print(get_pair_sell(get_pair_perpetual(vp.pair)))
-                    pb = get_pair_buy(get_pair_perpetual(vp.pair))
-                    print(pb)#praw
-                    earn = (pb - vp.priceSold)/vp.priceSold
-                    earn = -earn
-                    vp.totalEarn += earn
-                    print(earn)
-                    print(vp.totalEarn)
-                    
-                    robot = CoinexPerpetualApi(access_id, secret_key)
-                    robot.adjust_leverage(vp.pair, 1, 10)
-                    robot.adjust_leverage(vp.pair, 2, 10)
-                    result = robot.put_market_order(
-                        vp.pair,
-                        robot.ORDER_DIRECTION_BUY,
-                        contractAmount
-                    )
-                    print(json.dumps(result, indent=4))
-                    
-                    if(result.get("code") == 0):
-                        vp.isSold = False
-                        vp.priceSoldTP = 0
-                        vp.minuteSold = -1
-                    else:
-                        print("FAIL")
-                    
-                    #vp.isSold = False
-                    #vp.priceSoldTP = 0
-                    #vp.minuteSold = -1
-                    vp.tp1 = False
-                    vp.tp2 = False
-                    vp.tp3 = False
-                    print("&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&")
-            if(vp.priceSoldTP != 0) and vp.tp2 == True:
-                diff3 = (cur - vp.priceSoldTP)#/vp.priceSoldTP
-                if(diff3 > takeProfitStop2):
-                    print("&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&")
-                    print("TP " + vp.pair + " od shorta")
-                    print(datetime.now())
-                    print(get_pair_sell(get_pair_perpetual(vp.pair)))
-                    pb = get_pair_buy(get_pair_perpetual(vp.pair))
-                    print(pb)#praw
-                    earn = (pb - vp.priceSold)/vp.priceSold
-                    earn = -earn
-                    vp.totalEarn += earn
-                    print(earn)
-                    print(vp.totalEarn)
-                    
-                    robot = CoinexPerpetualApi(access_id, secret_key)
-                    robot.adjust_leverage(vp.pair, 1, 10)
-                    robot.adjust_leverage(vp.pair, 2, 10)
-                    result = robot.put_market_order(
-                        vp.pair,
-                        robot.ORDER_DIRECTION_BUY,
-                        contractAmount
-                    )
-                    print(json.dumps(result, indent=4))
-                    
-                    if(result.get("code") == 0):
-                        vp.isSold = False
-                        vp.priceSoldTP = 0
-                        vp.minuteSold = -1
-                    else:
-                        print("FAIL")
-                    
-                    #vp.isSold = False
-                    #vp.priceSoldTP = 0
-                    #vp.minuteSold = -1
-                    vp.tp1 = False
-                    vp.tp2 = False
-                    vp.tp3 = False
-                    print("&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&")
-            if(vp.priceSoldTP != 0) and vp.tp1 == True:
-                diff3 = (cur - vp.priceSoldTP)#/vp.priceSoldTP
-                if(diff3 > takeProfitStop1):
-                    print("&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&")
-                    print("TP " + vp.pair + " od shorta")
-                    print(datetime.now())
-                    print(get_pair_sell(get_pair_perpetual(vp.pair)))
-                    pb = get_pair_buy(get_pair_perpetual(vp.pair))
-                    print(pb)#praw
-                    earn = (pb - vp.priceSold)/vp.priceSold
-                    earn = -earn
-                    vp.totalEarn += earn
-                    print(earn)
-                    print(vp.totalEarn)
-                    
-                    robot = CoinexPerpetualApi(access_id, secret_key)
-                    robot.adjust_leverage(vp.pair, 1, 10)
-                    robot.adjust_leverage(vp.pair, 2, 10)
-                    result = robot.put_market_order(
-                        vp.pair,
-                        robot.ORDER_DIRECTION_BUY,
-                        contractAmount
-                    )
-                    print(json.dumps(result, indent=4))
-                    
-                    if(result.get("code") == 0):
-                        vp.isSold = False
-                        vp.priceSoldTP = 0
-                        vp.minuteSold = -1
-                    else:
-                        print("FAIL")
-                    
-                    #vp.isSold = False
-                    #vp.priceSoldTP = 0
-                    #vp.minuteSold = -1
-                    vp.tp1 = False
-                    vp.tp2 = False
-                    vp.tp3 = False
-                    print("&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&")
-                    
-            if(diff2 > stopLoss):
+        elif(vp.priceBoughtTP != 0) and vp.tp2 == True:
+            diff3 = (cur - vp.priceBoughtTP)#/vp.priceBoughtTP
+            if(diff3 < -takeProfitStop2):
                 print("&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&")
-                print("stop loss " + vp.pair + " od shorta")
+                print("TP " + vp.pair + " od longa")
+                print(datetime.now())
+                ps = get_pair_sell(get_pair_perpetual(vp.pair))
+                print(ps)#praw
+                print(get_pair_buy(get_pair_perpetual(vp.pair)))
+                earn = (ps - vp.priceBought)/vp.priceBought
+                vp.totalEarn += earn
+                print(earn)
+                print(vp.totalEarn)
+                
+                if(REAL_TRADE == True):
+                    result = putMarketOrder(vp, ORDER_DIRECTION_SELL, vp.leverage)
+                    handleResultAfterClose(vp, result)
+                else:
+                    vp.resetAfterClose()
+                
+                print("&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&")
+        elif(vp.priceBoughtTP != 0) and vp.tp1 == True:
+            diff3 = (cur - vp.priceBoughtTP)#/vp.priceBoughtTP
+            if(diff3 < -takeProfitStop1):
+                print("&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&")
+                print("TP " + vp.pair + " od longa")
+                print(datetime.now())
+                ps = get_pair_sell(get_pair_perpetual(vp.pair))
+                print(ps)#praw
+                print(get_pair_buy(get_pair_perpetual(vp.pair)))
+                earn = (ps - vp.priceBought)/vp.priceBought
+                vp.totalEarn += earn
+                print(earn)
+                print(vp.totalEarn)
+                
+                if(REAL_TRADE == True):
+                    result = putMarketOrder(vp, ORDER_DIRECTION_SELL, vp.leverage)
+                    handleResultAfterClose(vp, result)
+                else:
+                    vp.resetAfterClose()
+                
+                print("&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&")
+            
+        if(diff2 < -stopLoss):
+            print("&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&")
+            print("stop loss " + vp.pair + " od longa")
+            print(datetime.now())
+            ps = get_pair_sell(get_pair_perpetual(vp.pair))
+            print(ps)#praw
+            print(get_pair_buy(get_pair_perpetual(vp.pair)))
+            earn = (ps - vp.priceBought)/vp.priceBought
+            vp.totalEarn += earn
+            print(earn)
+            print(vp.totalEarn)
+            
+            if(REAL_TRADE == True):
+                result = putMarketOrder(vp, ORDER_DIRECTION_SELL, vp.leverage)
+                handleResultAfterClose(vp, result)
+            else:
+                vp.resetAfterClose()
+            
+            print("&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&")
+            
+    if(vp.isSold) and spread < 4 and vp.minuteSold != datetime.now().minute:
+        cur = get_price(vp.kline, 0, vp.priceType)
+        diff2 = (cur - vp.priceSold)#/vp.priceSold
+        if(diff2 < -takeProfit3):
+            vp.priceSoldTP = cur
+            vp.tp3 = True
+        elif(diff2 < -takeProfit2):
+            vp.priceSoldTP = cur
+            vp.tp2 = True
+        elif(diff2 < -takeProfit1):
+            vp.priceSoldTP = cur
+            vp.tp1 = True
+            
+        if(vp.priceSoldTP != 0) and vp.tp3 == True:
+            diff3 = (cur - vp.priceSoldTP)#/vp.priceSoldTP
+            if(diff3 > takeProfitStop3):
+                print("&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&")
+                print("TP " + vp.pair + " od shorta")
                 print(datetime.now())
                 print(get_pair_sell(get_pair_perpetual(vp.pair)))
                 pb = get_pair_buy(get_pair_perpetual(vp.pair))
@@ -465,167 +314,145 @@ def new_check2(vp):
                 print(earn)
                 print(vp.totalEarn)
                 
-                
-                robot = CoinexPerpetualApi(access_id, secret_key)
-                robot.adjust_leverage(vp.pair, 1, 10)
-                robot.adjust_leverage(vp.pair, 2, 10)
-                result = robot.put_market_order(
-                        vp.pair,
-                        robot.ORDER_DIRECTION_BUY,
-                        contractAmount
-                )
-                print(json.dumps(result, indent=4))
-                
-                if(result.get("code") == 0):
-                    vp.isSold = False
-                    vp.priceSoldTP = 0
-                    vp.minuteSold = -1
+                if(REAL_TRADE == True):
+                    result = putMarketOrder(vp, ORDER_DIRECTION_BUY, vp.leverage)
+                    handleResultAfterClose(vp, result)
                 else:
-                    print("FAIL")
+                    vp.resetAfterClose()
                 
-                #vp.isSold = False
-                #vp.priceSoldTP = 0
-                #vp.minuteSold = -1
-                vp.tp1 = False
-                vp.tp2 = False
-                vp.tp3 = False
                 print("&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&")
-        
-        if spread < 4: #(datetime.now().second < 3) and 
-            if(diff < -openOrder) and vp.isBought == False:
-                print("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%55")
-                print("przebicie od dołu " + vp.pair + " buy")
-                if(vp.isSold):
-                    print("zamknij " + vp.pair + " od shorta")
-                    print(get_pair_sell(get_pair_perpetual(vp.pair)))
-                    pb = get_pair_buy(get_pair_perpetual(vp.pair))
-                    print(pb)#praw
-                    earn = (pb - vp.priceSold)/vp.priceSold
-                    earn = -earn
-                    vp.totalEarn += earn
-                    print(earn)
-                    print(vp.totalEarn)
-                    
-                    robot = CoinexPerpetualApi(access_id, secret_key)
-                    robot.adjust_leverage(vp.pair, 1, 10)
-                    robot.adjust_leverage(vp.pair, 2, 10)
-                    result = robot.put_market_order(
-                        vp.pair,
-                        robot.ORDER_DIRECTION_BUY,
-                        contractAmount
-                    )
-                    print(json.dumps(result, indent=4))
-                    
-                    if(result.get("code") == 0):
-                        vp.isSold = False
-                        vp.priceSoldTP = 0
-                        vp.minuteSold = -1
-                    else:
-                        print("FAIL")
-                    
-                    #vp.isSold = False
-                    #vp.priceSoldTP = 0
-                    #vp.minuteSold = -1
-                    vp.tp1 = False
-                    vp.tp2 = False
-                    vp.tp3 = False
-                    
-                print(get_pair_sell(get_pair_perpetual(vp.pair)))#praw
-                print(get_pair_buy(get_pair_perpetual(vp.pair)))
+        if(vp.priceSoldTP != 0) and vp.tp2 == True:
+            diff3 = (cur - vp.priceSoldTP)#/vp.priceSoldTP
+            if(diff3 > takeProfitStop2):
+                print("&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&")
+                print("TP " + vp.pair + " od shorta")
                 print(datetime.now())
-                
-                robot = CoinexPerpetualApi(access_id, secret_key)
-                robot.adjust_leverage(vp.pair, 1, 10)
-                robot.adjust_leverage(vp.pair, 2, 10)
-                result = robot.put_market_order(
-                        vp.pair,
-                        robot.ORDER_DIRECTION_BUY,
-                        contractAmount
-                    )
-                print(json.dumps(result, indent=4))
-                
-                if(result.get("code") == 0):
-                    vp.isBought = True
-                else:
-                    print("FAIL")
-                
-                #vp.isBought = True
-                vp.highestBuy = get_pair_sell(get_pair_perpetual(vp.pair))
-                vp.priceBought = vp.highestBuy
-                vp.minuteBought = datetime.now().minute
-                vp.tp1 = False
-                vp.tp2 = False
-                vp.tp3 = False
-                print("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%55")
-                
-            elif(diff > openOrder) and vp.isSold == False:
-                print("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%55")
-                print("przebicie od góry " + vp.pair + " sell")
-                if(vp.isBought):
-                    print("zamknij " + vp.pair + " od longa")
-                    ps = get_pair_sell(get_pair_perpetual(vp.pair))
-                    print(ps)#praw
-                    print(get_pair_buy(get_pair_perpetual(vp.pair)))
-                    earn = (ps - vp.priceBought)/vp.priceBought
-                    vp.totalEarn += earn
-                    print(earn)
-                    print(vp.totalEarn)
-                    
-                    robot = CoinexPerpetualApi(access_id, secret_key)
-                    robot.adjust_leverage(vp.pair, 1, 10)
-                    robot.adjust_leverage(vp.pair, 2, 10)
-                    result = robot.put_market_order(
-                        vp.pair,
-                        robot.ORDER_DIRECTION_SELL,
-                        contractAmount
-                    )
-                    print(json.dumps(result, indent=4))
-                    
-                    if(result.get("code") == 0):
-                        vp.isBought = False
-                        vp.priceBoughtTP = 0
-                        vp.minuteBought = -1
-                    else:
-                        print("FAIL")
-                    
-                    #vp.isBought = False
-                    #vp.priceBoughtTP = 0
-                    #vp.minuteBought = -1
-                    vp.tp1 = False
-                    vp.tp2 = False
-                    vp.tp3 = False
-                    
-                    
                 print(get_pair_sell(get_pair_perpetual(vp.pair)))
-                print(get_pair_buy(get_pair_perpetual(vp.pair)))# praw
-                print(datetime.now())
+                pb = get_pair_buy(get_pair_perpetual(vp.pair))
+                print(pb)#praw
+                earn = (pb - vp.priceSold)/vp.priceSold
+                earn = -earn
+                vp.totalEarn += earn
+                print(earn)
+                print(vp.totalEarn)
                 
-                robot = CoinexPerpetualApi(access_id, secret_key)
-                robot.adjust_leverage(vp.pair, 1, 10)
-                robot.adjust_leverage(vp.pair, 2, 10)
-                result = robot.put_market_order(
-                        vp.pair,
-                        robot.ORDER_DIRECTION_SELL,
-                        contractAmount
-                    )
-                print(json.dumps(result, indent=4))
-                
-                if(result.get("code") == 0):
-                    vp.isSold = True
+                if(REAL_TRADE == True):
+                    result = putMarketOrder(vp, ORDER_DIRECTION_BUY, vp.leverage)
+                    handleResultAfterClose(vp, result)
                 else:
-                    print("FAIL")
+                    vp.resetAfterClose()
                 
-                #vp.isSold = True
-                vp.lowestSold = get_pair_buy(get_pair_perpetual(vp.pair))
-                vp.priceSold = vp.lowestSold
-                vp.minuteSold = datetime.now().minute
-                vp.tp1 = False
-                vp.tp2 = False
-                vp.tp3 = False
-                print("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%55")
+                print("&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&")
+        if(vp.priceSoldTP != 0) and vp.tp1 == True:
+            diff3 = (cur - vp.priceSoldTP)#/vp.priceSoldTP
+            if(diff3 > takeProfitStop1):
+                print("&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&")
+                print("TP " + vp.pair + " od shorta")
+                print(datetime.now())
+                print(get_pair_sell(get_pair_perpetual(vp.pair)))
+                pb = get_pair_buy(get_pair_perpetual(vp.pair))
+                print(pb)#praw
+                earn = (pb - vp.priceSold)/vp.priceSold
+                earn = -earn
+                vp.totalEarn += earn
+                print(earn)
+                print(vp.totalEarn)
+                
+                if(REAL_TRADE == True):
+                    result = putMarketOrder(vp, ORDER_DIRECTION_BUY, vp.leverage)
+                    handleResultAfterClose(vp, result)
+                else:
+                    vp.resetAfterClose()
+                
+                print("&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&")
+                
+        if(diff2 > stopLoss):
+            print("&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&")
+            print("stop loss " + vp.pair + " od shorta")
+            print(datetime.now())
+            print(get_pair_sell(get_pair_perpetual(vp.pair)))
+            pb = get_pair_buy(get_pair_perpetual(vp.pair))
+            print(pb)#praw
+            earn = (pb - vp.priceSold)/vp.priceSold
+            earn = -earn
+            vp.totalEarn += earn
+            print(earn)
+            print(vp.totalEarn)
+            
+            if(REAL_TRADE == True):
+                result = putMarketOrder(vp, ORDER_DIRECTION_BUY, vp.leverage)
+                handleResultAfterClose(vp, result)
+            else:
+                vp.resetAfterClose()
+            
+            print("&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&")
+    
+    if spread < 4: #(datetime.now().second < 3) and 
+        if(diff < -openOrder) and vp.isBought == False:
+            print("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%55")
+            print("przebicie od dołu " + vp.pair + " buy")
+            if(vp.isSold):
+                print("zamknij " + vp.pair + " od shorta")
+                print(get_pair_sell(get_pair_perpetual(vp.pair)))
+                pb = get_pair_buy(get_pair_perpetual(vp.pair))
+                print(pb)#praw
+                earn = (pb - vp.priceSold)/vp.priceSold
+                earn = -earn
+                vp.totalEarn += earn
+                print(earn)
+                print(vp.totalEarn)
+                
+                if(REAL_TRADE == True):
+                    result = putMarketOrder(vp, ORDER_DIRECTION_BUY, vp.leverage)
+                    handleResultAfterClose(vp, result)
+                else:
+                    vp.resetAfterClose()
+                
+            print(get_pair_sell(get_pair_perpetual(vp.pair)))#praw
+            print(get_pair_buy(get_pair_perpetual(vp.pair)))
+            print(datetime.now())
+            
+            if(REAL_TRADE == True):
+                result = putMarketOrder(vp, ORDER_DIRECTION_BUY, vp.leverage)
+                handleResultAfterBought(vp, result)
+            else:
+                vp.setAfterBought()
+            
+            print("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%55")
+            
+        elif(diff > openOrder) and vp.isSold == False:
+            print("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%55")
+            print("przebicie od góry " + vp.pair + " sell")
+            if(vp.isBought):
+                print("zamknij " + vp.pair + " od longa")
+                ps = get_pair_sell(get_pair_perpetual(vp.pair))
+                print(ps)#praw
+                print(get_pair_buy(get_pair_perpetual(vp.pair)))
+                earn = (ps - vp.priceBought)/vp.priceBought
+                vp.totalEarn += earn
+                print(earn)
+                print(vp.totalEarn)
+                
+                if(REAL_TRADE == True):
+                    result = putMarketOrder(vp, ORDER_DIRECTION_SELL, vp.leverage)
+                    handleResultAfterClose(vp, result) 
+                else:
+                    vp.resetAfterClose()
+                
+            print(get_pair_sell(get_pair_perpetual(vp.pair)))
+            print(get_pair_buy(get_pair_perpetual(vp.pair)))# praw
+            print(datetime.now())
+            
+            if(REAL_TRADE == True):
+                result = putMarketOrder(vp, ORDER_DIRECTION_SELL, vp.leverage)
+                handleResultAfterClose(vp, result)
+            else:
+                vp.setAfterSold()
+            
+            print("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%55")
         
-    except:
-        print(1)
+    #except:
+    #    print(1)
 
 def checkAll(vp, candleRange, debug):
     #time.sleep(1)
@@ -827,9 +654,10 @@ def hujl():
                 print(y)
                 vp1.bestOpenOrder = x
                 vp1.bestStopLoss = y     
+                
 class ValuePair():
-    def __init__(self, _pair, _firstsma, _secondsma, _priceType, _time, _limit):
-        self.kline = get_kline_perpetual(_pair, _time, _limit)
+    def __init__(self, _pair, _priceType, _time, _limit):
+        self.kline = None
         self.time = _time
         self.limit = _limit
         self.pair = _pair
@@ -851,18 +679,36 @@ class ValuePair():
         self.tp1 = False
         self.tp2 = False
         self.tp3 = False
+        self.leverage = 10
 
-    def reset(vp):
-        vp.isBought = False
-        vp.priceBoughtTP = 0
-        vp.minuteBought = -1
-        vp.isSold = False
-        vp.priceSoldTP = 0
-        vp.minuteSold = -1
-        vp.tp1 = False
-        vp.tp2 = False
-        vp.tp3 = False
-
+    def resetAfterClose(self):
+        self.isBought = False
+        self.priceBoughtTP = 0
+        self.minuteBought = -1
+        self.isSold = False
+        self.priceSoldTP = 0
+        self.minuteSold = -1
+        self.tp1 = False
+        self.tp2 = False
+        self.tp3 = False
+    
+    def setAfterSold(self):
+        self.isSold = True
+        self.lowestSold = get_pair_buy(get_pair_perpetual(self.pair))
+        self.priceSold = self.lowestSold
+        self.minuteSold = datetime.now().minute
+        self.tp1 = False
+        self.tp2 = False
+        self.tp3 = False
+    
+    def setAfterBought(self):
+        self.isBought = True
+        self.highestBuy = get_pair_sell(get_pair_perpetual(self.pair))
+        self.priceBought = self.highestBuy
+        self.minuteBought = datetime.now().minute
+        self.tp1 = False
+        self.tp2 = False
+        self.tp3 = False
         
 if __name__ == '__main__':
     firstsma = 5
@@ -870,7 +716,6 @@ if __name__ == '__main__':
     limit = 1000
     #print(put_limit_perpetual(1, get_pair_sell(get_pair_perpetual('BTCUSD')), 2, 'BTCUSD'))
     
-   # vp1 = ValuePair('ETHBTC', firstsma, secondsma, 2)
    # vp2 = ValuePair('LTCBTC', firstsma, secondsma, 2)
    # vp3 = ValuePair('EOSBTC', firstsma, secondsma, 2)
    # vp4 = ValuePair('BCHBTC', firstsma, secondsma, 2)
@@ -879,7 +724,7 @@ if __name__ == '__main__':
    # vp7 = ValuePair('ETCBTC', firstsma, secondsma, 2)
    # vp8 = ValuePair('TRXBTC', firstsma, secondsma, 2)
     
-    vp1 = ValuePair('BTCUSD', firstsma, secondsma, 2, "1min", limit)
+    vp1 = ValuePair('BTCUSD', 2, "1min", limit)
     #vp2 = ValuePair('ETHUSD', firstsma, secondsma, 2)
     #vp3 = ValuePair('BCHUSD', firstsma, secondsma, 2)
     #vp4 = ValuePair('LTCUSD', firstsma, secondsma, 2)
@@ -890,11 +735,9 @@ if __name__ == '__main__':
     #1 open
     #2 close
     print(time.time())
-
     #sr2 = get_price(vp1.kline, 0, 2)        
     #print(sr2)
     while True:
-        
         new_check2(vp1)
         #new_check(vp2)
         #new_check(vp3)
