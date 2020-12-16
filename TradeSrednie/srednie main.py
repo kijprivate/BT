@@ -715,11 +715,11 @@ def checkAll(vp, candleRange, debug):
                     print(earn)
                     print("&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&")
                 
-            if(diff2 > takeProfit):
+            if(diff2 > takeProfit1):
                 vp.priceBoughtTP = cur
             if(vp.priceBoughtTP != 0):
                 diff3 = (cur - vp.priceBoughtTP)#/vp.priceBoughtTP
-                if(diff3 < -takeProfitStop):
+                if(diff3 < -takeProfitStop1):
                     currTime = time.gmtime(get_price_old(vp1.kline, x, 0))
                     ps = get_price_old(vp.kline, x, vp.priceType)
                     earn = (ps - vp.priceBought)/vp.priceBought
@@ -755,11 +755,11 @@ def checkAll(vp, candleRange, debug):
                     print(earn)
                     print("&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&")
                 
-            if(diff2 < -takeProfit):
+            if(diff2 < -takeProfit1):
                 vp.priceSoldTP = cur
             if(vp.priceSoldTP != 0):
                 diff3 = (cur - vp.priceSoldTP)#/vp.priceSoldTP
-                if(diff3 > takeProfitStop):
+                if(diff3 > takeProfitStop1):
                     currTime = time.gmtime(get_price_old(vp1.kline, x, 0))
                     pb = get_price_old(vp.kline, x, vp.priceType)
                     earn = (pb - vp.priceSold)/vp.priceSold
@@ -783,6 +783,13 @@ def checkAll(vp, candleRange, debug):
     #print(vp.totalEarn)
     return vp.totalEarn
 
+def checkSpread(vp):
+    time.sleep(1)
+    spread = abs(get_pair_buy(get_pair_perpetual(vp.pair)) - get_pair_sell(get_pair_perpetual(vp.pair)))
+    print(spread)
+    print(vp.pair)
+    print(get_pair_buy(get_pair_perpetual(vp.pair)))
+    
 def hujl():
     vp1.openOrder = 3  
     vp1.stopLoss = 3
