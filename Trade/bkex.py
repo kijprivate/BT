@@ -59,7 +59,8 @@ def get_symbols():
             '{url}/v1/exchangeInfo'.format(url=request_client.url),
             params=params
     )
-    var = complex_json.loads(response.data).get('data', {}).get('pairs')
+    var = complex_json.loads(response.data).get('data').get('pairs')
+    return var
     s = (str)(var)
 
     array = []

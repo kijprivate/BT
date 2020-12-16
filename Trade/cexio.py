@@ -96,13 +96,14 @@ def getBidsResponse(response):
     return response.get("bids")
 
 def get_pair(pair):
+    end = pair[-3:]
+    start = pair[:-3]
     request_client = RequestClient()
     params = {
-        'market': pair
     }
     response = request_client.request(
             'GET',
-            '{url}/v1/market/ticker'.format(url=request_client.url),
+            '{url}/api/order_book/{s}/{e}'.format(url='https://cex.io', s = start, e = end),
             params=params
     )
     var = complex_json.loads(response.data)

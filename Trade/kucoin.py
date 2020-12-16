@@ -62,7 +62,8 @@ def get_symbols():
             params=params
     )
     var = complex_json.loads(response.data)
-    s = (str)(var.get('data', {}))
+    s = var.get('data')
+    return s
     array = []
     while True:
         sAppend = find_between(s, 'symbol\': \'', '\', \'name')
@@ -122,7 +123,7 @@ def get_orders(pair, limit):
             params=params
     )
     var = complex_json.loads(response.data)
-    return var.get('data', {})
+    return var.get('data')
 
 def get_orders_asks(pair, limit):
     return get_orders(pair, limit).get('asks')

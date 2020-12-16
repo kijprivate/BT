@@ -85,8 +85,12 @@ def getSymbolResponse(response):
     return newArr
 
 def getPairPriceEndpoint(pair):
-    end = pair[-3:]
-    start = pair[:-3]
+    if("USDT" in pair):
+        end = pair[-4:]
+        start = pair[:-4]
+    else:
+        end = pair[-3:]
+        start = pair[:-3]
     pair = start + "_" + end
     return '{url}/v3/mdata/depth?pair={p}&size=20'.format(url='https://api.bibox.com', p = pair)
 
@@ -200,7 +204,6 @@ def can_deposit(pair):
     )
     var = complex_json.loads(response.data)
     return var
-    return (bool)(var.get('data', {}).get(pair).get('can_deposit'))
 
 def can_withdraw(pair):
     return False

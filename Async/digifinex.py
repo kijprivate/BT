@@ -88,8 +88,12 @@ def getSymbolResponse(response):
 
 def getPairPriceEndpoint(pair):
     pair = pair.lower()
-    end = pair[-3:]
-    start = pair[:-3]
+    if("usdt" in pair):
+        end = pair[-4:]
+        start = pair[:-4]
+    else:
+        end = pair[-3:]
+        start = pair[:-3]
     pair = start + "_" + end
     return '{url}/order_book?symbol={p}&limit=20'.format(url='https://openapi.digifinex.com/v3', p = pair)
 

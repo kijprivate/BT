@@ -85,8 +85,12 @@ def getSymbolResponse(response):
     return newArr
 
 def getPairPriceEndpoint(pair):
-    end = pair[-3:]
-    start = pair[:-3]
+    if("USDT" in pair):
+        end = pair[-4:]
+        start = pair[:-4]
+    else:
+        end = pair[-3:]
+        start = pair[:-3]
     pair = start + "-" + end
     return '{url}/spot/orderBook?symbol={p}'.format(url='https://global-openapi.bithumb.pro/openapi/v1', p = pair)
 

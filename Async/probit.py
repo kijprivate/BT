@@ -86,8 +86,12 @@ def getSymbolResponse(response):
     return newArr
 
 def getPairPriceEndpoint(pair):
-    end = pair[-3:]
-    start = pair[:-3]
+    if("USDT" in pair):
+        end = pair[-4:]
+        start = pair[:-4]
+    else:
+        end = pair[-3:]
+        start = pair[:-3]
     pair = start + "-" + end
     return '{url}/exchange/v1/order_book?market_id={p}'.format(url='https://api.probit.com/api', p = pair)
 

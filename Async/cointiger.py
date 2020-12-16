@@ -76,6 +76,7 @@ def getSymbolsEndpoint():
     return "https://www.cointiger.com/exchange/api/public/market/detail"
 
 def getSymbolResponse(response):
+    print(response)
     resp = list(response.keys())
     return resp
 
@@ -84,6 +85,7 @@ def getPairPriceEndpoint(pair):
     return '{url}/depth?api_key=5f8a5ac1-cfe3-4ee4-8e55-13015d05787a&symbol={p}&type=step0'.format(url='https://api.cointiger.com/exchange/trading/api/market', p = pair)
 
 def getAsksResponse(response):
+    print(response)
     if(response.get("data") == None):
         arr = [[0 for i in range(2)] for i in range(20)]
         for x in range(20):
@@ -94,6 +96,7 @@ def getAsksResponse(response):
     return response.get("data").get("depth_data").get("tick").get("asks")
 
 def getBidsResponse(response):
+    print(response)
     if(response.get("data") == None):
         arr = [[0 for i in range(2)] for i in range(20)]
         for x in range(20):

@@ -7,6 +7,7 @@ import bithumb as bithumb
 import cryptology as cryptology
 import bitrue as bitrue
 import bibox as bibox
+import cexio as cexio
 #not working
 #import coinsuper as coinsuper #connection timeout? maybe easy fix
 #import huobi as huobi #signature
@@ -152,7 +153,11 @@ class TradesSimulation():
         
         self.askIndex = 0
         self.outOfAsk = False
-        while(self.toBuy > 0):
+        testIndex = 0
+        while(self.toBuy > 0) and testIndex < 50:
+            testIndex += 1
+            if(testIndex > 48):
+                print("Infinite loop " + str(testIndex))
             #print("LOOP BUY")
             if self.askIndex < len(self.askArray) and (self.toBuy > (float)(self.askArray[self.askIndex][1])):
                 boughts.append((float)(self.askArray[self.askIndex][0]))
@@ -184,7 +189,11 @@ class TradesSimulation():
         
         self.bidIndex = 0   
         self.outOfBid = False
-        while(self.toSell > 0):
+        testIndex = 0
+        while(self.toSell > 0) and testIndex < 50:
+            testIndex += 1
+            if(testIndex > 48):
+                print("Infinite loop " + str(testIndex))
             #print("LOOP SELL")
             if self.bidIndex < len(self.bidArray) and (self.toSell > (float)(self.bidArray[self.bidIndex][1])):
                 sold.append((float)(self.bidArray[self.bidIndex][0]))
@@ -215,7 +224,14 @@ class TradesSimulation():
         return substract / self.averageAskPrice   
         
 if __name__ == '__main__':
-
+    startTime = time.time()
+    print(cexio.get_pair("ETHBTC"))
+    
+    print("tu")
+    #for _ in range(868):
+    #    coinex.get_symbols()
+    #print(time.time() - startTime)
+   # print(coinex.get_orders("ETHBTC", 20))
     # get all symbols from market
     coinexSymbols = coinex.get_symbols()
     mxcSymbols = mxc.get_symbols()
@@ -223,7 +239,6 @@ if __name__ == '__main__':
     bkexSymbols = bkex.get_symbols()
     binanceSymbols = binance.get_symbols()
     bithumbSymbols = bithumb.get_symbols()
-    #cryptologySymbols = cryptology.get_symbols()
     bitrueSymbols = bitrue.get_symbols()
     biboxSymbols = bibox.get_symbols()
     
@@ -234,7 +249,6 @@ if __name__ == '__main__':
     bkexTuple = tuple_array(bkex, bkexSymbols)
     binanceTuple = tuple_array(binance, binanceSymbols)
     bithumbTuple = tuple_array(bithumb, bithumbSymbols)
-    #cryptologyTuple = tuple_array(cryptology, cryptologySymbols)
     bitrueTuple = tuple_array(bitrue, bitrueSymbols)
     biboxTuple = tuple_array(bibox, biboxSymbols)
     
@@ -244,7 +258,6 @@ if __name__ == '__main__':
     initTuple = add_uniques_to_array(initTuple, bkexTuple)
     initTuple = add_uniques_to_array(initTuple, binanceTuple)
     initTuple = add_uniques_to_array(initTuple, bithumbTuple)
-    #initTuple = add_uniques_to_array(initTuple, cryptologyTuple)
     initTuple = add_uniques_to_array(initTuple, bitrueTuple)
     initTuple = add_uniques_to_array(initTuple, biboxTuple)
     
@@ -258,7 +271,6 @@ if __name__ == '__main__':
     arrays = add_same_elements(arrays, bkexTuple)
     arrays = add_same_elements(arrays, binanceTuple)
     arrays = add_same_elements(arrays, bithumbTuple)
-    #arrays = add_same_elements(arrays, cryptologyTuple)
     arrays = add_same_elements(arrays, bitrueTuple)
     arrays = add_same_elements(arrays, biboxTuple)
     

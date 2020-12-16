@@ -85,8 +85,12 @@ def getSymbolResponse(response):
     return newArr
 
 def getPairPriceEndpoint(pair):
-    end = pair[-3:]
-    start = pair[:-3]
+    if("USDT" in pair):
+        end = pair[-4:]
+        start = pair[:-4]
+    else:
+        end = pair[-3:]
+        start = pair[:-3]
     return '{url}/api/order_book/{s}/{e}'.format(url='https://cex.io', s = start, e = end)
 
 def getAsksResponse(response):

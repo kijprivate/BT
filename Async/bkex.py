@@ -88,15 +88,31 @@ def getSymbolResponse(response):
     return newArr
 
 def getPairPriceEndpoint(pair):
-    end = pair[-3:]
-    start = pair[:-3]
+    if("USDT" in pair):
+        end = pair[-4:]
+        start = pair[:-4]
+    else:
+        end = pair[-3:]
+        start = pair[:-3]
     pair = start + "_" + end
     return '{url}/v2/q/depth?symbol={p}&depth=20'.format(url='https://api.bkex.com', p = pair)
 
 def getAsksResponse(response):
+    if(response.get("data") == None):
+        arr = [[0 for i in range(2)] for i in range(20)]
+        for x in range(20):
+            arr[x][0] = 0
+            arr[x][1] = 0
+        return arr
     return response.get("data").get("ask")
 
 def getBidsResponse(response):
+    if(response.get("data") == None):
+        arr = [[0 for i in range(2)] for i in range(20)]
+        for x in range(20):
+            arr[x][0] = 0
+            arr[x][1] = 0
+        return arr
     return response.get("data").get("bid")
 
 def get_pair(pair):

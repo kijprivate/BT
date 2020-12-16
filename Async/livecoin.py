@@ -78,7 +78,7 @@ def getSymbolsEndpoint():
 def getSymbolResponse(response):
     newArr = []
     for pair in response:
-        if ("USD" in pair.get("symbol")):
+        if(pair.get("volume") == 0) or ("USD" in pair.get("symbol")) or ("EUR" in pair.get("symbol")) or ("PLN" in pair.get("symbol")) or not(("BTC" in pair.get("symbol")) or ("ETH" in pair.get("symbol"))):
             continue
         toAdd = pair.get("symbol")
         toAdd = toAdd.replace('/',"")
@@ -86,8 +86,12 @@ def getSymbolResponse(response):
     return newArr
 
 def getPairPriceEndpoint(pair):
-    end = pair[-3:]
-    start = pair[:-3]
+    if("USDT" in pair):
+        end = pair[-4:]
+        start = pair[:-4]
+    else:
+        end = pair[-3:]
+        start = pair[:-3]
     pair = start + "/" + end
     return '{url}/exchange/all/order_book'.format(url='https://api.livecoin.net')
 

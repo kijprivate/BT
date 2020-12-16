@@ -2,6 +2,7 @@ import asyncio
 import aiohttp
 import time
 import math
+import random
 from datetime import datetime
 
 import coinex as coinex
@@ -158,6 +159,8 @@ async def fetchSymbols(session, url, stock):
     async with session.get(url) as response:
         if(response == None):
             print(stock)
+        if(stock == cointiger):
+            print(response)
         json_response = await response.json(content_type=None)
         symbolResponses.append(Response(stock, json_response))
 
@@ -170,14 +173,14 @@ async def taskSymbols():
         tasks.append(fetchSymbols(session, bithumb.getSymbolsEndpoint(), bithumb))
         tasks.append(fetchSymbols(session, bitrue.getSymbolsEndpoint(), bitrue))
         tasks.append(fetchSymbols(session, bibox.getSymbolsEndpoint(), bibox))
-        #tasks.append(fetchSymbols(session, bkex.getSymbolsEndpoint(), bkex))
+        tasks.append(fetchSymbols(session, bkex.getSymbolsEndpoint(), bkex))
         tasks.append(fetchSymbols(session, mxc.getSymbolsEndpoint(), mxc))
         tasks.append(fetchSymbols(session, probit.getSymbolsEndpoint(), probit))
         tasks.append(fetchSymbols(session, cexio.getSymbolsEndpoint(), cexio))
         #tasks.append(fetchSymbols(session, cointiger.getSymbolsEndpoint(), cointiger)) # sometimes suck
         tasks.append(fetchSymbols(session, digifinex.getSymbolsEndpoint(), digifinex))
         tasks.append(fetchSymbols(session, bitmax.getSymbolsEndpoint(), bitmax))
-        #tasks.append(fetchSymbols(session, livecoin.getSymbolsEndpoint(), livecoin)) try less calls
+        #tasks.append(fetchSymbols(session, livecoin.getSymbolsEndpoint(), livecoin)) #try less calls 
         tasks.append(fetchSymbols(session, bw.getSymbolsEndpoint(), bw))
         tasks.append(fetchSymbols(session, zb.getSymbolsEndpoint(), zb))
         tasks.append(fetchSymbols(session, gateio.getSymbolsEndpoint(), gateio))
@@ -215,7 +218,11 @@ async def taskPrices():
         tasks = []
         for i in range(len(arrays)):
             for j in arrays[i]:
+                if(j.stock == livecoin):
+                    await asyncio.sleep(2)
                 tasks.append(fetchAsks(session, j.stock.getPairPriceEndpoint(j.pair), j.stock, j))
+                if(j.stock == livecoin):
+                    await asyncio.sleep(2)
                 tasks.append(fetchBids(session, j.stock.getPairPriceEndpoint(j.pair), j.stock, j))
         print(len(tasks))
         await asyncio.gather(*tasks)
@@ -300,7 +307,7 @@ if __name__ == "__main__":
 
         dif = highSell - lowBuy
         perc = dif / lowBuy
-        if(perc > 0.03):
+        if(perc > 0.03) and (perc < 0.5):
             
             ask = lowBuyObj.asks #buy from
             bid = highSellObj.bids #sell at

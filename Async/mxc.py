@@ -90,8 +90,12 @@ def getSymbolResponse(response):
     return newArr
 
 def getPairPriceEndpoint(pair):
-    end = pair[-3:]
-    start = pair[:-3]
+    if("USDT" in pair):
+        end = pair[-4:]
+        start = pair[:-4]
+    else:
+        end = pair[-3:]
+        start = pair[:-3]
     pair = start + "_" + end
     return '{url}/open/api/v2/market/depth?api_key=mx0ivWxFZE2Bxg3y9y&symbol={p}&depth=20'.format(url='https://www.mxc.co', p = pair)
 
