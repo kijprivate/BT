@@ -167,292 +167,293 @@ secret_key = 'B7B13884C89347FE86E6E34A7C9FE7DD28A43B301CB70611'
 def new_check2(vp):
     time.sleep(1)
     
-    #try:
-    robot = CoinexPerpetualApi(access_id, secret_key)
-    vp.kline = robot.kline(vp.pair, vp.time, vp.limit)
-    
-    sr1 = get_price(vp.kline, 0, vp.priceType)
-    #sr2 = get_price(vp.kline, 0, 1)
-    last1 = get_price(vp.kline, 1, vp.priceType)
-    #last2 = get_price(vp.kline, 1, 1)
-    openOrder = 0.00125*sr1
-    stopLoss = 0.00125*sr1
-    takeProfit1 = 0.002*sr1
-    takeProfitStop1 = 0.001*sr1
-    takeProfit2 = 0.004*sr1
-    takeProfitStop2 = 0.002*sr1
-    takeProfit3 = 0.007*sr1
-    takeProfitStop3 = 0.0035*sr1
-    #oc1 = abs(sr1-sr2)
-    #oc2 = abs(last1-last2)
-    diff = (last1 - sr1)#/sr
-    spread = abs(get_pair_buy(get_pair_perpetual(vp.pair)) - get_pair_sell(get_pair_perpetual(vp.pair)))
-    
-    #stoploss
-    if(vp.isBought) and spread < 4 and vp.minuteBought != datetime.now().minute:
-        cur = get_price(vp.kline, 0, vp.priceType)
-        diff2 = (cur - vp.priceBought)#/vp.priceBought
-        if(diff2 > takeProfit3):
-            vp.priceBoughtTP = cur
-            vp.tp3 = True
-        elif(diff2 > takeProfit2):
-            vp.priceBoughtTP = cur
-            vp.tp2 = True
-        elif(diff2 > takeProfit1):
-            vp.priceBoughtTP = cur
-            vp.tp1 = True
-            
-        if(vp.priceBoughtTP != 0) and vp.tp3 == True:
-            diff3 = (cur - vp.priceBoughtTP)#/vp.priceBoughtTP
-            if(diff3 < -takeProfitStop3):
-                print("&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&")
-                print("TP " + vp.pair + " od longa")
-                print(datetime.now())
-                ps = get_pair_sell(get_pair_perpetual(vp.pair))
-                print(ps)#praw
-                print(get_pair_buy(get_pair_perpetual(vp.pair)))
-                earn = (ps - vp.priceBought)/vp.priceBought
-                vp.totalEarn += earn
-                print(earn)
-                print(vp.totalEarn)
-                
-                if(REAL_TRADE == True):
-                    result = putMarketOrder(vp, ORDER_DIRECTION_SELL, vp.leverage)
-                    handleResultAfterClose(vp, result)
-                else:
-                    vp.resetAfterClose()
-                
-                print("&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&")
-        elif(vp.priceBoughtTP != 0) and vp.tp2 == True:
-            diff3 = (cur - vp.priceBoughtTP)#/vp.priceBoughtTP
-            if(diff3 < -takeProfitStop2):
-                print("&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&")
-                print("TP " + vp.pair + " od longa")
-                print(datetime.now())
-                ps = get_pair_sell(get_pair_perpetual(vp.pair))
-                print(ps)#praw
-                print(get_pair_buy(get_pair_perpetual(vp.pair)))
-                earn = (ps - vp.priceBought)/vp.priceBought
-                vp.totalEarn += earn
-                print(earn)
-                print(vp.totalEarn)
-                
-                if(REAL_TRADE == True):
-                    result = putMarketOrder(vp, ORDER_DIRECTION_SELL, vp.leverage)
-                    handleResultAfterClose(vp, result)
-                else:
-                    vp.resetAfterClose()
-                
-                print("&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&")
-        elif(vp.priceBoughtTP != 0) and vp.tp1 == True:
-            diff3 = (cur - vp.priceBoughtTP)#/vp.priceBoughtTP
-            if(diff3 < -takeProfitStop1):
-                print("&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&")
-                print("TP " + vp.pair + " od longa")
-                print(datetime.now())
-                ps = get_pair_sell(get_pair_perpetual(vp.pair))
-                print(ps)#praw
-                print(get_pair_buy(get_pair_perpetual(vp.pair)))
-                earn = (ps - vp.priceBought)/vp.priceBought
-                vp.totalEarn += earn
-                print(earn)
-                print(vp.totalEarn)
-                
-                if(REAL_TRADE == True):
-                    result = putMarketOrder(vp, ORDER_DIRECTION_SELL, vp.leverage)
-                    handleResultAfterClose(vp, result)
-                else:
-                    vp.resetAfterClose()
-                
-                print("&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&")
-            
-        if(diff2 < -stopLoss):
-            print("&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&")
-            print("stop loss " + vp.pair + " od longa")
-            print(datetime.now())
-            ps = get_pair_sell(get_pair_perpetual(vp.pair))
-            print(ps)#praw
-            print(get_pair_buy(get_pair_perpetual(vp.pair)))
-            earn = (ps - vp.priceBought)/vp.priceBought
-            vp.totalEarn += earn
-            print(earn)
-            print(vp.totalEarn)
-            
-            if(REAL_TRADE == True):
-                result = putMarketOrder(vp, ORDER_DIRECTION_SELL, vp.leverage)
-                handleResultAfterClose(vp, result)
-            else:
-                vp.resetAfterClose()
-            
-            print("&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&")
-            
-    if(vp.isSold) and spread < 4 and vp.minuteSold != datetime.now().minute:
-        cur = get_price(vp.kline, 0, vp.priceType)
-        diff2 = (cur - vp.priceSold)#/vp.priceSold
-        if(diff2 < -takeProfit3):
-            vp.priceSoldTP = cur
-            vp.tp3 = True
-        elif(diff2 < -takeProfit2):
-            vp.priceSoldTP = cur
-            vp.tp2 = True
-        elif(diff2 < -takeProfit1):
-            vp.priceSoldTP = cur
-            vp.tp1 = True
-            
-        if(vp.priceSoldTP != 0) and vp.tp3 == True:
-            diff3 = (cur - vp.priceSoldTP)#/vp.priceSoldTP
-            if(diff3 > takeProfitStop3):
-                print("&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&")
-                print("TP " + vp.pair + " od shorta")
-                print(datetime.now())
-                print(get_pair_sell(get_pair_perpetual(vp.pair)))
-                pb = get_pair_buy(get_pair_perpetual(vp.pair))
-                print(pb)#praw
-                earn = (pb - vp.priceSold)/vp.priceSold
-                earn = -earn
-                vp.totalEarn += earn
-                print(earn)
-                print(vp.totalEarn)
-                
-                if(REAL_TRADE == True):
-                    result = putMarketOrder(vp, ORDER_DIRECTION_BUY, vp.leverage)
-                    handleResultAfterClose(vp, result)
-                else:
-                    vp.resetAfterClose()
-                
-                print("&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&")
-        if(vp.priceSoldTP != 0) and vp.tp2 == True:
-            diff3 = (cur - vp.priceSoldTP)#/vp.priceSoldTP
-            if(diff3 > takeProfitStop2):
-                print("&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&")
-                print("TP " + vp.pair + " od shorta")
-                print(datetime.now())
-                print(get_pair_sell(get_pair_perpetual(vp.pair)))
-                pb = get_pair_buy(get_pair_perpetual(vp.pair))
-                print(pb)#praw
-                earn = (pb - vp.priceSold)/vp.priceSold
-                earn = -earn
-                vp.totalEarn += earn
-                print(earn)
-                print(vp.totalEarn)
-                
-                if(REAL_TRADE == True):
-                    result = putMarketOrder(vp, ORDER_DIRECTION_BUY, vp.leverage)
-                    handleResultAfterClose(vp, result)
-                else:
-                    vp.resetAfterClose()
-                
-                print("&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&")
-        if(vp.priceSoldTP != 0) and vp.tp1 == True:
-            diff3 = (cur - vp.priceSoldTP)#/vp.priceSoldTP
-            if(diff3 > takeProfitStop1):
-                print("&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&")
-                print("TP " + vp.pair + " od shorta")
-                print(datetime.now())
-                print(get_pair_sell(get_pair_perpetual(vp.pair)))
-                pb = get_pair_buy(get_pair_perpetual(vp.pair))
-                print(pb)#praw
-                earn = (pb - vp.priceSold)/vp.priceSold
-                earn = -earn
-                vp.totalEarn += earn
-                print(earn)
-                print(vp.totalEarn)
-                
-                if(REAL_TRADE == True):
-                    result = putMarketOrder(vp, ORDER_DIRECTION_BUY, vp.leverage)
-                    handleResultAfterClose(vp, result)
-                else:
-                    vp.resetAfterClose()
-                
-                print("&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&")
-                
-        if(diff2 > stopLoss):
-            print("&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&")
-            print("stop loss " + vp.pair + " od shorta")
-            print(datetime.now())
-            print(get_pair_sell(get_pair_perpetual(vp.pair)))
-            pb = get_pair_buy(get_pair_perpetual(vp.pair))
-            print(pb)#praw
-            earn = (pb - vp.priceSold)/vp.priceSold
-            earn = -earn
-            vp.totalEarn += earn
-            print(earn)
-            print(vp.totalEarn)
-            
-            if(REAL_TRADE == True):
-                result = putMarketOrder(vp, ORDER_DIRECTION_BUY, vp.leverage)
-                handleResultAfterClose(vp, result)
-            else:
-                vp.resetAfterClose()
-            
-            print("&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&")
-    
-    if spread < 4: #(datetime.now().second < 3) and 
-        if(diff < -openOrder) and vp.isBought == False:
-            print("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%55")
-            print("przebicie od dołu " + vp.pair + " buy")
-            if(vp.isSold):
-                print("zamknij " + vp.pair + " od shorta")
-                print(get_pair_sell(get_pair_perpetual(vp.pair)))
-                pb = get_pair_buy(get_pair_perpetual(vp.pair))
-                print(pb)#praw
-                earn = (pb - vp.priceSold)/vp.priceSold
-                earn = -earn
-                vp.totalEarn += earn
-                print(earn)
-                print(vp.totalEarn)
-                
-                if(REAL_TRADE == True):
-                    result = putMarketOrder(vp, ORDER_DIRECTION_BUY, vp.leverage)
-                    handleResultAfterClose(vp, result)
-                else:
-                    vp.resetAfterClose()
-                
-            print(get_pair_sell(get_pair_perpetual(vp.pair)))#praw
-            print(get_pair_buy(get_pair_perpetual(vp.pair)))
-            print(datetime.now())
-            
-            if(REAL_TRADE == True):
-                result = putMarketOrder(vp, ORDER_DIRECTION_BUY, vp.leverage)
-                handleResultAfterBought(vp, result)
-            else:
-                vp.setAfterBought()
-            
-            print("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%55")
-            
-        elif(diff > openOrder) and vp.isSold == False:
-            print("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%55")
-            print("przebicie od góry " + vp.pair + " sell")
-            if(vp.isBought):
-                print("zamknij " + vp.pair + " od longa")
-                ps = get_pair_sell(get_pair_perpetual(vp.pair))
-                print(ps)#praw
-                print(get_pair_buy(get_pair_perpetual(vp.pair)))
-                earn = (ps - vp.priceBought)/vp.priceBought
-                vp.totalEarn += earn
-                print(earn)
-                print(vp.totalEarn)
-                
-                if(REAL_TRADE == True):
-                    result = putMarketOrder(vp, ORDER_DIRECTION_SELL, vp.leverage)
-                    handleResultAfterClose(vp, result) 
-                else:
-                    vp.resetAfterClose()
-                
-            print(get_pair_sell(get_pair_perpetual(vp.pair)))
-            print(get_pair_buy(get_pair_perpetual(vp.pair)))# praw
-            print(datetime.now())
-            
-            if(REAL_TRADE == True):
-                result = putMarketOrder(vp, ORDER_DIRECTION_SELL, vp.leverage)
-                handleResultAfterClose(vp, result)
-            else:
-                vp.setAfterSold()
-            
-            print("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%55")
+    try:
+        robot = CoinexPerpetualApi(access_id, secret_key)
+        vp.kline = robot.kline(vp.pair, vp.time, vp.limit)
         
-    #except:
-    #    print(1)
+        sr1 = get_price(vp.kline, 0, vp.priceType)
+        sr2 = get_price(vp.kline, 0, 1)
+        last1 = get_price(vp.kline, 1, vp.priceType)
+        #last2 = get_price(vp.kline, 1, 1)
+        openOrder = 0.00125*sr1
+        stopLoss = 0.00125*sr1
+        takeProfit1 = 0.002*sr1
+        takeProfitStop1 = 0.001*sr1
+        takeProfit2 = 0.004*sr1
+        takeProfitStop2 = 0.002*sr1
+        takeProfit3 = 0.007*sr1
+        takeProfitStop3 = 0.0035*sr1
+        oc1 = abs(sr1-sr2)/sr2
+
+        #oc2 = abs(last1-last2)
+        diff = (last1 - sr1)#/sr
+        spread = abs(get_pair_buy(get_pair_perpetual(vp.pair)) - get_pair_sell(get_pair_perpetual(vp.pair)))
+        
+        #stoploss
+        if(vp.isBought) and spread < 4 and vp.minuteBought != datetime.now().minute:
+            cur = get_price(vp.kline, 0, vp.priceType)
+            diff2 = (cur - vp.priceBought)#/vp.priceBought
+            if(diff2 > takeProfit3):
+                vp.priceBoughtTP = cur
+                vp.tp3 = True
+            elif(diff2 > takeProfit2):
+                vp.priceBoughtTP = cur
+                vp.tp2 = True
+            elif(diff2 > takeProfit1):
+                vp.priceBoughtTP = cur
+                vp.tp1 = True
+                
+            if(vp.priceBoughtTP != 0) and vp.tp3 == True:
+                diff3 = (cur - vp.priceBoughtTP)#/vp.priceBoughtTP
+                if(diff3 < -takeProfitStop3):
+                    print("&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&")
+                    print("TP " + vp.pair + " od longa")
+                    print(datetime.now())
+                    ps = get_pair_sell(get_pair_perpetual(vp.pair))
+                    print(ps)#praw
+                    print(get_pair_buy(get_pair_perpetual(vp.pair)))
+                    earn = (ps - vp.priceBought)/vp.priceBought
+                    vp.totalEarn += earn
+                    print(earn)
+                    print(vp.totalEarn)
+                    
+                    if(REAL_TRADE == True):
+                        result = putMarketOrder(vp, ORDER_DIRECTION_SELL, vp.leverage)
+                        handleResultAfterClose(vp, result)
+                    else:
+                        vp.resetAfterClose()
+                    
+                    print("&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&")
+            elif(vp.priceBoughtTP != 0) and vp.tp2 == True:
+                diff3 = (cur - vp.priceBoughtTP)#/vp.priceBoughtTP
+                if(diff3 < -takeProfitStop2):
+                    print("&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&")
+                    print("TP " + vp.pair + " od longa")
+                    print(datetime.now())
+                    ps = get_pair_sell(get_pair_perpetual(vp.pair))
+                    print(ps)#praw
+                    print(get_pair_buy(get_pair_perpetual(vp.pair)))
+                    earn = (ps - vp.priceBought)/vp.priceBought
+                    vp.totalEarn += earn
+                    print(earn)
+                    print(vp.totalEarn)
+                    
+                    if(REAL_TRADE == True):
+                        result = putMarketOrder(vp, ORDER_DIRECTION_SELL, vp.leverage)
+                        handleResultAfterClose(vp, result)
+                    else:
+                        vp.resetAfterClose()
+                    
+                    print("&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&")
+            elif(vp.priceBoughtTP != 0) and vp.tp1 == True:
+                diff3 = (cur - vp.priceBoughtTP)#/vp.priceBoughtTP
+                if(diff3 < -takeProfitStop1):
+                    print("&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&")
+                    print("TP " + vp.pair + " od longa")
+                    print(datetime.now())
+                    ps = get_pair_sell(get_pair_perpetual(vp.pair))
+                    print(ps)#praw
+                    print(get_pair_buy(get_pair_perpetual(vp.pair)))
+                    earn = (ps - vp.priceBought)/vp.priceBought
+                    vp.totalEarn += earn
+                    print(earn)
+                    print(vp.totalEarn)
+                    
+                    if(REAL_TRADE == True):
+                        result = putMarketOrder(vp, ORDER_DIRECTION_SELL, vp.leverage)
+                        handleResultAfterClose(vp, result)
+                    else:
+                        vp.resetAfterClose()
+                    
+                    print("&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&")
+                
+            if(diff2 < -stopLoss):
+                print("&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&")
+                print("stop loss " + vp.pair + " od longa")
+                print(datetime.now())
+                ps = get_pair_sell(get_pair_perpetual(vp.pair))
+                print(ps)#praw
+                print(get_pair_buy(get_pair_perpetual(vp.pair)))
+                earn = (ps - vp.priceBought)/vp.priceBought
+                vp.totalEarn += earn
+                print(earn)
+                print(vp.totalEarn)
+                
+                if(REAL_TRADE == True):
+                    result = putMarketOrder(vp, ORDER_DIRECTION_SELL, vp.leverage)
+                    handleResultAfterClose(vp, result)
+                else:
+                    vp.resetAfterClose()
+                
+                print("&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&")
+                
+        if(vp.isSold) and spread < 4 and vp.minuteSold != datetime.now().minute:
+            cur = get_price(vp.kline, 0, vp.priceType)
+            diff2 = (cur - vp.priceSold)#/vp.priceSold
+            if(diff2 < -takeProfit3):
+                vp.priceSoldTP = cur
+                vp.tp3 = True
+            elif(diff2 < -takeProfit2):
+                vp.priceSoldTP = cur
+                vp.tp2 = True
+            elif(diff2 < -takeProfit1):
+                vp.priceSoldTP = cur
+                vp.tp1 = True
+                
+            if(vp.priceSoldTP != 0) and vp.tp3 == True:
+                diff3 = (cur - vp.priceSoldTP)#/vp.priceSoldTP
+                if(diff3 > takeProfitStop3):
+                    print("&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&")
+                    print("TP " + vp.pair + " od shorta")
+                    print(datetime.now())
+                    print(get_pair_sell(get_pair_perpetual(vp.pair)))
+                    pb = get_pair_buy(get_pair_perpetual(vp.pair))
+                    print(pb)#praw
+                    earn = (pb - vp.priceSold)/vp.priceSold
+                    earn = -earn
+                    vp.totalEarn += earn
+                    print(earn)
+                    print(vp.totalEarn)
+                    
+                    if(REAL_TRADE == True):
+                        result = putMarketOrder(vp, ORDER_DIRECTION_BUY, vp.leverage)
+                        handleResultAfterClose(vp, result)
+                    else:
+                        vp.resetAfterClose()
+                    
+                    print("&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&")
+            if(vp.priceSoldTP != 0) and vp.tp2 == True:
+                diff3 = (cur - vp.priceSoldTP)#/vp.priceSoldTP
+                if(diff3 > takeProfitStop2):
+                    print("&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&")
+                    print("TP " + vp.pair + " od shorta")
+                    print(datetime.now())
+                    print(get_pair_sell(get_pair_perpetual(vp.pair)))
+                    pb = get_pair_buy(get_pair_perpetual(vp.pair))
+                    print(pb)#praw
+                    earn = (pb - vp.priceSold)/vp.priceSold
+                    earn = -earn
+                    vp.totalEarn += earn
+                    print(earn)
+                    print(vp.totalEarn)
+                    
+                    if(REAL_TRADE == True):
+                        result = putMarketOrder(vp, ORDER_DIRECTION_BUY, vp.leverage)
+                        handleResultAfterClose(vp, result)
+                    else:
+                        vp.resetAfterClose()
+                    
+                    print("&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&")
+            if(vp.priceSoldTP != 0) and vp.tp1 == True:
+                diff3 = (cur - vp.priceSoldTP)#/vp.priceSoldTP
+                if(diff3 > takeProfitStop1):
+                    print("&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&")
+                    print("TP " + vp.pair + " od shorta")
+                    print(datetime.now())
+                    print(get_pair_sell(get_pair_perpetual(vp.pair)))
+                    pb = get_pair_buy(get_pair_perpetual(vp.pair))
+                    print(pb)#praw
+                    earn = (pb - vp.priceSold)/vp.priceSold
+                    earn = -earn
+                    vp.totalEarn += earn
+                    print(earn)
+                    print(vp.totalEarn)
+                    
+                    if(REAL_TRADE == True):
+                        result = putMarketOrder(vp, ORDER_DIRECTION_BUY, vp.leverage)
+                        handleResultAfterClose(vp, result)
+                    else:
+                        vp.resetAfterClose()
+                    
+                    print("&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&")
+                    
+            if(diff2 > stopLoss):
+                print("&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&")
+                print("stop loss " + vp.pair + " od shorta")
+                print(datetime.now())
+                print(get_pair_sell(get_pair_perpetual(vp.pair)))
+                pb = get_pair_buy(get_pair_perpetual(vp.pair))
+                print(pb)#praw
+                earn = (pb - vp.priceSold)/vp.priceSold
+                earn = -earn
+                vp.totalEarn += earn
+                print(earn)
+                print(vp.totalEarn)
+                
+                if(REAL_TRADE == True):
+                    result = putMarketOrder(vp, ORDER_DIRECTION_BUY, vp.leverage)
+                    handleResultAfterClose(vp, result)
+                else:
+                    vp.resetAfterClose()
+                
+                print("&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&")
+        
+        if oc1 > 0.0015: #(datetime.now().second < 3) and 
+            if(diff < -openOrder) and vp.isBought == False:
+                print("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%55")
+                print("przebicie od dołu " + vp.pair + " buy")
+                if(vp.isSold):
+                    print("zamknij " + vp.pair + " od shorta")
+                    print(get_pair_sell(get_pair_perpetual(vp.pair)))
+                    pb = get_pair_buy(get_pair_perpetual(vp.pair))
+                    print(pb)#praw
+                    earn = (pb - vp.priceSold)/vp.priceSold
+                    earn = -earn
+                    vp.totalEarn += earn
+                    print(earn)
+                    print(vp.totalEarn)
+                    
+                    if(REAL_TRADE == True):
+                        result = putMarketOrder(vp, ORDER_DIRECTION_BUY, vp.leverage)
+                        handleResultAfterClose(vp, result)
+                    else:
+                        vp.resetAfterClose()
+                    
+                print(get_pair_sell(get_pair_perpetual(vp.pair)))#praw
+                print(get_pair_buy(get_pair_perpetual(vp.pair)))
+                print(datetime.now())
+                
+                if(REAL_TRADE == True):
+                    result = putMarketOrder(vp, ORDER_DIRECTION_BUY, vp.leverage)
+                    handleResultAfterBought(vp, result)
+                else:
+                    vp.setAfterBought()
+                
+                print("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%55")
+                
+            elif(diff > openOrder) and vp.isSold == False:
+                print("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%55")
+                print("przebicie od góry " + vp.pair + " sell")
+                if(vp.isBought):
+                    print("zamknij " + vp.pair + " od longa")
+                    ps = get_pair_sell(get_pair_perpetual(vp.pair))
+                    print(ps)#praw
+                    print(get_pair_buy(get_pair_perpetual(vp.pair)))
+                    earn = (ps - vp.priceBought)/vp.priceBought
+                    vp.totalEarn += earn
+                    print(earn)
+                    print(vp.totalEarn)
+                    
+                    if(REAL_TRADE == True):
+                        result = putMarketOrder(vp, ORDER_DIRECTION_SELL, vp.leverage)
+                        handleResultAfterClose(vp, result) 
+                    else:
+                        vp.resetAfterClose()
+                    
+                print(get_pair_sell(get_pair_perpetual(vp.pair)))
+                print(get_pair_buy(get_pair_perpetual(vp.pair)))# praw
+                print(datetime.now())
+                
+                if(REAL_TRADE == True):
+                    result = putMarketOrder(vp, ORDER_DIRECTION_SELL, vp.leverage)
+                    handleResultAfterClose(vp, result)
+                else:
+                    vp.setAfterSold()
+                
+                print("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%55")
+        
+    except:
+        print(1)
 
 def checkAll(vp, candleRange, debug):
     #time.sleep(1)
