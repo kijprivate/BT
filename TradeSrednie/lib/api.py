@@ -419,7 +419,8 @@ class CoinexPerpetualApi(object):
             'effect_type': effect_type,
             'side': side,
             'amount': str(amount),
-            'price': str(price)
+            'price': str(price),
+            'use_cet': 1
         }
         return self.request_client.post(path, data)
 

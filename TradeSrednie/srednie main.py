@@ -612,11 +612,75 @@ def checkAll(vp, candleRange, debug):
     return vp.totalEarn
 
 def checkSpread(vp):
-    time.sleep(1)
-    spread = abs(get_pair_buy(get_pair_perpetual(vp.pair)) - get_pair_sell(get_pair_perpetual(vp.pair)))
-    print(spread)
-    print(vp.pair)
-    print(get_pair_buy(get_pair_perpetual(vp.pair)))
+    #time.sleep(1)
+    robot = CoinexPerpetualApi(access_id, secret_key)
+    robot.adjust_leverage(vp.pair, 2, 3)
+    
+    buy = get_pair_buy(get_pair_perpetual(vp.pair))
+    sell = get_pair_sell(get_pair_perpetual(vp.pair))
+    
+    dataPosition = robot.query_position_pending(vp1.pair)
+    dataPosition = dataPosition.get("data")
+    print(len(dataPosition))
+    if(len(dataPosition) > 0):
+        print("TUUUUUUUUUUU")
+        if(dataPosition[0].get("side") == 1):
+            idPos = dataPosition[0].get("position_id")
+            amount = (dataPosition[0].get("close_left"))
+            if(vp.orderSellIDClose == -1):
+                res = robot.close_limit(vp.pair, idPos, amount, buy + 0.1)
+                vp.orderSellIDClose = res.get("data").get("order_id")
+                print("TRASDASd")
+                print(res)
+            if(vp.orderSellIDClose != -1):
+                res2 = robot.query_order_status(vp.pair, vp.orderSellIDClose)
+                if(float(res2.get("data").get("price")) < buy + 0.1):
+                    robot.cancel_order(vp.pair, vp.orderSellIDClose)
+                    vp.orderSellIDClose = -1
+    if(len(dataPosition) > 1):
+        print("WTF")
+        
+    getOrderSell = robot.query_order_status(vp.pair, vp.orderSellID)
+    if(getOrderSell.get("data") != None):
+        if(float(getOrderSell.get("data").get("price")) > sell - 1):
+            robot.cancel_order(vp.pair, vp.orderSellID)
+            vp.orderSellID = -1
+    else:
+        vp.orderSellID = -1
+        print("no order sell")
+    
+    getOrderBuy = robot.query_order_status(vp.pair, vp.orderBuyID)
+    if(getOrderBuy.get("data") != None):
+        if(float(getOrderBuy.get("data").get("price")) < buy + 1):
+            robot.cancel_order(vp.pair, vp.orderBuyID)
+            vp.orderBuyID = -1
+            #print(getOrderBuy.get("data"))
+    else:
+        vp.orderBuyID = -1
+        #print("noorderbuy")
+    
+    spread = (sell - buy)/sell
+    
+    if(spread > 0.0005) and len(dataPosition) < 1:
+        print(spread)
+        print(vp.pair)
+        print(buy)
+        print(sell)
+        if(vp.orderSellID == -1):
+            resultSell = robot.put_limit_order(vp.pair, ORDER_DIRECTION_SELL, 10, sell - 1)
+            print(resultSell)
+            if(resultSell.get("code") == 0):
+                vp.orderSellID = resultSell.get("data").get("order_id")
+        
+        #if(vp.orderBuyID == -1):
+        #    resultBuy = robot.put_limit_order(vp.pair, ORDER_DIRECTION_BUY, 10, buy + 1)
+        #    print(resultBuy)
+        #    if(resultBuy.get("code") == 0):
+        #        vp.orderBuyID = resultBuy.get("data").get("order_id")
+        
+        
+    #else:
+    #    robot.cancel_all_order(vp.pair)
     
 def hujl():
     vp1.openOrder = 3  
