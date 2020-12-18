@@ -154,7 +154,7 @@ REAL_TRADE = False
 openOrder = 10
 stopLoss = 8
 takeProfit1 = 10
-takeProfitStop1 = 5
+#takeProfitStop1 = 5
 takeProfit2 = 25
 takeProfitStop2 = 10
 takeProfit3 = 50
@@ -175,79 +175,37 @@ def new_check2(vp):
         sr2 = get_price(vp.kline, 0, 1)
         last1 = get_price(vp.kline, 1, vp.priceType)
         #last2 = get_price(vp.kline, 1, 1)
-        openOrder = 0.00125*sr1
-        stopLoss = 0.00125*sr1
-        takeProfit1 = 0.002*sr1
-        takeProfitStop1 = 0.001*sr1
-        takeProfit2 = 0.004*sr1
-        takeProfitStop2 = 0.002*sr1
-        takeProfit3 = 0.007*sr1
-        takeProfitStop3 = 0.0035*sr1
+        openOrder = 0.00125 # / zmniejszyc wartosci i glebsze TP dla malego zysku
+        stopLoss = 0.00125
+    
         oc1 = abs(sr1-sr2)/sr2
-
+    
         #oc2 = abs(last1-last2)
-        diff = (last1 - sr1)#/sr
+        diff = (last1 - sr1)/sr1
         spread = abs(get_pair_buy(get_pair_perpetual(vp.pair)) - get_pair_sell(get_pair_perpetual(vp.pair)))
         
         #stoploss
-        if(vp.isBought) and spread < 4 and vp.minuteBought != datetime.now().minute:
+        if(vp.isBought) and vp.minuteBought != datetime.now().minute:
             cur = get_price(vp.kline, 0, vp.priceType)
-            diff2 = (cur - vp.priceBought)#/vp.priceBought
-            if(diff2 > takeProfit3):
-                vp.priceBoughtTP = cur
-                vp.tp3 = True
-            elif(diff2 > takeProfit2):
-                vp.priceBoughtTP = cur
-                vp.tp2 = True
-            elif(diff2 > takeProfit1):
-                vp.priceBoughtTP = cur
+            diff2 = (cur - vp.priceBought)/vp.priceBought
+            if(diff2 > 0.05):
+                if(cur > vp.priceBoughtTP):
+                    vp.priceBoughtTP = cur
+                    vp.takeProfitStop = (cur - vp.priceBought)*0.7 + vp.priceBought #30% spadku od szczytu (23000 - 22800)*0.3 + 22800
+                vp.tp1 = True
+            elif(diff2 > 0.01):
+                if(cur > vp.priceBoughtTP):
+                    vp.priceBoughtTP = cur
+                    vp.takeProfitStop = (cur - vp.priceBought)*0.5 + vp.priceBought #50% spadku od szczytu (23000 - 22800)*0.3 + 22800
+                vp.tp1 = True
+            elif(diff2 > 0.0025):
+                if(cur > vp.priceBoughtTP):
+                    vp.priceBoughtTP = cur
+                    vp.takeProfitStop = (cur - vp.priceBought)*0.3 + vp.priceBought #70% spadku od szczytu (23000 - 22800)*0.3 + 22800
                 vp.tp1 = True
                 
-            if(vp.priceBoughtTP != 0) and vp.tp3 == True:
-                diff3 = (cur - vp.priceBoughtTP)#/vp.priceBoughtTP
-                if(diff3 < -takeProfitStop3):
-                    print("&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&")
-                    print("TP " + vp.pair + " od longa")
-                    print(datetime.now())
-                    ps = get_pair_sell(get_pair_perpetual(vp.pair))
-                    print(ps)#praw
-                    print(get_pair_buy(get_pair_perpetual(vp.pair)))
-                    earn = (ps - vp.priceBought)/vp.priceBought
-                    vp.totalEarn += earn
-                    print(earn)
-                    print(vp.totalEarn)
-                    
-                    if(REAL_TRADE == True):
-                        result = putMarketOrder(vp, ORDER_DIRECTION_SELL, vp.leverage)
-                        handleResultAfterClose(vp, result)
-                    else:
-                        vp.resetAfterClose()
-                    
-                    print("&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&")
-            elif(vp.priceBoughtTP != 0) and vp.tp2 == True:
-                diff3 = (cur - vp.priceBoughtTP)#/vp.priceBoughtTP
-                if(diff3 < -takeProfitStop2):
-                    print("&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&")
-                    print("TP " + vp.pair + " od longa")
-                    print(datetime.now())
-                    ps = get_pair_sell(get_pair_perpetual(vp.pair))
-                    print(ps)#praw
-                    print(get_pair_buy(get_pair_perpetual(vp.pair)))
-                    earn = (ps - vp.priceBought)/vp.priceBought
-                    vp.totalEarn += earn
-                    print(earn)
-                    print(vp.totalEarn)
-                    
-                    if(REAL_TRADE == True):
-                        result = putMarketOrder(vp, ORDER_DIRECTION_SELL, vp.leverage)
-                        handleResultAfterClose(vp, result)
-                    else:
-                        vp.resetAfterClose()
-                    
-                    print("&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&")
-            elif(vp.priceBoughtTP != 0) and vp.tp1 == True:
-                diff3 = (cur - vp.priceBoughtTP)#/vp.priceBoughtTP
-                if(diff3 < -takeProfitStop1):
+            if(vp.priceBoughtTP != 0) and vp.tp1 == True:
+                if(cur < vp.takeProfitStop):
                     print("&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&")
                     print("TP " + vp.pair + " od longa")
                     print(datetime.now())
@@ -287,66 +245,27 @@ def new_check2(vp):
                 
                 print("&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&")
                 
-        if(vp.isSold) and spread < 4 and vp.minuteSold != datetime.now().minute:
+        if(vp.isSold) and vp.minuteSold != datetime.now().minute:
             cur = get_price(vp.kline, 0, vp.priceType)
-            diff2 = (cur - vp.priceSold)#/vp.priceSold
-            if(diff2 < -takeProfit3):
-                vp.priceSoldTP = cur
-                vp.tp3 = True
-            elif(diff2 < -takeProfit2):
-                vp.priceSoldTP = cur
-                vp.tp2 = True
-            elif(diff2 < -takeProfit1):
-                vp.priceSoldTP = cur
+            diff2 = (cur - vp.priceSold)/vp.priceSold
+            if(diff2 < -0.05):
+                if(cur < vp.priceSoldTP):
+                    vp.priceSoldTP = cur
+                    vp.takeProfitStop = (vp.priceSold - cur)*0.3 + cur #30% spadku od szczytu (23000 - 22800)*0.3 + 22800
+                vp.tp1 = True
+            elif(diff2 < -0.01):
+                if(cur < vp.priceSoldTP):
+                    vp.priceSoldTP = cur
+                    vp.takeProfitStop = (vp.priceSold - cur)*0.5 + cur #50% spadku od szczytu (23000 - 22800)*0.3 + 22800
+                vp.tp1 = True
+            elif(diff2 < -0.0025):
+                if(cur < vp.priceSoldTP):
+                    vp.priceSoldTP = cur
+                    vp.takeProfitStop = (vp.priceSold - cur)*0.7 + cur #70% spadku od szczytu (23000 - 22800)*0.3 + 22800
                 vp.tp1 = True
                 
-            if(vp.priceSoldTP != 0) and vp.tp3 == True:
-                diff3 = (cur - vp.priceSoldTP)#/vp.priceSoldTP
-                if(diff3 > takeProfitStop3):
-                    print("&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&")
-                    print("TP " + vp.pair + " od shorta")
-                    print(datetime.now())
-                    print(get_pair_sell(get_pair_perpetual(vp.pair)))
-                    pb = get_pair_buy(get_pair_perpetual(vp.pair))
-                    print(pb)#praw
-                    earn = (pb - vp.priceSold)/vp.priceSold
-                    earn = -earn
-                    vp.totalEarn += earn
-                    print(earn)
-                    print(vp.totalEarn)
-                    
-                    if(REAL_TRADE == True):
-                        result = putMarketOrder(vp, ORDER_DIRECTION_BUY, vp.leverage)
-                        handleResultAfterClose(vp, result)
-                    else:
-                        vp.resetAfterClose()
-                    
-                    print("&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&")
-            if(vp.priceSoldTP != 0) and vp.tp2 == True:
-                diff3 = (cur - vp.priceSoldTP)#/vp.priceSoldTP
-                if(diff3 > takeProfitStop2):
-                    print("&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&")
-                    print("TP " + vp.pair + " od shorta")
-                    print(datetime.now())
-                    print(get_pair_sell(get_pair_perpetual(vp.pair)))
-                    pb = get_pair_buy(get_pair_perpetual(vp.pair))
-                    print(pb)#praw
-                    earn = (pb - vp.priceSold)/vp.priceSold
-                    earn = -earn
-                    vp.totalEarn += earn
-                    print(earn)
-                    print(vp.totalEarn)
-                    
-                    if(REAL_TRADE == True):
-                        result = putMarketOrder(vp, ORDER_DIRECTION_BUY, vp.leverage)
-                        handleResultAfterClose(vp, result)
-                    else:
-                        vp.resetAfterClose()
-                    
-                    print("&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&")
-            if(vp.priceSoldTP != 0) and vp.tp1 == True:
-                diff3 = (cur - vp.priceSoldTP)#/vp.priceSoldTP
-                if(diff3 > takeProfitStop1):
+            if(vp.priceSoldTP != 999999999999999999999999999999999999999) and vp.tp1 == True:
+                if(cur > vp.takeProfitStop):
                     print("&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&")
                     print("TP " + vp.pair + " od shorta")
                     print(datetime.now())
@@ -388,8 +307,8 @@ def new_check2(vp):
                 
                 print("&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&")
         
-        if oc1 > 0.0015: #(datetime.now().second < 3) and 
-            if(diff < -openOrder) and vp.isBought == False:
+        if vp.minuteStopLoss != datetime.now().minute: #oc1 > 0.0015: #(datetime.now().second < 3) and 
+            if(diff < -openOrder) and vp.isBought == False and vp.isSold == False:
                 print("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%55")
                 print("przebicie od dołu " + vp.pair + " buy")
                 if(vp.isSold):
@@ -421,7 +340,7 @@ def new_check2(vp):
                 
                 print("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%55")
                 
-            elif(diff > openOrder) and vp.isSold == False:
+            elif(diff > openOrder) and vp.isSold == False and vp.isBought == False:
                 print("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%55")
                 print("przebicie od góry " + vp.pair + " sell")
                 if(vp.isBought):
@@ -451,7 +370,7 @@ def new_check2(vp):
                     vp.setAfterSold()
                 
                 print("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%55")
-        
+                                            
     except:
         print(1)
 
@@ -736,22 +655,24 @@ class ValuePair():
         self.priceSold = 0
         self.totalEarn = 0 #0.050784281 -> 0.03; 0.040850027
         self.priceBoughtTP = 0
-        self.priceSoldTP = 0
+        self.priceSoldTP = 999999999999999999999999999999999999999
         self.bestOpenOrder = 0
         self.bestStopLoss = 0
         self.minuteBought = -1
         self.minuteSold = -1
+        self.minuteStopLoss = -1
         self.tp1 = False
         self.tp2 = False
         self.tp3 = False
         self.leverage = 10
+        self.takeProfitStop = 0
 
     def resetAfterClose(self):
         self.isBought = False
         self.priceBoughtTP = 0
         self.minuteBought = -1
         self.isSold = False
-        self.priceSoldTP = 0
+        self.priceSoldTP = 999999999999999999999999999999999999999
         self.minuteSold = -1
         self.tp1 = False
         self.tp2 = False
@@ -765,6 +686,7 @@ class ValuePair():
         self.tp1 = False
         self.tp2 = False
         self.tp3 = False
+        self.minuteStopLoss = -1
     
     def setAfterBought(self):
         self.isBought = True
@@ -774,6 +696,7 @@ class ValuePair():
         self.tp1 = False
         self.tp2 = False
         self.tp3 = False
+        self.minuteStopLoss = -1
         
 if __name__ == '__main__':
     firstsma = 5
@@ -790,11 +713,11 @@ if __name__ == '__main__':
    # vp8 = ValuePair('TRXBTC', firstsma, secondsma, 2)
     
     vp1 = ValuePair('BTCUSD', 2, "1min", limit)
-    #vp2 = ValuePair('ETHUSD', firstsma, secondsma, 2)
-    #vp3 = ValuePair('BCHUSD', firstsma, secondsma, 2)
-    #vp4 = ValuePair('LTCUSD', firstsma, secondsma, 2)
+    vp2 = ValuePair('ETHUSD', 2, "1min", limit)
+    #vp3 = ValuePair('BCHUSD', 2, "1min", limit)
+    #vp4 = ValuePair('LTCUSD', 2, "1min", limit)
     #vp5 = ValuePair('BSVUSD', firstsma, secondsma, 2)
-    #vp6 = ValuePair('XRPUSD', firstsma, secondsma, 2)
+    #vp6 = ValuePair('XRPUSD', 2, "1min", limit)
     #vp7 = ValuePair('EOSUSD', firstsma, secondsma, 2)
 
     #1 open
@@ -804,12 +727,10 @@ if __name__ == '__main__':
     #print(sr2)
     while True:
         new_check2(vp1)
-        #new_check(vp2)
-        #new_check(vp3)
-        #new_check(vp4)
-        #new_check(vp5)
-        #new_check(vp6)
-        #new_check(vp7)
+        new_check2(vp2)
+        #new_check2(vp3)
+        #new_check2(vp4)
+        #new_check2(vp6)
         
             
         
