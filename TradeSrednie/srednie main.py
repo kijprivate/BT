@@ -175,8 +175,8 @@ def new_check2(vp):
         sr2 = get_price(vp.kline, 0, 1)
         last1 = get_price(vp.kline, 1, vp.priceType)
         #last2 = get_price(vp.kline, 1, 1)
-        openOrder = 0.00125 # / zmniejszyc wartosci i glebsze TP dla malego zysku
-        stopLoss = 0.00125
+        openOrder = 0.001
+        stopLoss = 0.001
     
         oc1 = abs(sr1-sr2)/sr2
     
@@ -192,11 +192,14 @@ def new_check2(vp):
                 if(cur > vp.priceBoughtTP):
                     vp.priceBoughtTP = cur
                     vp.takeProfitStop = (cur - vp.priceBought)*0.7 + vp.priceBought #30% spadku od szczytu (23000 - 22800)*0.3 + 22800
+                vp.tp3 = True
+                vp.tp2 = True
                 vp.tp1 = True
             elif(diff2 > 0.01):
                 if(cur > vp.priceBoughtTP):
                     vp.priceBoughtTP = cur
                     vp.takeProfitStop = (cur - vp.priceBought)*0.5 + vp.priceBought #50% spadku od szczytu (23000 - 22800)*0.3 + 22800
+                vp.tp2 = True
                 vp.tp1 = True
             elif(diff2 > 0.0025):
                 if(cur > vp.priceBoughtTP):
@@ -252,11 +255,14 @@ def new_check2(vp):
                 if(cur < vp.priceSoldTP):
                     vp.priceSoldTP = cur
                     vp.takeProfitStop = (vp.priceSold - cur)*0.3 + cur #30% spadku od szczytu (23000 - 22800)*0.3 + 22800
+                vp.tp3 = True
+                vp.tp2 = True
                 vp.tp1 = True
             elif(diff2 < -0.01):
                 if(cur < vp.priceSoldTP):
                     vp.priceSoldTP = cur
                     vp.takeProfitStop = (vp.priceSold - cur)*0.5 + cur #50% spadku od szczytu (23000 - 22800)*0.3 + 22800
+                vp.tp2 = True
                 vp.tp1 = True
             elif(diff2 < -0.0025):
                 if(cur < vp.priceSoldTP):
@@ -308,7 +314,7 @@ def new_check2(vp):
                 print("&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&")
         
         if vp.minuteStopLoss != datetime.now().minute: #oc1 > 0.0015: #(datetime.now().second < 3) and 
-            if(diff < -openOrder) and vp.isBought == False and vp.isSold == False:
+            if(diff < -openOrder) and vp.isBought == False and vp.tp2 != True:
                 print("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%55")
                 print("przebicie od dołu " + vp.pair + " buy")
                 if(vp.isSold):
@@ -340,7 +346,7 @@ def new_check2(vp):
                 
                 print("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%55")
                 
-            elif(diff > openOrder) and vp.isSold == False and vp.isBought == False:
+            elif(diff > openOrder) and vp.isSold == False and vp.tp2 != True:
                 print("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%55")
                 print("przebicie od góry " + vp.pair + " sell")
                 if(vp.isBought):
