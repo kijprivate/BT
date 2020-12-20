@@ -703,17 +703,17 @@ def new_check3(vp):
         
         vp.sellsAmount = 0
         vp.buysAmount = 0
-        data = robot.get_market_deals("BTCUSD", limit=10).get("data")
-        for x in data:
-            if x.get("type") == "sell":
-                vp.sellsAmount += 1
-            else:
-                vp.buysAmount += 1
+        data = robot.depth(vp.pair, limit = 100).get("data")
+        for x in range(len(data.get('asks'))):
+            vp.sellsAmount += int(data.get('asks')[x][1])
         
+        for x in range(len(data.get('bids'))):
+            vp.buysAmount += int(data.get('bids')[x][1])
+          
         sellsPercent = vp.sellsAmount/(vp.sellsAmount+vp.buysAmount)
         boughtsPercent = vp.buysAmount/(vp.sellsAmount+vp.buysAmount)
         
-        if(boughtsPercent > 0.6) and vp.isBought == False:
+        if(boughtsPercent > 0.5) and vp.isBought == False:
             print("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%55")
             print("przebicie od dołu " + vp.pair + " buy")
             if(vp.isSold):
@@ -745,7 +745,7 @@ def new_check3(vp):
             
             print("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%55")
             
-        elif(sellsPercent > 0.6) and vp.isSold == False:
+        elif(sellsPercent > 0.5) and vp.isSold == False:
             print("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%55")
             print("przebicie od góry " + vp.pair + " sell")
             if(vp.isBought):
@@ -1028,6 +1028,8 @@ if __name__ == '__main__':
     
     #1 open
     #2 close
+
+    
     print(time.time())
     #checkSpread(vp6)
     #sr2 = get_price(vp1.kline, 0, 2)        
