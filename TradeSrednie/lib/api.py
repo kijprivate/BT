@@ -125,7 +125,7 @@ class CoinexPerpetualApi(object):
         }
         return self.request_client.get(path, params, sign=False)
 
-    def get_market_deals(self, market, last_id=0):
+    def get_market_deals(self, market, limit, last_id=0):
         """
         # params:
             id	Integer	交易id
@@ -158,7 +158,8 @@ class CoinexPerpetualApi(object):
         path = '/v1/market/deals'
         params = {
             'market': market,
-            'last_id': last_id
+            'last_id': last_id,
+            'limit': limit
         }
         return self.request_client.get(path, params, sign=False)
 

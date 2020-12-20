@@ -11,6 +11,9 @@ import json
 import urllib3
 from datetime import datetime
 from lib import CoinexPerpetualApi
+from lib import request_client
+import asyncio
+import aiohttp
 
 from urllib3.exceptions import InsecureRequestWarning
 
@@ -45,7 +48,7 @@ class RequestClient(object):
         params['access_id'] = self.access_id
         params['tonce'] = int(time.time()*1000)
         self.headers['AUTHORIZATION'] = self.get_sign(params, self.secret_key)
-
+    
     def request(self, method, url, params={}, data='', json={}):
         method = method.upper()
         if method in ['GET', 'DELETE']:
@@ -160,7 +163,7 @@ takeProfitStop2 = 10
 takeProfit3 = 50
 takeProfitStop3 = 20
 takeProfitNOW = 100
-contractAmount = 100
+contractAmount = 10
 access_id = '92D0E39AF1634EA9B7D037EDDBECD261'
 secret_key = 'B7B13884C89347FE86E6E34A7C9FE7DD28A43B301CB70611'
 
@@ -176,7 +179,7 @@ def new_check2(vp):
         last1 = get_price(vp.kline, 1, vp.priceType)
         #last2 = get_price(vp.kline, 1, 1)
         openOrder = 0.001
-        stopLoss = 0.001
+        stopLoss = 0.005
     
         oc1 = abs(sr1-sr2)/sr2
     
@@ -201,11 +204,13 @@ def new_check2(vp):
                     vp.takeProfitStop = (cur - vp.priceBought)*0.5 + vp.priceBought #50% spadku od szczytu (23000 - 22800)*0.3 + 22800
                 vp.tp2 = True
                 vp.tp1 = True
-            elif(diff2 > 0.0025):
-                if(cur > vp.priceBoughtTP):
-                    vp.priceBoughtTP = cur
-                    vp.takeProfitStop = (cur - vp.priceBought)*0.3 + vp.priceBought #70% spadku od szczytu (23000 - 22800)*0.3 + 22800
-                vp.tp1 = True
+# =============================================================================
+#             elif(diff2 > 0.0025):
+#                 if(cur > vp.priceBoughtTP):
+#                     vp.priceBoughtTP = cur
+#                     vp.takeProfitStop = (cur - vp.priceBought)*0.3 + vp.priceBought #70% spadku od szczytu (23000 - 22800)*0.3 + 22800
+#                 vp.tp1 = True
+# =============================================================================
                 
             if(vp.priceBoughtTP != 0) and vp.tp1 == True:
                 if(cur < vp.takeProfitStop):
@@ -219,6 +224,19 @@ def new_check2(vp):
                     vp.totalEarn += earn
                     print(earn)
                     print(vp.totalEarn)
+                    
+                    vp.highest = 0
+                    vp.lowest = 9999999999999999999999999999999999
+                    robot = CoinexPerpetualApi(access_id, secret_key)
+                    vp.kline = robot.kline(vp.pair, vp.time, vp.limit)
+                    for x in range(vp.limit):
+                        price = get_price(vp.kline, x, vp.priceType)
+                        if(price > vp.highest):
+                            vp.highest = price
+                    for x in range(vp.limit):
+                        price = get_price(vp.kline, x, vp.priceType)
+                        if(price < vp.lowest):
+                            vp.lowest = price
                     
                     if(REAL_TRADE == True):
                         result = putMarketOrder(vp, ORDER_DIRECTION_SELL, vp.leverage)
@@ -240,6 +258,19 @@ def new_check2(vp):
                 print(earn)
                 print(vp.totalEarn)
                 
+                vp.highest = 0
+                vp.lowest = 9999999999999999999999999999999999
+                robot = CoinexPerpetualApi(access_id, secret_key)
+                vp.kline = robot.kline(vp.pair, vp.time, vp.limit)
+                for x in range(vp.limit):
+                    price = get_price(vp.kline, x, vp.priceType)
+                    if(price > vp.highest):
+                        vp.highest = price
+                for x in range(vp.limit):
+                    price = get_price(vp.kline, x, vp.priceType)
+                    if(price < vp.lowest):
+                        vp.lowest = price
+                        
                 if(REAL_TRADE == True):
                     result = putMarketOrder(vp, ORDER_DIRECTION_SELL, vp.leverage)
                     handleResultAfterClose(vp, result)
@@ -264,11 +295,13 @@ def new_check2(vp):
                     vp.takeProfitStop = (vp.priceSold - cur)*0.5 + cur #50% spadku od szczytu (23000 - 22800)*0.3 + 22800
                 vp.tp2 = True
                 vp.tp1 = True
-            elif(diff2 < -0.0025):
-                if(cur < vp.priceSoldTP):
-                    vp.priceSoldTP = cur
-                    vp.takeProfitStop = (vp.priceSold - cur)*0.7 + cur #70% spadku od szczytu (23000 - 22800)*0.3 + 22800
-                vp.tp1 = True
+# =============================================================================
+#             elif(diff2 < -0.0025):
+#                 if(cur < vp.priceSoldTP):
+#                     vp.priceSoldTP = cur
+#                     vp.takeProfitStop = (vp.priceSold - cur)*0.7 + cur #70% spadku od szczytu (23000 - 22800)*0.3 + 22800
+#                 vp.tp1 = True
+# =============================================================================
                 
             if(vp.priceSoldTP != 999999999999999999999999999999999999999) and vp.tp1 == True:
                 if(cur > vp.takeProfitStop):
@@ -284,6 +317,19 @@ def new_check2(vp):
                     print(earn)
                     print(vp.totalEarn)
                     
+                    vp.highest = 0
+                    vp.lowest = 9999999999999999999999999999999999
+                    robot = CoinexPerpetualApi(access_id, secret_key)
+                    vp.kline = robot.kline(vp.pair, vp.time, vp.limit)
+                    for x in range(vp.limit):
+                        price = get_price(vp.kline, x, vp.priceType)
+                        if(price > vp.highest):
+                            vp.highest = price
+                    for x in range(vp.limit):
+                        price = get_price(vp.kline, x, vp.priceType)
+                        if(price < vp.lowest):
+                            vp.lowest = price
+                        
                     if(REAL_TRADE == True):
                         result = putMarketOrder(vp, ORDER_DIRECTION_BUY, vp.leverage)
                         handleResultAfterClose(vp, result)
@@ -305,6 +351,19 @@ def new_check2(vp):
                 print(earn)
                 print(vp.totalEarn)
                 
+                vp.highest = 0
+                vp.lowest = 9999999999999999999999999999999999
+                robot = CoinexPerpetualApi(access_id, secret_key)
+                vp.kline = robot.kline(vp.pair, vp.time, vp.limit)
+                for x in range(vp.limit):
+                    price = get_price(vp.kline, x, vp.priceType)
+                    if(price > vp.highest):
+                        vp.highest = price
+                for x in range(vp.limit):
+                    price = get_price(vp.kline, x, vp.priceType)
+                    if(price < vp.lowest):
+                        vp.lowest = price
+                        
                 if(REAL_TRADE == True):
                     result = putMarketOrder(vp, ORDER_DIRECTION_BUY, vp.leverage)
                     handleResultAfterClose(vp, result)
@@ -314,7 +373,7 @@ def new_check2(vp):
                 print("&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&")
         
         if vp.minuteStopLoss != datetime.now().minute: #oc1 > 0.0015: #(datetime.now().second < 3) and 
-            if(diff < -openOrder) and vp.isBought == False and vp.tp2 != True:
+            if(sr1 > vp.highest) and vp.isBought == False and vp.isSoled == False:
                 print("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%55")
                 print("przebicie od dołu " + vp.pair + " buy")
                 if(vp.isSold):
@@ -346,7 +405,7 @@ def new_check2(vp):
                 
                 print("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%55")
                 
-            elif(diff > openOrder) and vp.isSold == False and vp.tp2 != True:
+            elif(sr1 < vp.lowest) and vp.isSold == False and vp.isBought == False:
                 print("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%55")
                 print("przebicie od góry " + vp.pair + " sell")
                 if(vp.isBought):
@@ -536,76 +595,295 @@ def checkAll(vp, candleRange, debug):
     #print(vp.totalEarn)
     return vp.totalEarn
 
+async def getPairBuyAsync(session, url, data, headers):
+    async with session.post(url, data = data, headers = headers) as response:
+        json_response = await response.json()
+
+async def cancelAllOrderAsync(vp):
+    params = {
+        "access_id" : access_id,
+        "market": vp.pair,
+        "timestamp": int(time.time()*1000)
+    }
+    headers = setHeaders(params)
+    async with aiohttp.ClientSession() as session:
+        async with session.post("https://api.coinex.com/perpetual/v1/order/cancel_all", data = params, headers = headers) as response:
+            json_response = await response.json()
+
+async def getOrderStatusAsync(session, url, data, headers):
+    async with session.get(url, params = data, headers = headers) as response:
+        json_response = await response.json()
+
+async def putLimitOrder(vp, side, price, amount):
+    params = {
+        "access_id" : access_id,
+        "market": vp.pair,
+        "price": price,
+        "amount": amount, 
+        "side": side,  
+        "use_cet": 1,
+        "timestamp": int(time.time()*1000)
+    }
+    headers = setHeaders(params)
+    async with aiohttp.ClientSession() as session:
+        async with session.post("https://api.coinex.com/perpetual/v1/order/put_limit", data = params, headers = headers) as response:
+            json_response = await response.json()
+            print(json_response)
+            if(side == 1):  
+                if(json_response.get("code") == 0):
+                    vp.orderSellID = json_response.get("data").get("order_id") 
+            else:
+                if(json_response.get("code") == 0):
+                    vp.orderBuyID = json_response.get("data").get("order_id") 
+
+async def getOrderStatus(url, data, headers, vp, side):
+    async with aiohttp.ClientSession() as session:
+        async with session.get(url, params = data, headers = headers) as response:
+            json_response = await response.json()
+            if(side == 1):  
+                if(json_response.get("data") != None):
+                    if(float(json_response.get("data").get("price")) > vp.spreadSell - 0.0001):
+                        #print("Sell")
+                        #print(vp.spreadSell)
+                        params = {
+                                "access_id" : access_id,
+                                "market": vp.pair,
+                                "order_id": vp.orderSellID,
+                                "timestamp": int(time.time()*1000)   # 客户端请求时间戳
+                        }
+                        headersL = setHeaders(params)
+                        async with session.post("https://api.coinex.com/perpetual/v1/order/cancel", data = params, headers = headersL) as response:
+                            json_response = await response.json()
+                        vp.orderSellID = -1
+                else:
+                    vp.orderSellID = -1
+            else:
+                if(json_response.get("data") != None):
+                    if(float(json_response.get("data").get("price")) < vp.spreadBuy + 0.0001):
+                        #print("buy")
+                        #print(vp.spreadBuy)
+                        params = {
+                                "access_id" : access_id,
+                                "market": vp.pair,
+                                "order_id": vp.orderBuyID,
+                                "timestamp": int(time.time()*1000)   # 客户端请求时间戳
+                        }
+                        headersL = setHeaders(params)
+                        async with session.post("https://api.coinex.com/perpetual/v1/order/cancel", data = params, headers = headersL) as response:
+                            json_response = await response.json()
+                        vp.orderBuyID = -1
+                    else:
+                        vp.orderBuyID = -1
+
+async def getInfo(vp):
+    async with aiohttp.ClientSession() as session:
+        async with session.get("https://api.coinex.com/perpetual/v1/market/ticker?market={p}".format(p = vp.pair)) as response:
+            json_response = await response.json()
+            vp.spreadSell = float(json_response.get('data').get('ticker').get('sell'))
+            vp.spreadBuy = float(json_response.get('data').get('ticker').get('buy'))
+
+def setHeaders(params):
+    robot = CoinexPerpetualApi(access_id, secret_key)
+    req = robot.request_client
+    headers = {
+        'Content-Type': 'application/json; charset=utf-8',
+        'Accept': 'application/json',
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/60.0.3112.90 Safari/537.36'
+    }
+    headers['AccessId'] = access_id
+    headers['Authorization'] = req.get_sign(params, secret_key)
+
+    return headers
+
+def new_check3(vp):
+    time.sleep(1)
+    
+    try:
+        robot = CoinexPerpetualApi(access_id, secret_key)
+        
+        vp.sellsAmount = 0
+        vp.buysAmount = 0
+        data = robot.get_market_deals("BTCUSD", limit=10).get("data")
+        for x in data:
+            if x.get("type") == "sell":
+                vp.sellsAmount += 1
+            else:
+                vp.buysAmount += 1
+        
+        sellsPercent = vp.sellsAmount/(vp.sellsAmount+vp.buysAmount)
+        boughtsPercent = vp.buysAmount/(vp.sellsAmount+vp.buysAmount)
+        
+        if(boughtsPercent > 0.6) and vp.isBought == False:
+            print("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%55")
+            print("przebicie od dołu " + vp.pair + " buy")
+            if(vp.isSold):
+                print("zamknij " + vp.pair + " od shorta")
+                print(get_pair_sell(get_pair_perpetual(vp.pair)))
+                pb = get_pair_buy(get_pair_perpetual(vp.pair))
+                print(pb)#praw
+                earn = (pb - vp.priceSold)/vp.priceSold
+                earn = -earn
+                vp.totalEarn += earn
+                print(earn)
+                print(vp.totalEarn)
+                
+                if(REAL_TRADE == True):
+                    result = putMarketOrder(vp, ORDER_DIRECTION_BUY, vp.leverage)
+                    handleResultAfterClose(vp, result)
+                else:
+                    vp.resetAfterClose()
+                
+            print(get_pair_sell(get_pair_perpetual(vp.pair)))#praw
+            print(get_pair_buy(get_pair_perpetual(vp.pair)))
+            print(datetime.now())
+            
+            if(REAL_TRADE == True):
+                result = putMarketOrder(vp, ORDER_DIRECTION_BUY, vp.leverage)
+                handleResultAfterBought(vp, result)
+            else:
+                vp.setAfterBought()
+            
+            print("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%55")
+            
+        elif(sellsPercent > 0.6) and vp.isSold == False:
+            print("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%55")
+            print("przebicie od góry " + vp.pair + " sell")
+            if(vp.isBought):
+                print("zamknij " + vp.pair + " od longa")
+                ps = get_pair_sell(get_pair_perpetual(vp.pair))
+                print(ps)#praw
+                print(get_pair_buy(get_pair_perpetual(vp.pair)))
+                earn = (ps - vp.priceBought)/vp.priceBought
+                vp.totalEarn += earn
+                print(earn)
+                print(vp.totalEarn)
+                
+                if(REAL_TRADE == True):
+                    result = putMarketOrder(vp, ORDER_DIRECTION_SELL, vp.leverage)
+                    handleResultAfterClose(vp, result) 
+                else:
+                    vp.resetAfterClose()
+                
+            print(get_pair_sell(get_pair_perpetual(vp.pair)))
+            print(get_pair_buy(get_pair_perpetual(vp.pair)))# praw
+            print(datetime.now())
+            
+            if(REAL_TRADE == True):
+                result = putMarketOrder(vp, ORDER_DIRECTION_SELL, vp.leverage)
+                handleResultAfterClose(vp, result)
+            else:
+                vp.setAfterSold()
+            
+            print("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%55")
+                                            
+    except:
+        print(1)
+        
 def checkSpread(vp):
     #time.sleep(1)
-    robot = CoinexPerpetualApi(access_id, secret_key)
-    robot.adjust_leverage(vp.pair, 2, 3)
     
-    buy = get_pair_buy(get_pair_perpetual(vp.pair))
-    sell = get_pair_sell(get_pair_perpetual(vp.pair))
+    asyncio.run(getInfo(vp))
+    spread = (vp.spreadSell - vp.spreadBuy)/vp.spreadSell
+
+    params = {
+             "access_id" : access_id,
+             "market": vp.pair,   # 合约市场
+             "order_id": vp.orderSellID,
+             "timestamp": int(time.time()*1000)   # 客户端请求时间戳
+    }
+
+    params2 = {
+             "access_id" : access_id,
+             "market": vp.pair,   # 合约市场
+             "order_id": vp.orderBuyID,
+             "timestamp": int(time.time()*1000)   # 客户端请求时间戳
+    }
+    #headers = setHeaders(params)
     
-    dataPosition = robot.query_position_pending(vp1.pair)
-    dataPosition = dataPosition.get("data")
-    print(len(dataPosition))
-    if(len(dataPosition) > 0):
-        print("TUUUUUUUUUUU")
-        if(dataPosition[0].get("side") == 1):
-            idPos = dataPosition[0].get("position_id")
-            amount = (dataPosition[0].get("close_left"))
-            if(vp.orderSellIDClose == -1):
-                res = robot.close_limit(vp.pair, idPos, amount, buy + 0.1)
-                vp.orderSellIDClose = res.get("data").get("order_id")
-                print("TRASDASd")
-                print(res)
-            if(vp.orderSellIDClose != -1):
-                res2 = robot.query_order_status(vp.pair, vp.orderSellIDClose)
-                if(float(res2.get("data").get("price")) < buy + 0.1):
-                    robot.cancel_order(vp.pair, vp.orderSellIDClose)
-                    vp.orderSellIDClose = -1
-    if(len(dataPosition) > 1):
-        print("WTF")
-        
-    getOrderSell = robot.query_order_status(vp.pair, vp.orderSellID)
-    if(getOrderSell.get("data") != None):
-        if(float(getOrderSell.get("data").get("price")) > sell - 1):
-            robot.cancel_order(vp.pair, vp.orderSellID)
-            vp.orderSellID = -1
-    else:
-        vp.orderSellID = -1
-        print("no order sell")
-    
-    getOrderBuy = robot.query_order_status(vp.pair, vp.orderBuyID)
-    if(getOrderBuy.get("data") != None):
-        if(float(getOrderBuy.get("data").get("price")) < buy + 1):
-            robot.cancel_order(vp.pair, vp.orderBuyID)
-            vp.orderBuyID = -1
-            #print(getOrderBuy.get("data"))
-    else:
-        vp.orderBuyID = -1
-        #print("noorderbuy")
-    
-    spread = (sell - buy)/sell
-    
-    if(spread > 0.0005) and len(dataPosition) < 1:
+    asyncio.run(getOrderStatus("https://api.coinex.com/perpetual/v1/order/status", params, setHeaders(params), vp, ORDER_DIRECTION_SELL))
+    asyncio.run(getOrderStatus("https://api.coinex.com/perpetual/v1/order/status", params2, setHeaders(params2), vp, ORDER_DIRECTION_BUY))
+
+    if(spread > 0.0007 and spread < 0.002):
         print(spread)
         print(vp.pair)
-        print(buy)
-        print(sell)
+        print(vp.spreadBuy)
+        print(vp.spreadSell)
         if(vp.orderSellID == -1):
-            resultSell = robot.put_limit_order(vp.pair, ORDER_DIRECTION_SELL, 10, sell - 1)
-            print(resultSell)
-            if(resultSell.get("code") == 0):
-                vp.orderSellID = resultSell.get("data").get("order_id")
-        
-        #if(vp.orderBuyID == -1):
-        #    resultBuy = robot.put_limit_order(vp.pair, ORDER_DIRECTION_BUY, 10, buy + 1)
-        #    print(resultBuy)
-        #    if(resultBuy.get("code") == 0):
-        #        vp.orderBuyID = resultBuy.get("data").get("order_id")
-        
-        
+            asyncio.run(putLimitOrder(vp, ORDER_DIRECTION_SELL, vp.spreadSell - 0.0001, 10)) 
+        if(vp.orderBuyID == -1):
+            asyncio.run(putLimitOrder(vp, ORDER_DIRECTION_BUY, vp.spreadBuy + 0.0001, 10))  
     #else:
-    #    robot.cancel_all_order(vp.pair)
+    #    asyncio.run(cancelAllOrderAsync(vp))
+
+    #buy = get_pair_buy(get_pair_perpetual(vp.pair))
+    #sell = get_pair_sell(get_pair_perpetual(vp.pair))
+    
+# =============================================================================
+#     dataPosition = robot.query_position_pending(vp1.pair)
+#     dataPosition = dataPosition.get("data")
+#     print(len(dataPosition))
+#     if(len(dataPosition) > 0):
+#         print("TUUUUUUUUUUU")
+#         if(dataPosition[0].get("side") == 1):
+#             idPos = dataPosition[0].get("position_id")
+#             amount = (dataPosition[0].get("close_left"))
+#             if(vp.orderSellIDClose == -1):
+#                 res = robot.close_limit(vp.pair, idPos, amount, buy + 0.1)
+#                 vp.orderSellIDClose = res.get("data").get("order_id")
+#                 print("TRASDASd")
+#                 print(res)
+#             if(vp.orderSellIDClose != -1):
+#                 res2 = robot.query_order_status(vp.pair, vp.orderSellIDClose)
+#                 if(float(res2.get("data").get("price")) < buy + 0.1):
+#                     robot.cancel_order(vp.pair, vp.orderSellIDClose)
+#                     vp.orderSellIDClose = -1
+#     if(len(dataPosition) > 1):
+#         print("WTF")
+# =============================================================================
+        
+# =============================================================================
+#     getOrderSell = robot.query_order_status(vp.pair, vp.orderSellID)
+#     if(getOrderSell.get("data") != None):
+#         if(float(getOrderSell.get("data").get("price")) > sell - 0.0001):
+#             robot.cancel_order(vp.pair, vp.orderSellID)
+#             vp.orderSellID = -1
+#     else:
+#         vp.orderSellID = -1
+#         print("no order sell")
+#     
+#     getOrderBuy = robot.query_order_status(vp.pair, vp.orderBuyID)
+#     if(getOrderBuy.get("data") != None):
+#         if(float(getOrderBuy.get("data").get("price")) < buy + 0.0001):
+#             robot.cancel_order(vp.pair, vp.orderBuyID)
+#             vp.orderBuyID = -1
+#             #print(getOrderBuy.get("data"))
+#     else:
+#         vp.orderBuyID = -1
+#         #print("noorderbuy")
+#     
+#     spread = (sell - buy)/sell
+#     
+#     if(spread > 0.0007 and spread < 0.002): #and len(dataPosition) < 1:
+#         print(spread)
+#         print(vp.pair)
+#         print(buy)
+#         print(sell)
+#         if(vp.orderSellID == -1):
+#             resultSell = robot.put_limit_order(vp.pair, ORDER_DIRECTION_SELL, 10, sell - 0.0001)
+#             print(resultSell)
+#             if(resultSell.get("code") == 0):
+#                 vp.orderSellID = resultSell.get("data").get("order_id")
+#         
+#         if(vp.orderBuyID == -1):
+#             resultBuy = robot.put_limit_order(vp.pair, ORDER_DIRECTION_BUY, 10, buy + 0.0001)
+#             print(resultBuy)
+#             if(resultBuy.get("code") == 0):
+#                 vp.orderBuyID = resultBuy.get("data").get("order_id")
+#         
+#         
+#     else:
+#         robot.cancel_all_order(vp.pair)
+# =============================================================================
     
 def hujl():
     vp1.openOrder = 3  
@@ -672,6 +950,14 @@ class ValuePair():
         self.tp3 = False
         self.leverage = 10
         self.takeProfitStop = 0
+        self.orderSellID = -1
+        self.orderBuyID = -1
+        self.lowest = 99999999999999999999999999999
+        self.highest = 0
+        self.spreadBuy = 0
+        self.spreadSell = 0
+        self.sellsAmount = 0
+        self.buysAmount = 0
 
     def resetAfterClose(self):
         self.isBought = False
@@ -707,7 +993,7 @@ class ValuePair():
 if __name__ == '__main__':
     firstsma = 5
     secondsma = 10
-    limit = 1000
+    limit = 500
     #print(put_limit_perpetual(1, get_pair_sell(get_pair_perpetual('BTCUSD')), 2, 'BTCUSD'))
     
    # vp2 = ValuePair('LTCBTC', firstsma, secondsma, 2)
@@ -719,21 +1005,42 @@ if __name__ == '__main__':
    # vp8 = ValuePair('TRXBTC', firstsma, secondsma, 2)
     
     vp1 = ValuePair('BTCUSD', 2, "1min", limit)
-    vp2 = ValuePair('ETHUSD', 2, "1min", limit)
+    #vp2 = ValuePair('ETHUSD', 2, "1min", limit)
     #vp3 = ValuePair('BCHUSD', 2, "1min", limit)
     #vp4 = ValuePair('LTCUSD', 2, "1min", limit)
     #vp5 = ValuePair('BSVUSD', firstsma, secondsma, 2)
     #vp6 = ValuePair('XRPUSD', 2, "1min", limit)
     #vp7 = ValuePair('EOSUSD', firstsma, secondsma, 2)
 
+    robot = CoinexPerpetualApi(access_id, secret_key)
+    vp1.kline = robot.kline(vp1.pair, vp1.time, vp1.limit)
+    for x in range(vp1.limit):
+        price = get_price(vp1.kline, x, vp1.priceType)
+        if(price > vp1.highest):
+            vp1.highest = price
+    for x in range(vp1.limit):
+        price = get_price(vp1.kline, x, vp1.priceType)
+        if(price < vp1.lowest):
+            vp1.lowest = price
+            
+    print(vp1.lowest)
+    print(vp1.highest)
+    
     #1 open
     #2 close
     print(time.time())
+    #checkSpread(vp6)
     #sr2 = get_price(vp1.kline, 0, 2)        
     #print(sr2)
     while True:
-        new_check2(vp1)
-        new_check2(vp2)
+        new_check3(vp1)
+        #checkSpread(vp1)
+        #checkSpread(vp2)
+        #checkSpread(vp3)
+        #checkSpread(vp4)
+        #checkSpread(vp6)
+        #new_check2(vp1)
+        #new_check2(vp2)
         #new_check2(vp3)
         #new_check2(vp4)
         #new_check2(vp6)
