@@ -539,12 +539,13 @@ def checkAll(vp, candleRange, debug):
 def checkSpread(vp):
     #time.sleep(1)
     robot = CoinexPerpetualApi(access_id, secret_key)
-    robot.adjust_leverage(vp.pair, 2, 3)
+    robot.adjust_leverage(vp6.pair, 2, 3)
     
-    buy = get_pair_buy(get_pair_perpetual(vp.pair))
-    sell = get_pair_sell(get_pair_perpetual(vp.pair))
+    data = robot.get_market_state(vp.pair)
+    buy = float(data.get('data').get('ticker').get('buy'))
+    sell = float(data.get('data').get('ticker').get('sell'))
     
-    dataPosition = robot.query_position_pending(vp1.pair)
+    dataPosition = robot.query_position_pending(vp.pair)
     dataPosition = dataPosition.get("data")
     print(len(dataPosition))
     if(len(dataPosition) > 0):
@@ -552,31 +553,48 @@ def checkSpread(vp):
         if(dataPosition[0].get("side") == 1):
             idPos = dataPosition[0].get("position_id")
             amount = (dataPosition[0].get("close_left"))
+            #print(idPos)
+            #print(amount)
             if(vp.orderSellIDClose == -1):
-                res = robot.close_limit(vp.pair, idPos, amount, buy + 0.1)
+                res = robot.put_limit_order(vp.pair, ORDER_DIRECTION_BUY, 10, buy + 0.0001)
                 vp.orderSellIDClose = res.get("data").get("order_id")
                 print("TRASDASd")
-                print(res)
+                #print(res)
             if(vp.orderSellIDClose != -1):
                 res2 = robot.query_order_status(vp.pair, vp.orderSellIDClose)
-                if(float(res2.get("data").get("price")) < buy + 0.1):
+                print(res2)
+                if(float(res2.get("data").get("price")) < buy):
                     robot.cancel_order(vp.pair, vp.orderSellIDClose)
                     vp.orderSellIDClose = -1
+        elif(dataPosition[0].get("side") == 2):
+            idPos = dataPosition[0].get("position_id")
+            amount = (dataPosition[0].get("close_left"))
+            if(vp.orderBuyIDClose == -1):
+                res = robot.put_limit_order(vp.pair, ORDER_DIRECTION_SELL, 10, sell - 0.0001)
+                vp.orderBuyIDClose = res.get("data").get("order_id")
+                print("TRASDASd")
+                print(res)
+            if(vp.orderBuyIDClose != -1):
+                res2 = robot.query_order_status(vp.pair, vp.orderBuyIDClose)
+                if(float(res2.get("data").get("price")) > sell):
+                    robot.cancel_order(vp.pair, vp.orderBuyIDClose)
+                    vp.orderBuyIDClose = -1
+                    
     if(len(dataPosition) > 1):
         print("WTF")
         
     getOrderSell = robot.query_order_status(vp.pair, vp.orderSellID)
     if(getOrderSell.get("data") != None):
-        if(float(getOrderSell.get("data").get("price")) > sell - 1):
+        if(float(getOrderSell.get("data").get("price")) > sell - 0.0001):
             robot.cancel_order(vp.pair, vp.orderSellID)
             vp.orderSellID = -1
     else:
         vp.orderSellID = -1
-        print("no order sell")
+        #print("no order sell")
     
     getOrderBuy = robot.query_order_status(vp.pair, vp.orderBuyID)
     if(getOrderBuy.get("data") != None):
-        if(float(getOrderBuy.get("data").get("price")) < buy + 1):
+        if(float(getOrderBuy.get("data").get("price")) < buy + 0.0001):
             robot.cancel_order(vp.pair, vp.orderBuyID)
             vp.orderBuyID = -1
             #print(getOrderBuy.get("data"))
@@ -592,16 +610,16 @@ def checkSpread(vp):
         print(buy)
         print(sell)
         if(vp.orderSellID == -1):
-            resultSell = robot.put_limit_order(vp.pair, ORDER_DIRECTION_SELL, 10, sell - 1)
+            resultSell = robot.put_limit_order(vp.pair, ORDER_DIRECTION_SELL, 10, sell - 0.0001)
             print(resultSell)
             if(resultSell.get("code") == 0):
                 vp.orderSellID = resultSell.get("data").get("order_id")
         
-        #if(vp.orderBuyID == -1):
-        #    resultBuy = robot.put_limit_order(vp.pair, ORDER_DIRECTION_BUY, 10, buy + 1)
-        #    print(resultBuy)
-        #    if(resultBuy.get("code") == 0):
-        #        vp.orderBuyID = resultBuy.get("data").get("order_id")
+        if(vp.orderBuyID == -1):
+            resultBuy = robot.put_limit_order(vp.pair, ORDER_DIRECTION_BUY, 10, buy + 0.0001)
+            print(resultBuy)
+            if(resultBuy.get("code") == 0):
+                vp.orderBuyID = resultBuy.get("data").get("order_id")
         
         
     #else:
@@ -672,6 +690,10 @@ class ValuePair():
         self.tp3 = False
         self.leverage = 10
         self.takeProfitStop = 0
+        self.orderSellID = -1
+        self.orderBuyID = -1
+        self.orderSellIDClose = -1
+        self.orderBuyIDClose = -1
 
     def resetAfterClose(self):
         self.isBought = False
@@ -718,12 +740,13 @@ if __name__ == '__main__':
    # vp7 = ValuePair('ETCBTC', firstsma, secondsma, 2)
    # vp8 = ValuePair('TRXBTC', firstsma, secondsma, 2)
     
-    vp1 = ValuePair('BTCUSD', 2, "1min", limit)
-    vp2 = ValuePair('ETHUSD', 2, "1min", limit)
+    #vp1 = ValuePair('BTCUSD', 2, "1min", limit)
+    #vp2 = ValuePair('ETHUSD', 2, "1min", limit)
+    
     #vp3 = ValuePair('BCHUSD', 2, "1min", limit)
     #vp4 = ValuePair('LTCUSD', 2, "1min", limit)
     #vp5 = ValuePair('BSVUSD', firstsma, secondsma, 2)
-    #vp6 = ValuePair('XRPUSD', 2, "1min", limit)
+    vp6 = ValuePair('XRPUSD', 2, "1min", limit)
     #vp7 = ValuePair('EOSUSD', firstsma, secondsma, 2)
 
     #1 open
@@ -732,8 +755,9 @@ if __name__ == '__main__':
     #sr2 = get_price(vp1.kline, 0, 2)        
     #print(sr2)
     while True:
-        new_check2(vp1)
-        new_check2(vp2)
+        checkSpread(vp6)
+        #new_check2(vp1)
+        #new_check2(vp2)
         #new_check2(vp3)
         #new_check2(vp4)
         #new_check2(vp6)
