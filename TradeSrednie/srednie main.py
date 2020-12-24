@@ -11,6 +11,7 @@ import json
 import urllib3
 from datetime import datetime
 from lib import CoinexPerpetualApi
+import csv
 
 from urllib3.exceptions import InsecureRequestWarning
 
@@ -537,94 +538,237 @@ def checkAll(vp, candleRange, debug):
     return vp.totalEarn
 
 def checkSpread(vp):
-    #time.sleep(1)
+    time.sleep(3)
     robot = CoinexPerpetualApi(access_id, secret_key)
     robot.adjust_leverage(vp6.pair, 2, 3)
+    robot.cancel_all_order(vp.pair)
     
-    data = robot.get_market_state(vp.pair)
-    buy = float(data.get('data').get('ticker').get('buy'))
-    sell = float(data.get('data').get('ticker').get('sell'))
+    data = robot.depth(vp.pair)
+    buy = float(data.get('data').get('bids')[0][0])
+    sell = float(data.get('data').get('asks')[0][0])
+    buy3 = float(data.get('data').get('bids')[2][0])
+    sell3 = float(data.get('data').get('asks')[2][0])
     
-    dataPosition = robot.query_position_pending(vp.pair)
-    dataPosition = dataPosition.get("data")
-    print(len(dataPosition))
-    if(len(dataPosition) > 0):
-        print("TUUUUUUUUUUU")
-        if(dataPosition[0].get("side") == 1):
-            idPos = dataPosition[0].get("position_id")
-            amount = (dataPosition[0].get("close_left"))
-            #print(idPos)
-            #print(amount)
-            if(vp.orderSellIDClose == -1):
-                res = robot.put_limit_order(vp.pair, ORDER_DIRECTION_BUY, 10, buy + 0.0001)
-                vp.orderSellIDClose = res.get("data").get("order_id")
-                print("TRASDASd")
-                #print(res)
-            if(vp.orderSellIDClose != -1):
-                res2 = robot.query_order_status(vp.pair, vp.orderSellIDClose)
-                print(res2)
-                if(float(res2.get("data").get("price")) < buy):
-                    robot.cancel_order(vp.pair, vp.orderSellIDClose)
-                    vp.orderSellIDClose = -1
-        elif(dataPosition[0].get("side") == 2):
-            idPos = dataPosition[0].get("position_id")
-            amount = (dataPosition[0].get("close_left"))
-            if(vp.orderBuyIDClose == -1):
-                res = robot.put_limit_order(vp.pair, ORDER_DIRECTION_SELL, 10, sell - 0.0001)
-                vp.orderBuyIDClose = res.get("data").get("order_id")
-                print("TRASDASd")
-                print(res)
-            if(vp.orderBuyIDClose != -1):
-                res2 = robot.query_order_status(vp.pair, vp.orderBuyIDClose)
-                if(float(res2.get("data").get("price")) > sell):
-                    robot.cancel_order(vp.pair, vp.orderBuyIDClose)
-                    vp.orderBuyIDClose = -1
-                    
-    if(len(dataPosition) > 1):
-        print("WTF")
+# =============================================================================
+#     dataPosition = robot.query_position_pending(vp.pair)
+#     dataPosition = dataPosition.get("data")
+#     print(len(dataPosition))
+#     if(len(dataPosition) > 0):
+#         print("TUUUUUUUUUUU")
+#         if(dataPosition[0].get("side") == 1):
+#             idPos = dataPosition[0].get("position_id")
+#             amount = (dataPosition[0].get("close_left"))
+#             #print(idPos)
+#             #print(amount)
+#             if(vp.orderSellIDClose == -1):
+#                 res = robot.put_limit_order(vp.pair, ORDER_DIRECTION_BUY, 10, buy)
+#                 vp.orderSellIDClose = res.get("data").get("order_id")
+#                 print("TRASDASd")
+#                 #print(res)
+#             if(vp.orderSellIDClose != -1):
+#                 res2 = robot.query_order_status(vp.pair, vp.orderSellIDClose)
+#                 print(res2)
+#                 if(float(res2.get("data").get("price")) < buy):
+#                     robot.cancel_order(vp.pair, vp.orderSellIDClose)
+#                     vp.orderSellIDClose = -1
+#         elif(dataPosition[0].get("side") == 2):
+#             idPos = dataPosition[0].get("position_id")
+#             amount = (dataPosition[0].get("close_left"))
+#             if(vp.orderBuyIDClose == -1):
+#                 res = robot.put_limit_order(vp.pair, ORDER_DIRECTION_SELL, 10, sell)
+#                 vp.orderBuyIDClose = res.get("data").get("order_id")
+#                 print("TRASDASd")
+#                 print(res)
+#             if(vp.orderBuyIDClose != -1):
+#                 res2 = robot.query_order_status(vp.pair, vp.orderBuyIDClose)
+#                 if(float(res2.get("data").get("price")) > sell):
+#                     robot.cancel_order(vp.pair, vp.orderBuyIDClose)
+#                     vp.orderBuyIDClose = -1
+#                     
+#     if(len(dataPosition) > 1):
+#         print("WTF")
+# =============================================================================
         
-    getOrderSell = robot.query_order_status(vp.pair, vp.orderSellID)
-    if(getOrderSell.get("data") != None):
-        if(float(getOrderSell.get("data").get("price")) > sell - 0.0001):
-            robot.cancel_order(vp.pair, vp.orderSellID)
-            vp.orderSellID = -1
-    else:
-        vp.orderSellID = -1
-        #print("no order sell")
+    #spread = (sell - buy)/sell
     
-    getOrderBuy = robot.query_order_status(vp.pair, vp.orderBuyID)
-    if(getOrderBuy.get("data") != None):
-        if(float(getOrderBuy.get("data").get("price")) < buy + 0.0001):
-            robot.cancel_order(vp.pair, vp.orderBuyID)
-            vp.orderBuyID = -1
-            #print(getOrderBuy.get("data"))
-    else:
-        vp.orderBuyID = -1
-        #print("noorderbuy")
-    
-    spread = (sell - buy)/sell
-    
-    if(spread > 0.0005) and len(dataPosition) < 1:
-        print(spread)
+    if True:#(spread > 0.0003) and spread < 0.002:# and len(dataPosition) < 1:
+        #print(spread)
         print(vp.pair)
         print(buy)
         print(sell)
-        if(vp.orderSellID == -1):
-            resultSell = robot.put_limit_order(vp.pair, ORDER_DIRECTION_SELL, 10, sell - 0.0001)
-            print(resultSell)
-            if(resultSell.get("code") == 0):
-                vp.orderSellID = resultSell.get("data").get("order_id")
+        #if(vp.orderSellID == -1):
+        resultSell = robot.put_limit_order(vp.pair, ORDER_DIRECTION_SELL, 10, (sell+sell3)/2)
+        print(resultSell)
+        if(resultSell.get("code") == 0):
+            vp.orderSellID = resultSell.get("data").get("order_id")
         
-        if(vp.orderBuyID == -1):
-            resultBuy = robot.put_limit_order(vp.pair, ORDER_DIRECTION_BUY, 10, buy + 0.0001)
-            print(resultBuy)
-            if(resultBuy.get("code") == 0):
-                vp.orderBuyID = resultBuy.get("data").get("order_id")
+        #if(vp.orderBuyID == -1):
+        resultBuy = robot.put_limit_order(vp.pair, ORDER_DIRECTION_BUY, 10, (buy+buy3)/2)
+        print(resultBuy)
+        if(resultBuy.get("code") == 0):
+            vp.orderBuyID = resultBuy.get("data").get("order_id")
+                
+# =============================================================================
+#     getOrderSell = robot.query_order_status(vp.pair, vp.orderSellID)
+#     if(getOrderSell.get("data") != None):
+#         if(float(getOrderSell.get("data").get("price")) != sell or abs(sell - sell2) > 0.0002):
+#             robot.cancel_order(vp.pair, vp.orderSellID)
+#             vp.orderSellID = -1
+#     else:
+#         vp.orderSellID = -1
+#         #print("no order sell")
+#     
+#     getOrderBuy = robot.query_order_status(vp.pair, vp.orderBuyID)
+#     if(getOrderBuy.get("data") != None):
+#         if(float(getOrderBuy.get("data").get("price")) != buy or abs(buy - buy2) > 0.0002):
+#             robot.cancel_order(vp.pair, vp.orderBuyID)
+#             vp.orderBuyID = -1
+#             #print(getOrderBuy.get("data"))
+#     else:
+#         vp.orderBuyID = -1
+#         #print("noorderbuy")
+# =============================================================================
+    
+
         
         
     #else:
     #    robot.cancel_all_order(vp.pair)
+
+def collectDepthData(vp, limit, robot):
+
+    depthData = robot.depth(vp1.pair, limit = limit).get("data")
     
+    sellsAmount = 0
+    buysAmount = 0
+    for x in range(len(depthData.get('asks'))):
+        sellsAmount += float(depthData.get('asks')[x][1])
+    
+    for x in range(len(depthData.get('bids'))):
+        buysAmount += float(depthData.get('bids')[x][1])
+    
+    sellsPercent = sellsAmount/(sellsAmount + buysAmount)    
+    buysPercent = buysAmount/(sellsAmount + buysAmount) 
+
+    marketDealsData = robot.get_market_deals(vp1.pair, limit = limit).get("data")
+
+    sellsAmountDeals = 0
+    buysAmountDeals = 0
+    for x in marketDealsData:
+        if(x.get("type") == "sell"):
+            sellsAmountDeals += float(x.get('amount'))
+        else:
+            buysAmountDeals += float(x.get('amount'))
+    
+    sellsPercentDeals = sellsAmountDeals/(sellsAmountDeals + buysAmountDeals)    
+    buysPercentDeals = buysAmountDeals/(sellsAmountDeals + buysAmountDeals) 
+
+    currTime = time.gmtime(time.time())
+    realTime = (str)(currTime[2]) + "." + (str)(currTime[1]) + "." + (str)(currTime[0]) + " " + (str)(currTime[3] + 1) + ":" + (str)(currTime[4])
+    
+    data = [{
+         "tonce": realTime,
+         "sellsPercent": sellsPercent,
+         "buysPercent": buysPercent,
+         "sellsPercentDeals": sellsPercentDeals,
+         "buysPercentDeals": buysPercentDeals,
+         "pairSell": get_pair_sell(get_pair_perpetual(vp.pair)),
+         "pairBuy": get_pair_buy(get_pair_perpetual(vp.pair))
+    }]  
+    
+    fileName = "depthData_" + vp.pair + "_" + str(limit) + ".csv"
+    with open(fileName, 'a', newline='') as csv_file:
+        csv_writer = csv.writer(csv_file, delimiter=',')
+        csv_writer.writerow(data)
+
+def collectKlineData(vp, typeInMinutes, robot):
+    
+    klineData = robot.kline(vp.pair, str(typeInMinutes) + "min", 1).get("data")
+
+    data = [{
+         "tonce": klineData[0][0],
+         "open": klineData[0][1],
+         "close": klineData[0][2],
+         "highest": klineData[0][3],
+         "lowest": klineData[0][4],
+         "volume": klineData[0][5],
+         "amount": klineData[0][6],
+         "pairSell": get_pair_sell(get_pair_perpetual(vp.pair)),
+         "pairBuy": get_pair_buy(get_pair_perpetual(vp.pair))
+    }]
+    
+    fileName = "klineData_" + vp.pair + "_" + str(typeInMinutes) + ".csv"
+    with open(fileName, 'a', newline='') as csv_file:
+        csv_writer = csv.writer(csv_file, delimiter=',')
+        csv_writer.writerow(data)
+        
+    time.sleep(typeInMinutes*60)
+
+def checkDepthData(vp, limit, percent):
+    fileName = "depthData_" + vp.pair + "_" + str(limit) + ".csv"
+
+    with open(fileName, 'r') as csv_file:
+        csv_reader = csv.reader(csv_file)
+        for row in csv_reader:
+            r = row[0]
+            r = r.replace("\'", "\"")
+            data = json.loads(r)
+            buys = float(data.get("buysPercent"))
+            sells = float(data.get("sellsPercent"))
+            
+            if(buys > percent) and vp.isBought == False:
+                print("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%55")
+                print("przebicie od dołu " + vp.pair + " buy")
+                if(vp.isSold):
+                    print("zamknij " + vp.pair + " od shorta")
+                    print(data.get("pairSell"))
+                    pb = data.get("pairBuy")
+                    print(pb)#praw
+                    earn = (pb - vp.priceSold)/vp.priceSold
+                    earn = -earn
+                    vp.totalEarn += earn
+                    print(earn)
+                    print(vp.totalEarn)
+                    
+                    vp.resetAfterClose()
+                    
+                print(data.get("pairSell"))#praw
+                print(data.get("pairBuy"))
+                print(data.get("tonce"))
+                
+                vp.priceBought = float(data.get("pairSell"))
+                vp.isBought = True
+                #vp.setAfterBought()
+                
+                print("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%55")
+                
+            elif(sells > percent) and vp.isSold == False:
+                print("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%55")
+                print("przebicie od góry " + vp.pair + " sell")
+                if(vp.isBought):
+                    print("zamknij " + vp.pair + " od longa")
+                    ps = data.get("pairSell")
+                    print(ps)#praw
+                    print(data.get("pairBuy"))
+                    earn = (ps - vp.priceBought)/vp.priceBought
+                    vp.totalEarn += earn
+                    print(earn)
+                    print(vp.totalEarn)
+                    
+                    vp.resetAfterClose()
+                
+                print(data.get("pairSell"))
+                print(data.get("pairBuy"))# praw
+                print(data.get("tonce"))
+                
+                vp.priceSold = float(data.get("pairBuy"))
+                vp.isSold = True
+                #vp.setAfterSold()
+                
+                print("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%55")
+                
+    print(vp.totalEarn)
+                
 def hujl():
     vp1.openOrder = 3  
     vp1.stopLoss = 3
@@ -730,32 +874,29 @@ if __name__ == '__main__':
     firstsma = 5
     secondsma = 10
     limit = 1000
-    #print(put_limit_perpetual(1, get_pair_sell(get_pair_perpetual('BTCUSD')), 2, 'BTCUSD'))
     
-   # vp2 = ValuePair('LTCBTC', firstsma, secondsma, 2)
-   # vp3 = ValuePair('EOSBTC', firstsma, secondsma, 2)
-   # vp4 = ValuePair('BCHBTC', firstsma, secondsma, 2)
-   # vp5 = ValuePair('XRPBTC', firstsma, secondsma, 2)
-   # vp6 = ValuePair('BSVBTC', firstsma, secondsma, 2)
-   # vp7 = ValuePair('ETCBTC', firstsma, secondsma, 2)
-   # vp8 = ValuePair('TRXBTC', firstsma, secondsma, 2)
-    
-    #vp1 = ValuePair('BTCUSD', 2, "1min", limit)
-    #vp2 = ValuePair('ETHUSD', 2, "1min", limit)
+    vp1 = ValuePair('BTCUSD', 2, "1min", limit)
+    vp2 = ValuePair('ETHUSD', 2, "1min", limit)
     
     #vp3 = ValuePair('BCHUSD', 2, "1min", limit)
     #vp4 = ValuePair('LTCUSD', 2, "1min", limit)
     #vp5 = ValuePair('BSVUSD', firstsma, secondsma, 2)
-    vp6 = ValuePair('XRPUSD', 2, "1min", limit)
+    #vp6 = ValuePair('XRPUSD', 2, "1min", limit)
     #vp7 = ValuePair('EOSUSD', firstsma, secondsma, 2)
 
-    #1 open
-    #2 close
-    print(time.time())
-    #sr2 = get_price(vp1.kline, 0, 2)        
-    #print(sr2)
+    robot = CoinexPerpetualApi(access_id, secret_key)
+    #checkDepthData(vp1, 10, 0.55)
+
     while True:
-        checkSpread(vp6)
+        collectDepthData(vp1, 10, robot)
+        collectDepthData(vp1, 20, robot)
+        collectDepthData(vp2, 10, robot)
+        collectDepthData(vp2, 20, robot)
+        
+    #while True:
+        #curTime = datetime.now()
+        #checkSpread(vp6)
+        #print(datetime.now() - curTime)
         #new_check2(vp1)
         #new_check2(vp2)
         #new_check2(vp3)

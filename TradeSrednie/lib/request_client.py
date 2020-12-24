@@ -96,3 +96,30 @@ class RequestClient(object):
             self.logger.error('POST {url} failed: \n{trace_info}'.format(
                 url=url, trace_info=trace_info))
             return None
+        
+    def delete(self, path, data=None):
+        url = self.host + path
+        data = data or {}
+        data['timestamp'] = int(time.time()*1000)
+        headers = copy.copy(self.headers)
+        self.set_authorization(data, headers)
+        try:
+            response = self.http_client.delete(
+                url, data=data, headers=headers, timeout=10)
+            # self.logger.info(response.request.url)
+            if response.status_code == requests.codes.ok:
+                return response.json()
+            else:
+                self.logger.error(
+                    'URL: {0}\nSTATUS_CODE: {1}\nResponse: {2}'.format(
+                        response.request.url,
+                        response.status_code,
+                        response.text
+                    )
+                )
+                return None
+        except Exception as ex:
+            trace_info = traceback.format_exc()
+            self.logger.error('POST {url} failed: \n{trace_info}'.format(
+                url=url, trace_info=trace_info))
+            return None

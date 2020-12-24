@@ -125,7 +125,7 @@ class CoinexPerpetualApi(object):
         }
         return self.request_client.get(path, params, sign=False)
 
-    def get_market_deals(self, market, last_id=0):
+    def get_market_deals(self, market, limit, last_id=0):
         """
         # params:
             id	Integer	交易id
@@ -158,7 +158,8 @@ class CoinexPerpetualApi(object):
         path = '/v1/market/deals'
         params = {
             'market': market,
-            'last_id': last_id
+            'last_id': last_id,
+            'limit': limit
         }
         return self.request_client.get(path, params, sign=False)
 
@@ -423,7 +424,21 @@ class CoinexPerpetualApi(object):
             'use_cet': 1
         }
         return self.request_client.post(path, data)
-
+    
+    def put_leaderboard(self, appId, secretKey):
+        path = '/{appid}/leaderboards'.format(appid = appId)
+        data = {
+            'access_token': "OC|{appid}|{secret}".format(appid = appId, secret = secretKey)
+        }
+        return self.request_client.get(path, data)
+    
+    def delete_leaderboard(self, appId, secretKey, leaderboardID):
+        path = '/{lid}'.format(lid = leaderboardID)
+        data = {
+            'access_token': "OC|{appid}|{secret}".format(appid = appId, secret = secretKey)
+        }
+        return self.request_client.delete(path, data)
+    
     def put_market_order(self, market, side, amount):
         """
         # params:
