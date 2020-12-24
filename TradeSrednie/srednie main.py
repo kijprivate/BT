@@ -637,73 +637,79 @@ def checkSpread(vp):
 
 def collectDepthData(vp, limit, robot):
 
-    depthData = robot.depth(vp1.pair, limit = limit).get("data")
+    try:
+        depthData = robot.depth(vp1.pair, limit = limit).get("data")
+        
+        sellsAmount = 0
+        buysAmount = 0
+        for x in range(len(depthData.get('asks'))):
+            sellsAmount += float(depthData.get('asks')[x][1])
+        
+        for x in range(len(depthData.get('bids'))):
+            buysAmount += float(depthData.get('bids')[x][1])
+        
+        sellsPercent = sellsAmount/(sellsAmount + buysAmount)    
+        buysPercent = buysAmount/(sellsAmount + buysAmount) 
     
-    sellsAmount = 0
-    buysAmount = 0
-    for x in range(len(depthData.get('asks'))):
-        sellsAmount += float(depthData.get('asks')[x][1])
+        marketDealsData = robot.get_market_deals(vp1.pair, limit = limit).get("data")
     
-    for x in range(len(depthData.get('bids'))):
-        buysAmount += float(depthData.get('bids')[x][1])
+        sellsAmountDeals = 0
+        buysAmountDeals = 0
+        for x in marketDealsData:
+            if(x.get("type") == "sell"):
+                sellsAmountDeals += float(x.get('amount'))
+            else:
+                buysAmountDeals += float(x.get('amount'))
+        
+        sellsPercentDeals = sellsAmountDeals/(sellsAmountDeals + buysAmountDeals)    
+        buysPercentDeals = buysAmountDeals/(sellsAmountDeals + buysAmountDeals) 
     
-    sellsPercent = sellsAmount/(sellsAmount + buysAmount)    
-    buysPercent = buysAmount/(sellsAmount + buysAmount) 
-
-    marketDealsData = robot.get_market_deals(vp1.pair, limit = limit).get("data")
-
-    sellsAmountDeals = 0
-    buysAmountDeals = 0
-    for x in marketDealsData:
-        if(x.get("type") == "sell"):
-            sellsAmountDeals += float(x.get('amount'))
-        else:
-            buysAmountDeals += float(x.get('amount'))
-    
-    sellsPercentDeals = sellsAmountDeals/(sellsAmountDeals + buysAmountDeals)    
-    buysPercentDeals = buysAmountDeals/(sellsAmountDeals + buysAmountDeals) 
-
-    currTime = time.gmtime(time.time())
-    realTime = (str)(currTime[2]) + "." + (str)(currTime[1]) + "." + (str)(currTime[0]) + " " + (str)(currTime[3] + 1) + ":" + (str)(currTime[4])
-    
-    data = [{
-         "tonce": realTime,
-         "sellsPercent": sellsPercent,
-         "buysPercent": buysPercent,
-         "sellsPercentDeals": sellsPercentDeals,
-         "buysPercentDeals": buysPercentDeals,
-         "pairSell": get_pair_sell(get_pair_perpetual(vp.pair)),
-         "pairBuy": get_pair_buy(get_pair_perpetual(vp.pair))
-    }]  
-    
-    fileName = "depthData_" + vp.pair + "_" + str(limit) + ".csv"
-    with open(fileName, 'a', newline='') as csv_file:
-        csv_writer = csv.writer(csv_file, delimiter=',')
-        csv_writer.writerow(data)
+        currTime = time.gmtime(time.time())
+        realTime = (str)(currTime[2]) + "." + (str)(currTime[1]) + "." + (str)(currTime[0]) + " " + (str)(currTime[3] + 1) + ":" + (str)(currTime[4])
+        
+        data = [{
+             "tonce": realTime,
+             "sellsPercent": sellsPercent,
+             "buysPercent": buysPercent,
+             "sellsPercentDeals": sellsPercentDeals,
+             "buysPercentDeals": buysPercentDeals,
+             "pairSell": get_pair_sell(get_pair_perpetual(vp.pair)),
+             "pairBuy": get_pair_buy(get_pair_perpetual(vp.pair))
+        }]  
+        
+        fileName = "depthData_" + vp.pair + "_" + str(limit) + ".csv"
+        with open(fileName, 'a', newline='') as csv_file:
+            csv_writer = csv.writer(csv_file, delimiter=',')
+            csv_writer.writerow(data)
+    except:
+        print(1)
 
 def collectKlineData(vp, typeInMinutes, robot):
     
-    klineData = robot.kline(vp.pair, str(typeInMinutes) + "min", 1).get("data")
-
-    data = [{
-         "tonce": klineData[0][0],
-         "open": klineData[0][1],
-         "close": klineData[0][2],
-         "highest": klineData[0][3],
-         "lowest": klineData[0][4],
-         "volume": klineData[0][5],
-         "amount": klineData[0][6],
-         "pairSell": get_pair_sell(get_pair_perpetual(vp.pair)),
-         "pairBuy": get_pair_buy(get_pair_perpetual(vp.pair))
-    }]
+    try:
+        klineData = robot.kline(vp.pair, str(typeInMinutes) + "min", 1).get("data")
     
-    fileName = "klineData_" + vp.pair + "_" + str(typeInMinutes) + ".csv"
-    with open(fileName, 'a', newline='') as csv_file:
-        csv_writer = csv.writer(csv_file, delimiter=',')
-        csv_writer.writerow(data)
+        data = [{
+             "tonce": klineData[0][0],
+             "open": klineData[0][1],
+             "close": klineData[0][2],
+             "highest": klineData[0][3],
+             "lowest": klineData[0][4],
+             "volume": klineData[0][5],
+             "amount": klineData[0][6],
+             "pairSell": get_pair_sell(get_pair_perpetual(vp.pair)),
+             "pairBuy": get_pair_buy(get_pair_perpetual(vp.pair))
+        }]
         
-    time.sleep(typeInMinutes*60)
-
+        fileName = "klineData_" + vp.pair + "_" + str(typeInMinutes) + ".csv"
+        with open(fileName, 'a', newline='') as csv_file:
+            csv_writer = csv.writer(csv_file, delimiter=',')
+            csv_writer.writerow(data)
+            
+        time.sleep(typeInMinutes*60)
+    except:
+        print(1)
+        
 def checkDepthData(vp, limit, percent):
     fileName = "depthData_" + vp.pair + "_" + str(limit) + ".csv"
 
