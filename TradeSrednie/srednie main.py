@@ -13,7 +13,6 @@ from datetime import datetime
 from lib import CoinexPerpetualApi
 from lib import request_client
 import asyncio
-import aiohttp
 
 from urllib3.exceptions import InsecureRequestWarning
 
@@ -695,7 +694,7 @@ def setHeaders(params):
 
     return headers
 
-def new_check3(vp):
+def new_check3(vp, lim, percent):
     time.sleep(1)
     
     try:
@@ -703,19 +702,21 @@ def new_check3(vp):
         
         vp.sellsAmount = 0
         vp.buysAmount = 0
-        data = robot.depth(vp.pair, limit = 100).get("data")
+        data = robot.depth(vp.pair, limit = lim).get("data")
         for x in range(len(data.get('asks'))):
-            vp.sellsAmount += int(data.get('asks')[x][1])
+            vp.sellsAmount += float(data.get('asks')[x][1])
         
         for x in range(len(data.get('bids'))):
-            vp.buysAmount += int(data.get('bids')[x][1])
+            vp.buysAmount += float(data.get('bids')[x][1])
           
         sellsPercent = vp.sellsAmount/(vp.sellsAmount+vp.buysAmount)
         boughtsPercent = vp.buysAmount/(vp.sellsAmount+vp.buysAmount)
         
-        if(boughtsPercent > 0.5) and vp.isBought == False:
+        if(boughtsPercent > percent) and vp.isBought == False:
             print("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%55")
             print("przebicie od dołu " + vp.pair + " buy")
+            print(lim)
+            print(percent)
             if(vp.isSold):
                 print("zamknij " + vp.pair + " od shorta")
                 print(get_pair_sell(get_pair_perpetual(vp.pair)))
@@ -730,8 +731,8 @@ def new_check3(vp):
                 if(REAL_TRADE == True):
                     result = putMarketOrder(vp, ORDER_DIRECTION_BUY, vp.leverage)
                     handleResultAfterClose(vp, result)
-                else:
-                    vp.resetAfterClose()
+                
+                vp.resetAfterClose()
                 
             print(get_pair_sell(get_pair_perpetual(vp.pair)))#praw
             print(get_pair_buy(get_pair_perpetual(vp.pair)))
@@ -740,14 +741,16 @@ def new_check3(vp):
             if(REAL_TRADE == True):
                 result = putMarketOrder(vp, ORDER_DIRECTION_BUY, vp.leverage)
                 handleResultAfterBought(vp, result)
-            else:
-                vp.setAfterBought()
+            
+            vp.setAfterBought()
             
             print("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%55")
             
-        elif(sellsPercent > 0.5) and vp.isSold == False:
+        elif(sellsPercent > percent) and vp.isSold == False:
             print("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%55")
             print("przebicie od góry " + vp.pair + " sell")
+            print(lim)
+            print(percent)
             if(vp.isBought):
                 print("zamknij " + vp.pair + " od longa")
                 ps = get_pair_sell(get_pair_perpetual(vp.pair))
@@ -761,8 +764,8 @@ def new_check3(vp):
                 if(REAL_TRADE == True):
                     result = putMarketOrder(vp, ORDER_DIRECTION_SELL, vp.leverage)
                     handleResultAfterClose(vp, result) 
-                else:
-                    vp.resetAfterClose()
+                
+                vp.resetAfterClose()
                 
             print(get_pair_sell(get_pair_perpetual(vp.pair)))
             print(get_pair_buy(get_pair_perpetual(vp.pair)))# praw
@@ -771,8 +774,8 @@ def new_check3(vp):
             if(REAL_TRADE == True):
                 result = putMarketOrder(vp, ORDER_DIRECTION_SELL, vp.leverage)
                 handleResultAfterClose(vp, result)
-            else:
-                vp.setAfterSold()
+            
+            vp.setAfterSold()
             
             print("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%55")
                                             
@@ -1005,6 +1008,11 @@ if __name__ == '__main__':
    # vp8 = ValuePair('TRXBTC', firstsma, secondsma, 2)
     
     vp1 = ValuePair('BTCUSD', 2, "1min", limit)
+    vp2 = ValuePair('BTCUSD', 2, "1min", limit)
+    vp3 = ValuePair('BTCUSD', 2, "1min", limit)
+    vp4 = ValuePair('ETHUSD', 2, "1min", limit)
+    vp5 = ValuePair('ETHUSD', 2, "1min", limit)
+    vp6 = ValuePair('ETHUSD', 2, "1min", limit)
     #vp2 = ValuePair('ETHUSD', 2, "1min", limit)
     #vp3 = ValuePair('BCHUSD', 2, "1min", limit)
     #vp4 = ValuePair('LTCUSD', 2, "1min", limit)
@@ -1035,7 +1043,12 @@ if __name__ == '__main__':
     #sr2 = get_price(vp1.kline, 0, 2)        
     #print(sr2)
     while True:
-        new_check3(vp1)
+        #new_check3(vp1, 10, 0.55)
+        #new_check3(vp2, 10, 0.6)
+        #new_check3(vp3, 10, 0.65)
+        #new_check3(vp4, 10, 0.55)
+        new_check3(vp5, 10, 0.6)
+        #new_check3(vp6, 10, 0.65)
         #checkSpread(vp1)
         #checkSpread(vp2)
         #checkSpread(vp3)
