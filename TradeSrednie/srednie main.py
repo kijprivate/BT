@@ -129,7 +129,7 @@ def putMarketOrder(vp, side, leverage):
     result = robot.put_market_order(
         vp.pair,
         side,
-        contractAmount
+        vp.contractAmount
     )
     print(json.dumps(result, indent=4))
     return result
@@ -162,7 +162,6 @@ takeProfitStop2 = 10
 takeProfit3 = 50
 takeProfitStop3 = 20
 takeProfitNOW = 100
-contractAmount = 10
 access_id = '92D0E39AF1634EA9B7D037EDDBECD261'
 secret_key = 'B7B13884C89347FE86E6E34A7C9FE7DD28A43B301CB70611'
 
@@ -694,25 +693,24 @@ def setHeaders(params):
 
     return headers
 
-def new_check3(vp, lim, percent):
+def tradeDeals(robot, vp, lim, percent):
     time.sleep(1)
     
     try:
-        robot = CoinexPerpetualApi(access_id, secret_key)
+        marketDealsData = robot.get_market_deals(vp1.pair, limit = lim).get("data")
+    
+        sellsAmountDeals = 0
+        buysAmountDeals = 0
+        for x in marketDealsData:
+            if(x.get("type") == "sell"):
+                sellsAmountDeals += float(x.get('amount'))
+            else:
+                buysAmountDeals += float(x.get('amount'))
         
-        vp.sellsAmount = 0
-        vp.buysAmount = 0
-        data = robot.depth(vp.pair, limit = lim).get("data")
-        for x in range(len(data.get('asks'))):
-            vp.sellsAmount += float(data.get('asks')[x][1])
+        sellsPercentDeals = sellsAmountDeals/(sellsAmountDeals + buysAmountDeals)    
+        buysPercentDeals = buysAmountDeals/(sellsAmountDeals + buysAmountDeals)
         
-        for x in range(len(data.get('bids'))):
-            vp.buysAmount += float(data.get('bids')[x][1])
-          
-        sellsPercent = vp.sellsAmount/(vp.sellsAmount+vp.buysAmount)
-        boughtsPercent = vp.buysAmount/(vp.sellsAmount+vp.buysAmount)
-        
-        if(boughtsPercent > percent) and vp.isBought == False:
+        if(sellsPercentDeals > percent) and vp.isBought == False:
             print("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%55")
             print("przebicie od dołu " + vp.pair + " buy")
             print(lim)
@@ -746,7 +744,7 @@ def new_check3(vp, lim, percent):
             
             print("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%55")
             
-        elif(sellsPercent > percent) and vp.isSold == False:
+        elif(buysPercentDeals > percent) and vp.isSold == False:
             print("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%55")
             print("przebicie od góry " + vp.pair + " sell")
             print(lim)
@@ -927,7 +925,7 @@ def hujl():
                 vp1.bestStopLoss = y     
                 
 class ValuePair():
-    def __init__(self, _pair, _priceType, _time, _limit):
+    def __init__(self, _pair, _priceType, _time, _limit, _contractAmount):
         self.kline = None
         self.time = _time
         self.limit = _limit
@@ -952,6 +950,7 @@ class ValuePair():
         self.tp2 = False
         self.tp3 = False
         self.leverage = 10
+        self.contractAmount = _contractAmount
         self.takeProfitStop = 0
         self.orderSellID = -1
         self.orderBuyID = -1
@@ -1007,12 +1006,12 @@ if __name__ == '__main__':
    # vp7 = ValuePair('ETCBTC', firstsma, secondsma, 2)
    # vp8 = ValuePair('TRXBTC', firstsma, secondsma, 2)
     
-    vp1 = ValuePair('BTCUSD', 2, "1min", limit)
-    vp2 = ValuePair('BTCUSD', 2, "1min", limit)
-    vp3 = ValuePair('BTCUSD', 2, "1min", limit)
-    vp4 = ValuePair('ETHUSD', 2, "1min", limit)
-    vp5 = ValuePair('ETHUSD', 2, "1min", limit)
-    vp6 = ValuePair('ETHUSD', 2, "1min", limit)
+    vp1 = ValuePair('BTCUSD', 2, "1min", limit, 1500)
+    vp2 = ValuePair('BTCUSD', 2, "1min", limit, 470)
+    #vp3 = ValuePair('BTCUSD', 2, "1min", limit)
+    #vp4 = ValuePair('ETHUSD', 2, "1min", limit)
+    #vp5 = ValuePair('ETHUSD', 2, "1min", limit)
+    #vp6 = ValuePair('ETHUSD', 2, "1min", limit)
     #vp2 = ValuePair('ETHUSD', 2, "1min", limit)
     #vp3 = ValuePair('BCHUSD', 2, "1min", limit)
     #vp4 = ValuePair('LTCUSD', 2, "1min", limit)
@@ -1021,21 +1020,6 @@ if __name__ == '__main__':
     #vp7 = ValuePair('EOSUSD', firstsma, secondsma, 2)
 
     robot = CoinexPerpetualApi(access_id, secret_key)
-    vp1.kline = robot.kline(vp1.pair, vp1.time, vp1.limit)
-    for x in range(vp1.limit):
-        price = get_price(vp1.kline, x, vp1.priceType)
-        if(price > vp1.highest):
-            vp1.highest = price
-    for x in range(vp1.limit):
-        price = get_price(vp1.kline, x, vp1.priceType)
-        if(price < vp1.lowest):
-            vp1.lowest = price
-            
-    print(vp1.lowest)
-    print(vp1.highest)
-    
-    #1 open
-    #2 close
 
     
     print(time.time())
@@ -1043,12 +1027,9 @@ if __name__ == '__main__':
     #sr2 = get_price(vp1.kline, 0, 2)        
     #print(sr2)
     while True:
-        #new_check3(vp1, 10, 0.55)
-        #new_check3(vp2, 10, 0.6)
-        #new_check3(vp3, 10, 0.65)
-        #new_check3(vp4, 10, 0.55)
-        new_check3(vp5, 10, 0.6)
-        #new_check3(vp6, 10, 0.65)
+        tradeDeals(robot, vp1, 20, 0.997)
+        tradeDeals(robot, vp2, 20, 0.995)
+
         #checkSpread(vp1)
         #checkSpread(vp2)
         #checkSpread(vp3)
