@@ -710,7 +710,7 @@ def collectKlineData(vp, typeInMinutes, robot):
     except:
         print(1)
         
-def checkDepthData(vp, limit, percent):
+def checkDepthData(vp, limit, percent, percent2, useStopLoss, useTakeProfit):
     fileName = "depthData_" + vp.pair + "_" + str(limit) + ".csv"
 
     with open(fileName, 'r') as csv_file:
@@ -722,7 +722,83 @@ def checkDepthData(vp, limit, percent):
             buys = float(data.get("buysPercent"))
             sells = float(data.get("sellsPercent"))
             
-            if(buys > percent) and vp.isBought == False:
+            if(useStopLoss == True):
+                if(vp.isBought):
+                    cur = float(data.get("pairSell"))
+                    diff2 = (cur - vp.priceBought)/vp.priceBought
+                    if(diff2 < -0.01):
+    
+                        ps = data.get("pairSell")
+                        earn = (ps - vp.priceBought)/vp.priceBought
+                        vp.totalEarn += earn
+                        vp.totalEarn -= 0.0003
+                        vp.isBought = False
+                        
+                        print("&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&")
+                        print("stop loss " + vp.pair + " od longa")
+                        print(data.get("tonce"))
+                        print(ps)#praw
+                        print(earn)
+                        print("&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&")
+                        
+                if(vp.isSold):
+                    cur = float(data.get("pairBuy"))
+                    diff2 = (cur - vp.priceSold)/vp.priceSold
+                    if(diff2 > 0.01):
+    
+                        pb = data.get("pairBuy")
+                        earn = (pb - vp.priceSold)/vp.priceSold
+                        earn = -earn
+                        vp.totalEarn += earn
+                        vp.totalEarn -= 0.0003
+                        vp.isSold = False
+                    
+                        print("&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&")
+                        print("stop loss " + vp.pair + " od shorta")
+                        print(data.get("tonce"))
+                        print(pb)#praw
+                        print(earn)
+                        print("&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&")
+
+            if(useTakeProfit == True):
+                if(vp.isBought):
+                    cur = float(data.get("pairSell"))
+                    diff2 = (cur - vp.priceBought)/vp.priceBought
+                    if(diff2 > 0.05):
+    
+                        ps = data.get("pairSell")
+                        earn = (ps - vp.priceBought)/vp.priceBought
+                        vp.totalEarn += earn
+                        vp.totalEarn -= 0.0003
+                        vp.isBought = False
+                        
+                        print("&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&")
+                        print("TakeProfit " + vp.pair + " od longa")
+                        print(data.get("tonce"))
+                        print(ps)#praw
+                        print(earn)
+                        print("&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&")
+                        
+                if(vp.isSold):
+                    cur = float(data.get("pairBuy"))
+                    diff2 = (cur - vp.priceSold)/vp.priceSold
+                    if(diff2 < -0.05):
+    
+                        pb = data.get("pairBuy")
+                        earn = (pb - vp.priceSold)/vp.priceSold
+                        earn = -earn
+                        vp.totalEarn += earn
+                        vp.totalEarn -= 0.0003
+                        vp.isSold = False
+                    
+                        print("&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&")
+                        print("Take Profit " + vp.pair + " od shorta")
+                        print(data.get("tonce"))
+                        print(pb)#praw
+                        print(earn)
+                        print("&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&")
+                        
+            if(sells > percent) and vp.isBought == False:
                 print("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%55")
                 print("przebicie od dołu " + vp.pair + " buy")
                 if(vp.isSold):
@@ -733,6 +809,7 @@ def checkDepthData(vp, limit, percent):
                     earn = (pb - vp.priceSold)/vp.priceSold
                     earn = -earn
                     vp.totalEarn += earn
+                    vp.totalEarn -= 0.0003
                     print(earn)
                     print(vp.totalEarn)
                     
@@ -748,7 +825,26 @@ def checkDepthData(vp, limit, percent):
                 
                 print("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%55")
                 
-            elif(sells > percent) and vp.isSold == False:
+# =============================================================================
+#             if(sells < percent2) and vp.isSold == True:
+#                 print("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%55")
+# 
+#                 print("zamknij " + vp.pair + " od shorta")
+#                 print(data.get("pairSell"))
+#                 pb = data.get("pairBuy")
+#                 print(pb)#praw
+#                 earn = (pb - vp.priceSold)/vp.priceSold
+#                 earn = -earn
+#                 vp.totalEarn += earn
+#                 vp.totalEarn -= 0.0003
+#                 print(earn)
+#                 print(vp.totalEarn)
+#                 print(data.get("tonce"))
+#                 vp.resetAfterClose()
+#                 
+#                 print("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%55")
+# =============================================================================
+            if(buys > percent) and vp.isSold == False:
                 print("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%55")
                 print("przebicie od góry " + vp.pair + " sell")
                 if(vp.isBought):
@@ -758,6 +854,133 @@ def checkDepthData(vp, limit, percent):
                     print(data.get("pairBuy"))
                     earn = (ps - vp.priceBought)/vp.priceBought
                     vp.totalEarn += earn
+                    vp.totalEarn -= 0.0003
+                    print(earn)
+                    print(vp.totalEarn)
+                    
+                    vp.resetAfterClose()
+                
+                print(data.get("pairSell"))
+                print(data.get("pairBuy"))# praw
+                print(data.get("tonce"))
+                
+                vp.priceSold = float(data.get("pairBuy"))
+                vp.isSold = True
+                #vp.setAfterSold()
+                
+                print("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%55")
+# =============================================================================
+#             if(buys < percent2) and vp.isBought == True:
+#                 print("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%55")
+# 
+#                 print("zamknij " + vp.pair + " od longa")
+#                 ps = data.get("pairSell")
+#                 print(ps)#praw
+#                 print(data.get("pairBuy"))
+#                 earn = (ps - vp.priceBought)/vp.priceBought
+#                 vp.totalEarn += earn
+#                 vp.totalEarn -= 0.0003
+#                 print(earn)
+#                 print(vp.totalEarn)
+#                 print(data.get("tonce"))
+#                 vp.resetAfterClose()
+#                 print("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%55")
+# =============================================================================
+                
+    print(vp.totalEarn)
+    
+def checkDealsData(vp, limit, percent, useStopLoss):
+    fileName = "depthData_" + vp.pair + "_" + str(limit) + ".csv"
+
+    with open(fileName, 'r') as csv_file:
+        csv_reader = csv.reader(csv_file)
+        for row in csv_reader:
+            r = row[0]
+            r = r.replace("\'", "\"")
+            data = json.loads(r)
+            buys = float(data.get("buysPercentDeals"))
+            sells = float(data.get("sellsPercentDeals"))
+            
+            if(useStopLoss == True):
+                if(vp.isBought):
+                    cur = float(data.get("pairSell"))
+                    diff2 = (cur - vp.priceBought)/vp.priceBought
+                    if(diff2 < -0.02):
+    
+                        ps = data.get("pairSell")
+                        earn = (ps - vp.priceBought)/vp.priceBought
+                        vp.totalEarn += earn
+                        vp.totalEarn -= 0.0003
+                        vp.isBought = False
+                        vp.dealsAmount += 1
+                        
+                        print("&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&")
+                        print("stop loss " + vp.pair + " od longa")
+                        print(data.get("tonce"))
+                        print(ps)#praw
+                        print(earn)
+                        print("&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&")
+                        
+                if(vp.isSold):
+                    cur = float(data.get("pairBuy"))
+                    diff2 = (cur - vp.priceSold)/vp.priceSold
+                    if(diff2 > 0.02):
+    
+                        pb = data.get("pairBuy")
+                        earn = (pb - vp.priceSold)/vp.priceSold
+                        earn = -earn
+                        vp.totalEarn += earn
+                        vp.totalEarn -= 0.0003
+                        vp.isSold = False
+                        vp.dealsAmount += 1
+                    
+                        print("&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&")
+                        print("stop loss " + vp.pair + " od shorta")
+                        print(data.get("tonce"))
+                        print(pb)#praw
+                        print(earn)
+                        print("&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&")
+                        
+            if(sells > percent) and vp.isBought == False:
+                print("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%55")
+                print("przebicie od dołu " + vp.pair + " buy")
+                if(vp.isSold):
+                    print("zamknij " + vp.pair + " od shorta")
+                    print(data.get("pairSell"))
+                    pb = data.get("pairBuy")
+                    print(pb)#praw
+                    earn = (pb - vp.priceSold)/vp.priceSold
+                    earn = -earn
+                    vp.totalEarn += earn
+                    vp.totalEarn -= 0.0003
+                    vp.dealsAmount += 1
+                    print(earn)
+                    print(vp.totalEarn)
+                    
+                    vp.resetAfterClose()
+                    
+                print(data.get("pairSell"))#praw
+                print(data.get("pairBuy"))
+                print(data.get("tonce"))
+                
+                vp.priceBought = float(data.get("pairSell"))
+                vp.isBought = True
+                #vp.setAfterBought()
+                
+                print("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%55")
+                
+            if(buys > percent) and vp.isSold == False:
+                print("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%55")
+                print("przebicie od góry " + vp.pair + " sell")
+                if(vp.isBought):
+                    print("zamknij " + vp.pair + " od longa")
+                    ps = data.get("pairSell")
+                    print(ps)#praw
+                    print(data.get("pairBuy"))
+                    earn = (ps - vp.priceBought)/vp.priceBought
+                    vp.totalEarn += earn
+                    vp.totalEarn -= 0.0003
+                    vp.dealsAmount += 1
                     print(earn)
                     print(vp.totalEarn)
                     
@@ -774,7 +997,8 @@ def checkDepthData(vp, limit, percent):
                 print("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%55")
                 
     print(vp.totalEarn)
-                
+    print(vp.dealsAmount)
+             
 def hujl():
     vp1.openOrder = 3  
     vp1.stopLoss = 3
@@ -844,6 +1068,7 @@ class ValuePair():
         self.orderBuyID = -1
         self.orderSellIDClose = -1
         self.orderBuyIDClose = -1
+        self.dealsAmount = 0
 
     def resetAfterClose(self):
         self.isBought = False
@@ -891,13 +1116,28 @@ if __name__ == '__main__':
     #vp7 = ValuePair('EOSUSD', firstsma, secondsma, 2)
 
     robot = CoinexPerpetualApi(access_id, secret_key)
-    #checkDepthData(vp1, 10, 0.55)
-
-    while True:
-        collectDepthData(vp1, 10, robot)
-        collectDepthData(vp1, 20, robot)
-        collectDepthData(vp2, 10, robot)
-        collectDepthData(vp2, 20, robot)
+    #checkDepthData(vp2, 10, 0.6, 0.2)
+    #checkDepthData2(vp2, 20, 0.6, 0.5)
+    #checkDepthData2(vp1, 20, 0.9, 0.55)
+    
+    #checkDepthData(vp2, 10, 0.85, 0.3, False, True) #!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! 4.3->2.3->5.5s1->1.6->1.8->10.0 SL: 3.7 -> 1.3 -> -2.0 -> 8.1 TP: 0.6
+    #checkDepthData(vp1, 20, 0.6, 0.5, False, True) #2.5 -> 2.2 -> 1.9s1 -> -0.1 -> 2.1 -> 2.4 -> 2.92 SL: 2.49 -> 2.44 -> 3.7 -> 2.8 -> 3.4 TP: 3.4
+    #checkDepthData(vp1, 10, 0.95, 0.5, True, True) #3 -> 3+ -> 3+s1 -> 9.95 -> 9.95 -> 9.95 !!! SL: 2.559 SL: 12.17 -> 10.0 -> 10.0 TP: 8.0
+    #checkDepthData(vp2, 10, 0.95, 0.5, True, True) # 5 -> 9.1s1 -> 10.46 -> 10.38 -> 10.38 -> 3.97 !!!!!!!!! SL: 5.04 - > 4.19 -> 3.27 -> 2.21 -> 2.21 TP: 2.3
+    #checkDepthData(vp2, 20, 0.75, 0.5, True, True) # 8.6s1 -> 8.6 -> 8.6 -> 8.6 SL: 3.4 -> 2.4 -> 2.4 -> 1.3 TP: -0.4
+    #checkDepthData(vp1, 20, 0.75, 0.5, True, True) # 3.8s1 -> 3.8 -> 3.8 -> 3.8 SL 4.2 -> 1.09 -> 0.05 -> 0.05 TP: 0.05
+    
+    #checkDealsData(vp1, 20, 0.997, True)
+    #checkDealsData(vp2, 20, 0.995, True) 
+    
+    
+    #checkDepthData(vp1, 20, 0.6, 0.6, True, True) 
+    
+    #while True:
+    #    collectDepthData(vp1, 10, robot)
+    #    collectDepthData(vp1, 20, robot)
+    #    collectDepthData(vp2, 10, robot)
+    #    collectDepthData(vp2, 20, robot)
         
     #while True:
         #curTime = datetime.now()
