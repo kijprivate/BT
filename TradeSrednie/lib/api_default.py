@@ -1,11 +1,7 @@
-#!/usr/bin/python
-# -*- coding: utf-8 -*-
-
 import logging
-from .request_client import RequestClient
+from .request_client_coinex import RequestClient
 
-
-class CoinexPerpetualApi(object):
+class CoinexPerpetualApiDefault(object):
     ORDER_DIRECTION_SELL = 1
     ORDER_DIRECTION_BUY = 2
 
@@ -431,7 +427,21 @@ class CoinexPerpetualApi(object):
             'access_token': "OC|{appid}|{secret}".format(appid = appId, secret = secretKey)
         }
         return self.request_client.get(path, data)
-    
+
+    def put_achievement(self, appId, secretKey):
+        path = '/{appid}/achievement_definitions'.format(appid = appId)
+        data = {
+            'access_token': "OC|{appid}|{secret}".format(appid = appId, secret = secretKey),
+            'api_name': "pythonaaaaaaaaaaaaaaaaaaaaa",
+            'achievement_type': "SIMPLE",
+            'achievement_write_policy': "CLIENT_AUTHORITATIVE",
+            'title': "python title",
+            'description': "python desc",
+            'unlocked_image_file': "S:\\CookingVR2\\Assets\\test_image.png; type=image/png"
+        }
+        print(data.get("unlocked_image_file"))
+        return self.request_client.postOculus(path, data)
+
     def delete_leaderboard(self, appId, secretKey, leaderboardID):
         path = '/{lid}'.format(lid = leaderboardID)
         data = {
@@ -1221,10 +1231,3 @@ class CoinexPerpetualApi(object):
             'leverage': leverage
         }
         return self.request_client.post(path, data)
-
-
-if __name__ == "__main__":
-    access_id = ''
-    secret_key = ''
-    api = CoinexContractApi(access_id, secret_key)
-    print(api.ping())

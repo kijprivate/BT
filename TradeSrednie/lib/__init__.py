@@ -1,1 +1,1 @@
-from .api import CoinexPerpetualApi
+from .api_coinex import CoinexPerpetualApi
