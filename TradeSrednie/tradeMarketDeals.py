@@ -5,9 +5,7 @@ from datetime import datetime
 from lib import CoinexPerpetualApi
 #from lib import request_client_coinex
 
-def tradeDeals(robot, vp, lim, percent, minVolume):
-    time.sleep(1)
-    
+def tradeDeals(robot, vp, lim, percent, minVolume):    
     try:
         sellsPercentDeals = vp.getPercentDeals(lim, "sell")    
         buysPercentDeals = vp.getPercentDeals(lim, "buy")
@@ -47,7 +45,7 @@ def tradeDeals(robot, vp, lim, percent, minVolume):
 class ValuePair():
     def __init__(self, _robot, _pair, _contractAmount, _isBought = False, _priceBought = 0, _isSold = False, _priceSold = 0):
         self.robot = _robot
-        self.realTrade = False
+        self.realTrade = True
         self.pair = _pair
         self.isBought = _isBought
         self.isSold = _isSold
@@ -129,14 +127,14 @@ class ValuePair():
 if __name__ == '__main__':
     robot = CoinexPerpetualApi()
 
-    vp1 = ValuePair(robot, 'BTCUSD', 500)
+    vp1 = ValuePair(robot, 'BTCUSD', 500, _isSold = True, _priceSold = 28964)
     vp2 = ValuePair(robot, 'ETHUSD', 100)
     
     print(time.time())
 
     while True:
-        tradeDeals(robot, vp1, 20, 0.997, 20000)
-        tradeDeals(robot, vp2, 20, 0.997, 20000)
+        tradeDeals(robot, vp1, 20, 0.998, 20000)
+        #tradeDeals(robot, vp2, 20, 0.997, 20000)
 
         
             
