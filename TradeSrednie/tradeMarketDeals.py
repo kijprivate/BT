@@ -12,17 +12,17 @@ def tradeDeals(robot, vp, lim, percent, minVolume):
         sellsPercentDeals = vp.getPercentDeals(lim, "sell")    
         buysPercentDeals = vp.getPercentDeals(lim, "buy")
         totalVolume = vp.getAmountDeals(lim)
-        
+
         if(sellsPercentDeals > percent) and totalVolume > minVolume and vp.isBought == False:
             print("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%")
             if(vp.isSold):
                 vp.closeShort()
-                putMarketOrder(vp, robot.ORDER_DIRECTION_BUY, vp.leverage)
+                robot.putMarketOrder(vp, robot.ORDER_DIRECTION_BUY, vp.leverage)
                 vp.resetAfterClose()
 
             vp.printDebug(robot.ORDER_DIRECTION_BUY)
             
-            putMarketOrder(vp, robot.ORDER_DIRECTION_BUY, vp.leverage)
+            robot.putMarketOrder(vp, robot.ORDER_DIRECTION_BUY, vp.leverage)
             vp.setAfterBought()
             
             print("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%")
@@ -31,12 +31,12 @@ def tradeDeals(robot, vp, lim, percent, minVolume):
             print("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%")
             if(vp.isBought):
                 vp.closeLong()
-                putMarketOrder(vp, robot.ORDER_DIRECTION_SELL, vp.leverage)
+                robot.putMarketOrder(vp, robot.ORDER_DIRECTION_SELL, vp.leverage)
                 vp.resetAfterClose()
             
             vp.printDebug(robot.ORDER_DIRECTION_SELL)
             
-            putMarketOrder(vp, robot.ORDER_DIRECTION_SELL, vp.leverage)
+            robot.putMarketOrder(vp, robot.ORDER_DIRECTION_SELL, vp.leverage)
             vp.setAfterSold()
             
             print("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%")
@@ -63,6 +63,7 @@ class ValuePair():
         earn = (pairBuy - self.priceSold)/self.priceSold
         earn = -earn
         self.totalEarn += earn
+        self.totalEarn -= 0.0003
         print(earn)
         print(self.totalEarn)
 
@@ -71,6 +72,7 @@ class ValuePair():
         priceSell = self.robot.get_pair_sell(self.pair)
         earn = (priceSell - self.priceBought)/self.priceBought
         self.totalEarn += earn
+        self.totalEarn -= 0.0003
         print(earn)
         print(self.totalEarn)
 
@@ -128,13 +130,13 @@ if __name__ == '__main__':
     robot = CoinexPerpetualApi()
 
     vp1 = ValuePair(robot, 'BTCUSD', 500)
-    #vp2 = ValuePair(robot, 'ETHUSD', 100)
+    vp2 = ValuePair(robot, 'ETHUSD', 100)
     
     print(time.time())
 
     while True:
         tradeDeals(robot, vp1, 20, 0.997, 20000)
-        #tradeDeals(robot, vp2, 20, 0.9925, 20000)
+        tradeDeals(robot, vp2, 20, 0.997, 20000)
 
         
             
