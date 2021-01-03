@@ -5,22 +5,41 @@ from datetime import datetime
 from lib import CoinexPerpetualApi
 #from lib import request_client_coinex
 
-def tradeDeals(robot, vp, lim, percent, minVolume):    
+def tradeDeals(robot, vp, lim, percent, minVolume = 0, useCumulativePosition = False, cumulativePositionCount = 3):    
     try:
         sellsPercentDeals = vp.getPercentDeals(lim, "sell")    
         buysPercentDeals = vp.getPercentDeals(lim, "buy")
         totalVolume = vp.getAmountDeals(lim)
 
+        if(useCumulativePosition == True):
+            if(sellsPercentDeals > percent) and totalVolume > minVolume and vp.isBought == True and vp.buyPositions < cumulativePositionCount and time.time() - vp.lastBuyTime > 120 and vp.priceBought > vp.robot.get_pair_sell(vp.pair):
+                print("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%")
+                vp.printDebug(robot.ORDER_DIRECTION_BUY)
+                
+                robot.putMarketOrder(vp, robot.ORDER_DIRECTION_BUY, vp.leverage, vp.contractAmount)
+                vp.setAfterBought()
+                
+                print("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%")
+                
+            elif(buysPercentDeals > percent) and totalVolume > minVolume and vp.isSold == True and vp.sellPositions < cumulativePositionCount and time.time() - vp.lastSellTime > 120 and vp.priceSold < vp.robot.get_pair_buy(vp.pair):
+                print("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%")
+                vp.printDebug(robot.ORDER_DIRECTION_SELL)
+                
+                robot.putMarketOrder(vp, robot.ORDER_DIRECTION_SELL, vp.leverage, vp.contractAmount)
+                vp.setAfterSold()
+                
+                print("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%")
+
         if(sellsPercentDeals > percent) and totalVolume > minVolume and vp.isBought == False:
             print("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%")
             if(vp.isSold):
                 vp.closeShort()
-                robot.putMarketOrder(vp, robot.ORDER_DIRECTION_BUY, vp.leverage)
+                robot.putMarketOrder(vp, robot.ORDER_DIRECTION_BUY, vp.leverage, vp.contractAmount*vp.sellPositions)
                 vp.resetAfterClose()
 
             vp.printDebug(robot.ORDER_DIRECTION_BUY)
             
-            robot.putMarketOrder(vp, robot.ORDER_DIRECTION_BUY, vp.leverage)
+            robot.putMarketOrder(vp, robot.ORDER_DIRECTION_BUY, vp.leverage, vp.contractAmount)
             vp.setAfterBought()
             
             print("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%")
@@ -29,12 +48,12 @@ def tradeDeals(robot, vp, lim, percent, minVolume):
             print("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%")
             if(vp.isBought):
                 vp.closeLong()
-                robot.putMarketOrder(vp, robot.ORDER_DIRECTION_SELL, vp.leverage)
+                robot.putMarketOrder(vp, robot.ORDER_DIRECTION_SELL, vp.leverage, vp.contractAmount*vp.buyPositions)
                 vp.resetAfterClose()
             
             vp.printDebug(robot.ORDER_DIRECTION_SELL)
             
-            robot.putMarketOrder(vp, robot.ORDER_DIRECTION_SELL, vp.leverage)
+            robot.putMarketOrder(vp, robot.ORDER_DIRECTION_SELL, vp.leverage, vp.contractAmount)
             vp.setAfterSold()
             
             print("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%")
@@ -51,6 +70,10 @@ class ValuePair():
         self.isSold = _isSold
         self.priceBought = _priceBought
         self.priceSold = _priceSold
+        self.buyPositions = 0
+        self.sellPositions = 0
+        self.lastBuyTime = time.time()
+        self.lastSellTime = time.time()
         self.totalEarn = 0 
         self.leverage = 10
         self.contractAmount = _contractAmount
@@ -77,14 +100,26 @@ class ValuePair():
     def resetAfterClose(self):
         self.isBought = False
         self.isSold = False
+        self.buyPositions = 0
+        self.sellPositions = 0
     
     def setAfterSold(self):
         self.isSold = True
-        self.priceSold = self.robot.get_pair_buy(self.pair)
+        self.sellPositions += 1
+        self.lastSellTime = time.time()
+        if self.sellPositions > 1:
+            self.priceSold = (self.priceSold + self.robot.get_pair_buy(self.pair))/2
+        else:
+            self.priceSold = self.robot.get_pair_buy(self.pair)
     
     def setAfterBought(self):
         self.isBought = True
-        self.priceBought = self.robot.get_pair_sell(self.pair)
+        self.buyPositions += 1
+        self.lastBuyTime = time.time()
+        if self.buyPositions > 1:
+            self.priceBought = (self.priceBought + self.robot.get_pair_sell(self.pair))/2
+        else:
+            self.priceBought = self.robot.get_pair_sell(self.pair)
 
     def getPercentDeals(self, lim, dealsType):
         marketDealsData = self.robot.get_market_deals(self.pair, limit = lim).get("data")
@@ -127,14 +162,14 @@ class ValuePair():
 if __name__ == '__main__':
     robot = CoinexPerpetualApi()
 
-    vp1 = ValuePair(robot, 'BTCUSD', 500, _isSold = True, _priceSold = 28964)
-    vp2 = ValuePair(robot, 'ETHUSD', 100)
-    
+    vp1 = ValuePair(robot, 'BTCUSD', 100)
+    vp2 = ValuePair(robot, 'ETHUSD', 20)
+
     print(time.time())
 
     while True:
-        tradeDeals(robot, vp1, 20, 0.998, 20000)
-        #tradeDeals(robot, vp2, 20, 0.997, 20000)
+        tradeDeals(robot, vp1, 20, 0.996)
+        tradeDeals(robot, vp2, 20, 0.993, minVolume=20000, useCumulativePosition=True, cumulativePositionCount=3)
 
         
             
