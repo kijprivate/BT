@@ -4,6 +4,7 @@ import hashlib
 import json
 from datetime import datetime
 from lib import CoinexPerpetualApi
+from lib import BinancePerpetualApi
 import csv
 import matplotlib.pyplot as plt
 
@@ -34,7 +35,7 @@ def checkDepthData(vp, limit, stockName, percent, useStopLoss, useTakeProfit, pe
 
                         print("&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&")
                         print("stop loss " + vp.pair + " long")
-                        vp.printDebug(data, robot.ORDER_DIRECTION_BUY)
+                        vp.printDebug(data, vp.robot.ORDER_DIRECTION_BUY)
                         print("&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&")
 
                 if(vp.isSold):
@@ -46,7 +47,7 @@ def checkDepthData(vp, limit, stockName, percent, useStopLoss, useTakeProfit, pe
 
                         print("&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&")
                         print("stop loss " + vp.pair + " short")
-                        vp.printDebug(data, robot.ORDER_DIRECTION_SELL)
+                        vp.printDebug(data, vp.robot.ORDER_DIRECTION_SELL)
                         print("&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&")
 
             if(useTakeProfit == True):
@@ -59,7 +60,7 @@ def checkDepthData(vp, limit, stockName, percent, useStopLoss, useTakeProfit, pe
 
                         print("&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&")
                         print("stop loss " + vp.pair + " long")
-                        vp.printDebug(data, robot.ORDER_DIRECTION_BUY)
+                        vp.printDebug(data, vp.robot.ORDER_DIRECTION_BUY)
                         print("&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&")
 
                 if(vp.isSold):
@@ -71,7 +72,7 @@ def checkDepthData(vp, limit, stockName, percent, useStopLoss, useTakeProfit, pe
 
                         print("&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&")
                         print("stop loss " + vp.pair + " short")
-                        vp.printDebug(data, robot.ORDER_DIRECTION_SELL)
+                        vp.printDebug(data, vp.robot.ORDER_DIRECTION_SELL)
                         print("&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&")
 
             if(sells > percent) and vp.isBought == False:
@@ -80,7 +81,7 @@ def checkDepthData(vp, limit, stockName, percent, useStopLoss, useTakeProfit, pe
                     vp.closeShort(data)
                     vp.resetAfterClose()
 
-                vp.printDebug(data, robot.ORDER_DIRECTION_BUY)
+                vp.printDebug(data, vp.robot.ORDER_DIRECTION_BUY)
                 vp.setAfterBought(data)
                 print("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%")
 
@@ -90,58 +91,89 @@ def checkDepthData(vp, limit, stockName, percent, useStopLoss, useTakeProfit, pe
                     vp.closeLong(data)
                     vp.resetAfterClose()
 
-                vp.printDebug(data, robot.ORDER_DIRECTION_SELL)
+                vp.printDebug(data, vp.robot.ORDER_DIRECTION_SELL)
                 vp.setAfterSold(data)
                 print("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%55")
 
     print(vp.dealsAmount)
     print(vp.totalEarn)
 
-def checkDealsData(vp, limit, stockName, percent, useStopLoss, minimumVolume, periodLimited = False, lastDay = 28):
+def checkDealsData(vp, limit, stockName, percent, percent2, minimumVolume = 0, useStopLoss = False, stopLossPercent = 0.02, periodLimited = False, lastDay = 28, lastMonth = 1, useCumulativePosition = False, cumulativePositionCount = 3):
     fileName = "depthData_" + vp.pair + "_" + str(limit) + "_" + stockName + ".csv"
 
     with open(fileName, 'r') as csv_file:
-        csv_reader = csv.reader(csv_file)
-        for row in csv_reader:
+        #csv_reader = csv.reader(csv_file)
+        rowList = list(csv.reader(csv_file))
+
+        for row in rowList:
             r = row[0]
             r = r.replace("\'", "\"")
             data = json.loads(r)
             buys = float(data.get("buysPercentDeals"))
             sells = float(data.get("sellsPercentDeals"))
+
             if(data.get("buysAmountDeals") != None):
                 totalVolume = float(data.get("buysAmountDeals")) + float(data.get("sellsAmountDeals"))
             else:
                 totalVolume = 999999999999999999999999999
 
             if(periodLimited == True):
-                day = int(data.get("tonce")[0] + data.get("tonce")[1])
-                if(day < lastDay):
+                if data.get("tonce")[1] == ".":
+                    day = int(data.get("tonce")[0])
+                else:
+                    day = int(data.get("tonce")[0] + data.get("tonce")[1])
+
+                if data.get("tonce")[5] == ".": #12.12.2020
+                    month = int(data.get("tonce")[3] + data.get("tonce")[4])
+                elif data.get("tonce")[3] == ".": #1.1.2020
+                    month = int(data.get("tonce")[2])
+                elif data.get("tonce")[1] == "." and data.get("tonce")[4] == ".": #1.12.2020 
+                    month = int(data.get("tonce")[2] + data.get("tonce")[3])
+                elif data.get("tonce")[2] == "." and data.get("tonce")[4] == ".": #12.1.2020
+                    month = int(data.get("tonce")[3])
+                
+                if(day < lastDay) or month != lastMonth:
                     continue
 
             if(useStopLoss == True):
                 if(vp.isBought):
                     cur = float(data.get("pairSell"))
                     diff2 = (cur - vp.priceBought)/vp.priceBought
-                    if(diff2 < -0.02):
+                    if(diff2 < -stopLossPercent):
                         vp.closeLong(data)
                         vp.resetAfterClose()
 
                         print("&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&")
                         print("stop loss " + vp.pair + " long")
-                        vp.printDebug(data, robot.ORDER_DIRECTION_BUY)
+                        vp.printDebug(data, vp.robot.ORDER_DIRECTION_BUY)
                         print("&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&")
 
                 if(vp.isSold):
                     cur = float(data.get("pairBuy"))
                     diff2 = (cur - vp.priceSold)/vp.priceSold
-                    if(diff2 > 0.02):
+                    if(diff2 > stopLossPercent):
                         vp.closeShort(data)
                         vp.resetAfterClose()
 
                         print("&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&")
                         print("stop loss " + vp.pair + " short")
-                        vp.printDebug(data, robot.ORDER_DIRECTION_SELL)
+                        vp.printDebug(data, vp.robot.ORDER_DIRECTION_SELL)
                         print("&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&")
+
+            if(useCumulativePosition):
+                if(sells > percent) and totalVolume > minimumVolume and vp.isBought == True and vp.buyPositions < cumulativePositionCount and vp.lastBuyTime != data.get("tonce") and vp.priceBought > data.get("pairSell"):
+                    print("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%")
+
+                    vp.printDebug(data, vp.robot.ORDER_DIRECTION_BUY)
+                    vp.setAfterBought(data)
+                    print("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%")
+
+                if(buys > percent) and totalVolume > minimumVolume and vp.isSold == True and vp.sellPositions < cumulativePositionCount and vp.lastSellTime != data.get("tonce") and vp.priceSold < data.get("pairBuy"):
+                    print("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%")
+
+                    vp.printDebug(data, vp.robot.ORDER_DIRECTION_SELL)
+                    vp.setAfterSold(data)
+                    print("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%55")        
 
             if(sells > percent) and totalVolume > minimumVolume and vp.isBought == False:
                 print("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%")
@@ -149,45 +181,57 @@ def checkDealsData(vp, limit, stockName, percent, useStopLoss, minimumVolume, pe
                     vp.closeShort(data)
                     vp.resetAfterClose()
 
-                vp.printDebug(data, robot.ORDER_DIRECTION_BUY)
+                vp.printDebug(data, vp.robot.ORDER_DIRECTION_BUY)
                 vp.setAfterBought(data)
                 print("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%")
 
-            if(buys > percent) and totalVolume > minimumVolume and vp.isSold == False:
+            if(buys > percent2) and totalVolume > minimumVolume and vp.isSold == False:
                 print("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%")
                 if(vp.isBought):
                     vp.closeLong(data)
                     vp.resetAfterClose()
 
-                vp.printDebug(data, robot.ORDER_DIRECTION_SELL)
+                vp.printDebug(data, vp.robot.ORDER_DIRECTION_SELL)
                 vp.setAfterSold(data)
                 print("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%55")
 
     print(vp.totalEarn)
     print(vp.dealsAmount)
+    print(vp.bilance)
     return vp.totalEarn
 
 class ValuePair():
-    def __init__(self, _robot, _pair):
+    def __init__(self, _robot, _stockName, _pair):
         self.robot = _robot
+        self.stockName = _stockName
         self.pair = _pair
         self.isBought = False
         self.isSold = False
         self.priceBought = 0
         self.priceSold = 0
+        self.buyPositions = 0
+        self.sellPositions = 0
+        self.lastBuyTime = ""
+        self.lastSellTime = ""
         self.totalEarn = 0
         self.leverage = 10
         self.dealsAmount = 0
         self.totalEarnValues = []
         self.totalEarnTimeValues = []
         self.priceValues = []
+        self.bilance = 0
 
     def closeShort(self, data):
         print("close " + self.pair + " short")
-        pb = data.get("pairBuy")
+        #pb = data.get("pairBuy")
+        pb = data.get("pairSell")
         earn = (pb - self.priceSold)/self.priceSold
         earn = -earn
-        self.totalEarn += earn
+        self.totalEarn += earn#*self.sellPositions
+        if earn > 0:
+            self.bilance += 1
+        else:
+            self.bilance -=1
         self.totalEarn -= 0.0003
         self.dealsAmount += 1
 
@@ -201,12 +245,16 @@ class ValuePair():
 
     def closeLong(self, data):
         print("close " + self.pair + " long")
-        ps = data.get("pairSell")
+        #ps = data.get("pairSell")
+        ps = data.get("pairBuy")
         earn = (ps - self.priceBought)/self.priceBought
-        self.totalEarn += earn
+        self.totalEarn += earn#*self.buyPositions
         self.totalEarn -= 0.0003
         self.dealsAmount += 1
-
+        if earn > 0:
+            self.bilance += 1
+        else:
+            self.bilance -=1
         self.totalEarnValues.append(self.totalEarn)
         time = str(data.get("tonce")).replace("2020","")
         self.totalEarnTimeValues.append(time)
@@ -218,14 +266,26 @@ class ValuePair():
     def resetAfterClose(self):
         self.isBought = False
         self.isSold = False
+        self.buyPositions = 0
+        self.sellPositions = 0
 
     def setAfterSold(self, data):
         self.isSold = True
-        self.priceSold = float(data.get("pairBuy"))
+        self.sellPositions += 1
+        self.lastSellTime = data.get("tonce")
+        if self.sellPositions > 1:
+            self.priceSold = (self.priceSold + float(data.get("pairBuy")))/2
+        else:
+            self.priceSold = float(data.get("pairBuy"))
 
     def setAfterBought(self, data):
         self.isBought = True
-        self.priceBought = float(data.get("pairSell"))
+        self.buyPositions += 1
+        self.lastBuyTime = data.get("tonce")
+        if self.buyPositions > 1:
+            self.priceBought = (self.priceBought + float(data.get("pairSell")))/2
+        else:
+            self.priceBought = float(data.get("pairSell"))
 
     def printDebug(self, data, orderDirection):
         if(orderDirection == 1):

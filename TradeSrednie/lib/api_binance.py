@@ -1,9 +1,9 @@
 import logging
-from .request_client_coinex import RequestClient
+from .request_client_binance import RequestClient
 import csv
 import time
 
-class CoinexPerpetualApi(object):
+class BinancePerpetualApi(object):
     ORDER_DIRECTION_SELL = 1
     ORDER_DIRECTION_BUY = 2
 
@@ -21,67 +21,67 @@ class CoinexPerpetualApi(object):
 
     #My API
     def collectDepthData(self, vp, limit):
-        try:
-            depthData = self.depth(vp.pair, limit = limit).get("data")
-            
-            sellsAmount = 0
-            buysAmount = 0
-            for x in range(len(depthData.get('asks'))):
-                sellsAmount += float(depthData.get('asks')[x][1])
-            
-            for x in range(len(depthData.get('bids'))):
-                buysAmount += float(depthData.get('bids')[x][1])
-            
-            sellsPercent = sellsAmount/(sellsAmount + buysAmount)    
-            buysPercent = buysAmount/(sellsAmount + buysAmount) 
+        #try:
+        depthData = self.depth(vp.pair, limit = limit)
 
-            marketDealsData = self.get_market_deals(vp.pair, limit = limit).get("data")
+        sellsAmount = 0
+        buysAmount = 0
+        for x in range(len(depthData.get('asks'))):
+            sellsAmount += float(depthData.get('asks')[x][1])
+        
+        for x in range(len(depthData.get('bids'))):
+            buysAmount += float(depthData.get('bids')[x][1])
+        
+        sellsPercent = sellsAmount/(sellsAmount + buysAmount)    
+        buysPercent = buysAmount/(sellsAmount + buysAmount) 
 
-            sellsAmountDeals = 0
-            buysAmountDeals = 0
-            for x in marketDealsData:
-                if(x.get("type") == "sell"):
-                    sellsAmountDeals += float(x.get('amount'))
-                else:
-                    buysAmountDeals += float(x.get('amount'))
-            
-            sellsPercentDeals = sellsAmountDeals/(sellsAmountDeals + buysAmountDeals)    
-            buysPercentDeals = buysAmountDeals/(sellsAmountDeals + buysAmountDeals) 
+        marketDealsData = self.get_market_deals(vp.pair, limit = limit)
 
-            currTime = time.gmtime(time.time())
-            realTime = (str)(currTime[2]) + "." + (str)(currTime[1]) + "." + (str)(currTime[0]) + " " + (str)(currTime[3] + 1) + ":" + (str)(currTime[4])
-            
-            data = [{
-                "tonce": realTime,
-                "sellsPercent": sellsPercent,
-                "buysPercent": buysPercent,
-                "sellsPercentDeals": sellsPercentDeals,
-                "buysPercentDeals": buysPercentDeals,
-                "pairSell": self.get_pair_sell(vp.pair),
-                "pairBuy": self.get_pair_buy(vp.pair),
-                "sellsAmountDeals": sellsAmountDeals,
-                "buysAmountDeals": buysAmountDeals
-            }]  
-            
-            fileName = "depthData_" + vp.pair + "_" + str(limit) + "_" + vp.stockName + ".csv"
-            with open(fileName, 'a', newline='') as csv_file:
-                csv_writer = csv.writer(csv_file, delimiter=',')
-                csv_writer.writerow(data)
-        except:
-            print(1)
+        sellsAmountDeals = 0
+        buysAmountDeals = 0
+        for x in marketDealsData:
+            if(x.get("isBuyerMaker") == "true"):
+                sellsAmountDeals += float(x.get('baseQty'))
+            else:
+                buysAmountDeals += float(x.get('baseQty'))
+        
+        sellsPercentDeals = sellsAmountDeals/(sellsAmountDeals + buysAmountDeals)    
+        buysPercentDeals = buysAmountDeals/(sellsAmountDeals + buysAmountDeals) 
+
+        currTime = time.gmtime(time.time())
+        realTime = (str)(currTime[2]) + "." + (str)(currTime[1]) + "." + (str)(currTime[0]) + " " + (str)(currTime[3] + 1) + ":" + (str)(currTime[4])
+        
+        data = [{
+            "time": realTime,
+            "sellsPercent": sellsPercent,
+            "buysPercent": buysPercent,
+            "sellsPercentDeals": sellsPercentDeals,
+            "buysPercentDeals": buysPercentDeals,
+            "pairSell": self.get_pair_sell(vp.pair),
+            "pairBuy": self.get_pair_buy(vp.pair),
+            "sellsAmountDeals": sellsAmountDeals,
+            "buysAmountDeals": buysAmountDeals
+        }]  
+        
+        fileName = "depthData_" + vp.pair + "_" + str(limit) + "_" + vp.stockName + ".csv"
+        with open(fileName, 'a', newline='') as csv_file:
+            csv_writer = csv.writer(csv_file, delimiter=',')
+            csv_writer.writerow(data)
+        #except:
+        #    print(1)
 
     def collectKlineData(self, vp, typeInMinutes):
         try:
-            klineData = self.kline(vp.pair, str(typeInMinutes) + "min", 1).get("data")
+            klineData = self.kline(vp.pair, str(typeInMinutes) + "m", 1)
 
             data = [{
                 "tonce": klineData[0][0],
                 "open": klineData[0][1],
-                "close": klineData[0][2],
-                "highest": klineData[0][3],
-                "lowest": klineData[0][4],
+                "close": klineData[0][4],
+                "highest": klineData[0][2],
+                "lowest": klineData[0][3],
                 "volume": klineData[0][5],
-                "amount": klineData[0][6],
+                "amount": klineData[0][7],
                 "pairSell": self.get_pair_sell(vp.pair),
                 "pairBuy": self.get_pair_buy(vp.pair)
             }]
@@ -106,11 +106,10 @@ class CoinexPerpetualApi(object):
         }
         return self.request_client.get(path, params, sign=False)
 
-    def get_market_deals(self, market, limit, last_id=0):
-        path = '/v1/market/deals'
+    def get_market_deals(self, market, limit):
+        path = '/dapi/v1/trades'
         params = {
-            'market': market,
-            'last_id': last_id,
+            'symbol': market,
             'limit': limit
         }
         return self.request_client.get(path, params, sign=False)
@@ -120,30 +119,29 @@ class CoinexPerpetualApi(object):
         return self.request_client.get(path, sign=False)
 
     def depth(self, market, merge=0, limit=50):
-        path = '/v1/market/depth'
+        path = '/dapi/v1/depth'
         params = {
-            'market': market,
-            'merge': merge,
+            'symbol': market,
             'limit': limit
         }
         return self.request_client.get(path, params, sign=False)
 
     def kline(self, market, kline_type, limit):
-        path = '/v1/market/kline'
+        path = '/dapi/v1/klines'
         params = {
-            'market': market,
-            'type': kline_type,
+            'symbol': market,
+            'interval': kline_type,
             'limit': limit
         }
         return self.request_client.get(path, params, sign=False)
 
     def get_pair_sell(self, pair):
-        marketState = self.get_market_state(pair)
-        return (float)(marketState.get('data').get('ticker').get('sell'))
+        dep = self.depth(pair)
+        return (float)(dep.get('asks')[0][0])
 
     def get_pair_buy(self, pair):
-        marketState = self.get_market_state(pair)
-        return (float)(marketState.get('data').get('ticker').get('buy'))
+        dep = self.depth(pair)
+        return (float)(dep.get('bids')[0][0])
     
     # Account API
     def query_account(self):
@@ -151,7 +149,7 @@ class CoinexPerpetualApi(object):
         return self.request_client.get(path)
 
     # Trading API
-    def putMarketOrder(self, vp, side, leverage, amount):
+    def putMarketOrder(self, vp, side, leverage):
         if(vp.realTrade == False):
             return "Trading disabled"
 
@@ -160,7 +158,7 @@ class CoinexPerpetualApi(object):
         result = self.put_market_order(
             vp.pair,
             side,
-            amount
+            vp.contractAmount
         )
         print(result)
         return result
