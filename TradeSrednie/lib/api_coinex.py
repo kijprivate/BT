@@ -106,6 +106,13 @@ class CoinexPerpetualApi(object):
         }
         return self.request_client.get(path, params, sign=False)
 
+    def get_market_state_defaultAPI(self, market):
+        path = '/v1/market/ticker'
+        params = {
+            'market': market
+        }
+        return self.request_client.getDefaultAPI(path, params, sign=False)
+
     def get_market_deals(self, market, limit, last_id=0):
         path = '/v1/market/deals'
         params = {
@@ -145,6 +152,10 @@ class CoinexPerpetualApi(object):
         marketState = self.get_market_state(pair)
         return (float)(marketState.get('data').get('ticker').get('buy'))
     
+    def get_pair_sell_defaultAPI(self, pair):
+        marketState = self.get_market_state_defaultAPI(pair)
+        return (float)(marketState.get('data').get('ticker').get('buy'))
+
     # Account API
     def query_account(self):
         path = '/v1/asset/query'
@@ -168,9 +179,11 @@ class CoinexPerpetualApi(object):
         profitWithFee = 0
         if(result.get("code") == 0):
             profit = float(result.get("data").get("deal_profit"))
-            profitWithFee = float(result.get("data").get("deal_profit")) - float(result.get("data").get("deal_fee"))
+            profitWithFee = float(result.get("data").get("deal_profit")) - float(result.get("data").get("deal_fee")) - float(result.get("data").get("deal_asset_fee"))*self.get_pair_sell_defaultAPI("CETBTC")
         vp.realTotalEarn += profit
         vp.realTotalEarnWithFee += profitWithFee
+        print(vp.realTotalEarn)
+        print(vp.realTotalEarnWithFee)
         return result
 
     def put_limit_order(self, market, side, amount, price, effect_type=1):

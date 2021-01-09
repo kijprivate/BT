@@ -22,6 +22,7 @@ class RequestClient(object):
         self.secret_key = secret_key
         self.headers = self.__headers
         self.host = 'https://api.coinex.com/perpetual'
+        self.hostDefault = 'https://api.coinex.com'
         self.hostOculus = 'https://graph.oculus.com'
         session = requests.Session()
         session.mount('http://', requests.adapters.HTTPAdapter())
@@ -45,6 +46,34 @@ class RequestClient(object):
 
     def get(self, path, params=None, sign=True):
         url = self.host + path
+        params = params or {}
+        params['timestamp'] = int(time.time()*1000)
+        headers = copy.copy(self.headers)
+        if sign:
+            self.set_authorization(params, headers)
+        try:
+            response = self.http_client.get(
+                url, params=params, headers=headers, timeout=5)
+            # self.logger.info(response.request.url)
+            if response.status_code == requests.codes.ok:
+                return response.json()
+            else:
+                self.logger.error(
+                    'URL: {0}\nSTATUS_CODE: {1}\nResponse: {2}'.format(
+                        response.request.url,
+                        response.status_code,
+                        response.text
+                    )
+                )
+                return None
+        except Exception as ex:
+            trace_info = traceback.format_exc()
+            self.logger.error('GET {url} failed: \n{trace_info}'.format(
+                url=url, trace_info=trace_info))
+            return None
+
+    def getDefaultAPI(self, path, params=None, sign=True):
+        url = self.hostDefault + path
         params = params or {}
         params['timestamp'] = int(time.time()*1000)
         headers = copy.copy(self.headers)

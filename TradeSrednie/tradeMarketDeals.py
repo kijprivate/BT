@@ -93,8 +93,8 @@ class ValuePair():
         print(earn)
         print(fee)
         print(self.totalEarn)
-        print(self.realTotalEarn)
-        print(self.realTotalEarnWithFee)
+        #print(self.realTotalEarn)
+        #print(self.realTotalEarnWithFee)
 
     def closeLong(self):
         print("close " + self.pair + " long")
@@ -108,8 +108,8 @@ class ValuePair():
         print(earn)
         print(fee)
         print(self.totalEarn)
-        print(self.realTotalEarn)
-        print(self.realTotalEarnWithFee)
+        #print(self.realTotalEarn)
+        #print(self.realTotalEarnWithFee)
 
     def resetAfterClose(self):
         self.isBought = False
