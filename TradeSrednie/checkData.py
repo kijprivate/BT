@@ -98,7 +98,7 @@ def checkDepthData(vp, limit, stockName, percent, useStopLoss, useTakeProfit, pe
     print(vp.dealsAmount)
     print(vp.totalEarn)
 
-def checkDealsData(vp, limit, stockName, percent, percent2, minimumVolume = 0, useStopLoss = False, stopLossPercent = 0.02, periodLimited = False, lastDay = 28, lastMonth = 1, useCumulativePosition = False, cumulativePositionCount = 3):
+def checkDealsData(vp, limit, stockName, percent, percent2, minimumVolume = 0, maximumVolume = 99999999999999999999999999999999999999999999, useStopLoss = False, stopLossPercent = 0.02, useTakeProfit = False, takeProfitPercent = 0.02, periodLimited = False, lastDay = 28, lastMonth = 1, useCumulativePosition = False, cumulativePositionCount = 3):
     fileName = "depthData_" + vp.pair + "_" + str(limit) + "_" + stockName + ".csv"
 
     with open(fileName, 'r') as csv_file:
@@ -161,21 +161,21 @@ def checkDealsData(vp, limit, stockName, percent, percent2, minimumVolume = 0, u
                         print("&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&")
 
             if(useCumulativePosition):
-                if(sells > percent) and totalVolume > minimumVolume and vp.isBought == True and vp.buyPositions < cumulativePositionCount and vp.lastBuyTime != data.get("tonce") and vp.priceBought > data.get("pairSell"):
+                if(sells > percent) and totalVolume > minimumVolume and totalVolume < maximumVolume and vp.isBought == True and vp.buyPositions < cumulativePositionCount and vp.lastBuyTime != data.get("tonce") and vp.priceBought > data.get("pairSell"):
                     print("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%")
 
                     vp.printDebug(data, vp.robot.ORDER_DIRECTION_BUY)
                     vp.setAfterBought(data)
                     print("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%")
 
-                if(buys > percent) and totalVolume > minimumVolume and vp.isSold == True and vp.sellPositions < cumulativePositionCount and vp.lastSellTime != data.get("tonce") and vp.priceSold < data.get("pairBuy"):
+                if(buys > percent) and totalVolume > minimumVolume and totalVolume < maximumVolume and vp.isSold == True and vp.sellPositions < cumulativePositionCount and vp.lastSellTime != data.get("tonce") and vp.priceSold < data.get("pairBuy"):
                     print("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%")
 
                     vp.printDebug(data, vp.robot.ORDER_DIRECTION_SELL)
                     vp.setAfterSold(data)
                     print("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%55")        
 
-            if(sells > percent) and totalVolume > minimumVolume and vp.isBought == False:
+            if(sells > percent) and totalVolume > minimumVolume and totalVolume < maximumVolume  and vp.isBought == False:
                 print("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%")
                 if(vp.isSold):
                     vp.closeShort(data)
@@ -185,7 +185,7 @@ def checkDealsData(vp, limit, stockName, percent, percent2, minimumVolume = 0, u
                 vp.setAfterBought(data)
                 print("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%")
 
-            if(buys > percent2) and totalVolume > minimumVolume and vp.isSold == False:
+            if(buys > percent2) and totalVolume > minimumVolume and totalVolume < maximumVolume and vp.isSold == False:
                 print("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%")
                 if(vp.isBought):
                     vp.closeLong(data)
@@ -194,6 +194,31 @@ def checkDealsData(vp, limit, stockName, percent, percent2, minimumVolume = 0, u
                 vp.printDebug(data, vp.robot.ORDER_DIRECTION_SELL)
                 vp.setAfterSold(data)
                 print("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%55")
+
+            if(useTakeProfit == True):
+                if(vp.isBought):
+                    cur = float(data.get("pairSell"))
+                    diff2 = (cur - vp.priceBought)/vp.priceBought
+                    if(diff2 > takeProfitPercent):
+                        vp.closeLong(data)
+                        vp.resetAfterClose()
+
+                        print("&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&")
+                        print("takeProfit " + vp.pair + " long")
+                        vp.printDebug(data, vp.robot.ORDER_DIRECTION_BUY)
+                        print("&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&")
+
+                if(vp.isSold):
+                    cur = float(data.get("pairBuy"))
+                    diff2 = (cur - vp.priceSold)/vp.priceSold
+                    if(diff2 < -takeProfitPercent):
+                        vp.closeShort(data)
+                        vp.resetAfterClose()
+
+                        print("&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&")
+                        print("takeProfit " + vp.pair + " short")
+                        vp.printDebug(data, vp.robot.ORDER_DIRECTION_SELL)
+                        print("&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&")
 
     print(vp.totalEarn)
     print(vp.dealsAmount)
@@ -220,19 +245,25 @@ class ValuePair():
         self.totalEarnTimeValues = []
         self.priceValues = []
         self.bilance = 0
+        self.contractAmount = 20
 
     def closeShort(self, data):
         print("close " + self.pair + " short")
         #pb = data.get("pairBuy")
         pb = data.get("pairSell")
-        earn = (pb - self.priceSold)/self.priceSold
-        earn = -earn
+        #50/(10*40800) - 50/(10*40700) contractAmount/(leverage*curPrice)
+        earn = (self.contractAmount*self.sellPositions)/(self.leverage*pb) - (self.contractAmount*self.sellPositions)/(self.leverage*self.priceSold)
+        fee = 0.0005*((self.contractAmount*self.sellPositions)/(self.leverage*self.priceSold))
+        print(fee)
+        #earn = (pb - self.priceSold)/self.priceSold
+        #earn = -earn
         self.totalEarn += earn#*self.sellPositions
+        self.totalEarn -= fee
         if earn > 0:
             self.bilance += 1
         else:
             self.bilance -=1
-        self.totalEarn -= 0.0003
+        #self.totalEarn -= 0.0005
         self.dealsAmount += 1
 
         self.totalEarnValues.append(self.totalEarn)
@@ -240,6 +271,7 @@ class ValuePair():
         self.totalEarnTimeValues.append(time)
         self.priceValues.append(float(data.get("pairSell")))
 
+        print(pb - self.priceSold)
         print(earn)
         print(self.totalEarn)
 
@@ -247,9 +279,14 @@ class ValuePair():
         print("close " + self.pair + " long")
         #ps = data.get("pairSell")
         ps = data.get("pairBuy")
-        earn = (ps - self.priceBought)/self.priceBought
+        earn = (self.contractAmount*self.buyPositions)/(self.leverage*ps) - (self.contractAmount*self.buyPositions)/(self.leverage*self.priceBought)
+        fee = 0.0005*((self.contractAmount*self.buyPositions)/(self.leverage*self.priceBought))
+        print(fee)
+        #earn = (ps - self.priceBought)/self.priceBought
+        earn = -earn
         self.totalEarn += earn#*self.buyPositions
-        self.totalEarn -= 0.0003
+        self.totalEarn -= fee
+        #self.totalEarn -= 0.0005
         self.dealsAmount += 1
         if earn > 0:
             self.bilance += 1
@@ -260,6 +297,7 @@ class ValuePair():
         self.totalEarnTimeValues.append(time)
         self.priceValues.append(float(data.get("pairSell")))
 
+        print(ps - self.priceBought)
         print(earn)
         print(self.totalEarn)
 
@@ -295,41 +333,56 @@ class ValuePair():
         print(data.get("pairSell"))
         print(data.get("pairBuy"))
         print(data.get("tonce"))
+        print(data.get("sellsAmountDeals"))
+        print(data.get("buysAmountDeals"))
 
 if __name__ == '__main__':
-    robot = CoinexPerpetualApi()
+    coinexRobot = CoinexPerpetualApi()
+    binanceRobot = BinancePerpetualApi()
 
-    vpb1 = ValuePair(robot, 'BTCUSD')
-    vpb2 = ValuePair(robot, 'BTCUSD')
+    coinexBTC = ValuePair(coinexRobot, "coinex", 'BTCUSD')
+    coinexETH = ValuePair(coinexRobot, "coinex", 'ETHUSD')
 
-    vpe1 = ValuePair(robot, 'ETHUSD')
-    vpe2 = ValuePair(robot, 'ETHUSD')
+    binanceBTC = ValuePair(binanceRobot, "binance", 'BTCUSD_PERP')
 
-    #checkDepthData(vpe1, 10, "coinex", 0.85, False, False)
-    #checkDepthData(vpb1, 10, "coinex", 0.95, True, True) 
-    #checkDepthData(vpe1, 10, "coinex", 0.95, False, False) 
+    coinexBTC2 = ValuePair(coinexRobot, "coinex", 'BTCUSD')
+    coinexETH2 = ValuePair(coinexRobot, "coinex", 'ETHUSD')
 
-    # checkDealsData(vpb1, 20, "coinex", 0.998, False, 20000, False, 30)  #20k volume, 0.996/7 best
-    # checkDealsData(vpb2, 20, "coinex", 0.998, False, 1000, False, 30)
+    #ogarnąć data tonce
+    #checkDepthData(coinexETH, 10, "coinex", 0.85, False, False)
+    #checkDepthData(coinexBTC, 10, "coinex", 0.95, False, False) 
+    #checkDepthData(coinexETH, 10, "coinex", 0.95, False, False) 
 
-    # plt.plot(vpb1.totalEarnValues, label = "t")
-    # plt.plot(vpb2.totalEarnValues, label = "n")
+    checkDealsData(coinexBTC, 20, "coinex", 0.95, 0.95, minimumVolume=20000, useStopLoss=False, stopLossPercent=0.02, useTakeProfit=False, takeProfitPercent = 0.02, periodLimited=True, lastDay=7, lastMonth=1, useCumulativePosition=True, cumulativePositionCount=3)  #20k volume, 0.996/7 best -> 998
+    checkDealsData(coinexBTC2, 20, "coinex", 0.95, 0.95, minimumVolume=20000, useStopLoss=False, stopLossPercent=0.015, useTakeProfit=False, takeProfitPercent = 0.02, periodLimited=True, lastDay=7, lastMonth=1, useCumulativePosition=True, cumulativePositionCount=10)
 
-    # checkDealsData(vpe1, 20, "coinex", 0.993, False, 20000, False, 30)
-    # checkDealsData(vpe2, 20, "coinex", 0.993, False, 1000, False, 30)
+    plt.plot(coinexBTC.totalEarnValues, label = "1")
+    plt.plot(coinexBTC2.totalEarnValues, label = "2")
 
-    # plt.plot(vpe1.totalEarnValues, label = "t")
-    # plt.plot(vpe2.totalEarnValues, label = "n")
+    # checkDealsData(coinexETH, 20, "coinex", 0.95, 0.95, minimumVolume = 20000, periodLimited=True, lastDay=7, lastMonth=1, useCumulativePosition=True, cumulativePositionCount=15) #20k 0.993
+    # checkDealsData(coinexETH2, 20, "coinex", 0.935, 0.935, minimumVolume = 0, periodLimited=True, lastDay=7, lastMonth=1, useCumulativePosition=True, cumulativePositionCount=15)
 
-    # plt.xticks(rotation=90)
-    # plt.legend()
-    # plt.show()
+    # plt.plot(coinexETH.totalEarnValues, label = "1")
+    # plt.plot(coinexETH2.totalEarnValues, label = "2")
 
-    while True:
-        robot.collectDepthData(vpb1, 10, "coinex")
-        robot.collectDepthData(vpb1, 20, "coinex")
-        robot.collectDepthData(vpe1, 10, "coinex")
-        robot.collectDepthData(vpe1, 20, "coinex")
+    plt.xticks(rotation=90)
+    plt.legend()
+    plt.show()
+    # while True:
+    #     coinexRobot.collectDepthData(coinexBTC, 10)
+    #     coinexRobot.collectDepthData(coinexBTC, 20)
+    #     coinexRobot.collectDepthData(coinexETH, 10)
+    #     coinexRobot.collectDepthData(coinexETH, 20)
+    #     coinexRobot.collectKlineData(coinexBTC, 1)
+    #     coinexRobot.collectKlineData(coinexBTC, 5)
+    #     coinexRobot.collectKlineData(coinexBTC, 15)
+
+    #     binanceRobot.collectDepthData(binanceBTC, 10)
+    #     binanceRobot.collectDepthData(binanceBTC, 20)
+
+    #     binanceRobot.collectKlineData(binanceBTC, 1)
+    #     binanceRobot.collectKlineData(binanceBTC, 5)
+    #     binanceRobot.collectKlineData(binanceBTC, 15)
 
 
 
