@@ -13,7 +13,7 @@ def tradeDeals(robot, vp, lim, percent, minVolume = 0, useCumulativePosition = F
         totalVolume = vp.getAmountDeals(lim)
 
         if(useCumulativePosition == True):
-            if(sellsPercentDeals > percent) and totalVolume > minVolume and vp.isBought == True and vp.buyPositions < cumulativePositionCount and time.time() - vp.lastBuyTime > 20 and vp.priceBought > vp.robot.get_pair_sell(vp.pair):
+            if(sellsPercentDeals > percent) and totalVolume > minVolume and vp.isBought == True and vp.buyPositions < cumulativePositionCount and time.time() - vp.lastBuyTime > 50 and vp.priceBought > vp.robot.get_pair_sell(vp.pair):
                 print("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%")
                 vp.printDebug(robot.ORDER_DIRECTION_BUY)
                 
@@ -22,7 +22,7 @@ def tradeDeals(robot, vp, lim, percent, minVolume = 0, useCumulativePosition = F
                 
                 print("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%")
                 
-            elif(buysPercentDeals > percent) and totalVolume > minVolume and vp.isSold == True and vp.sellPositions < cumulativePositionCount and time.time() - vp.lastSellTime > 20 and vp.priceSold < vp.robot.get_pair_buy(vp.pair):
+            elif(buysPercentDeals > percent) and totalVolume > minVolume and vp.isSold == True and vp.sellPositions < cumulativePositionCount and time.time() - vp.lastSellTime > 50 and vp.priceSold < vp.robot.get_pair_buy(vp.pair):
                 print("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%")
                 vp.printDebug(robot.ORDER_DIRECTION_SELL)
                 
