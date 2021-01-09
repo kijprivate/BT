@@ -154,7 +154,8 @@ class CoinexPerpetualApi(object):
     def putMarketOrder(self, vp, side, leverage, amount):
         if(vp.realTrade == False):
             return "Trading disabled"
-
+        if(amount == 0):
+            amount = vp.contractAmount
         self.adjust_leverage(vp.pair, 1, leverage)
         self.adjust_leverage(vp.pair, 2, leverage)
         result = self.put_market_order(
@@ -163,6 +164,13 @@ class CoinexPerpetualApi(object):
             amount
         )
         print(result)
+        profit = 0
+        profitWithFee = 0
+        if(result.get("code") == 0):
+            profit = float(result.get("data").get("deal_profit"))
+            profitWithFee = float(result.get("data").get("deal_profit")) - float(result.get("data").get("deal_fee"))
+        vp.realTotalEarn += profit
+        vp.realTotalEarnWithFee += profitWithFee
         return result
 
     def put_limit_order(self, market, side, amount, price, effect_type=1):
