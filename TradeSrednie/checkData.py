@@ -233,7 +233,7 @@ class ValuePair():
         self.isBought = False
         self.isSold = False
         self.priceBought = 0
-        self.priceSold = 0
+        self.priceSold = 99999999999
         self.buyPositions = 0
         self.sellPositions = 0
         self.lastBuyTime = ""
@@ -245,25 +245,21 @@ class ValuePair():
         self.totalEarnTimeValues = []
         self.priceValues = []
         self.bilance = 0
-        self.contractAmount = 20
+        self.contractAmount = 100
 
     def closeShort(self, data):
         print("close " + self.pair + " short")
-        #pb = data.get("pairBuy")
-        pb = data.get("pairSell")
-        #50/(10*40800) - 50/(10*40700) contractAmount/(leverage*curPrice)
-        earn = (self.contractAmount*self.sellPositions)/(self.leverage*pb) - (self.contractAmount*self.sellPositions)/(self.leverage*self.priceSold)
+        priceSell = data.get("pairSell")
+        earn = (self.contractAmount*self.sellPositions)/(self.leverage*priceSell) - (self.contractAmount*self.sellPositions)/(self.leverage*self.priceSold)
         fee = 0.0005*((self.contractAmount*self.sellPositions)/(self.leverage*self.priceSold))
-        print(fee)
-        #earn = (pb - self.priceSold)/self.priceSold
-        #earn = -earn
-        self.totalEarn += earn#*self.sellPositions
+        self.totalEarn += earn
         self.totalEarn -= fee
+
         if earn > 0:
             self.bilance += 1
         else:
             self.bilance -=1
-        #self.totalEarn -= 0.0005
+
         self.dealsAmount += 1
 
         self.totalEarnValues.append(self.totalEarn)
@@ -271,33 +267,31 @@ class ValuePair():
         self.totalEarnTimeValues.append(time)
         self.priceValues.append(float(data.get("pairSell")))
 
-        print(pb - self.priceSold)
+        print(priceSell - self.priceSold)
         print(earn)
         print(self.totalEarn)
 
     def closeLong(self, data):
         print("close " + self.pair + " long")
-        #ps = data.get("pairSell")
-        ps = data.get("pairBuy")
-        earn = (self.contractAmount*self.buyPositions)/(self.leverage*ps) - (self.contractAmount*self.buyPositions)/(self.leverage*self.priceBought)
+        pairBuy = data.get("pairBuy")
+        earn = (self.contractAmount*self.buyPositions)/(self.leverage*pairBuy) - (self.contractAmount*self.buyPositions)/(self.leverage*self.priceBought)
         fee = 0.0005*((self.contractAmount*self.buyPositions)/(self.leverage*self.priceBought))
-        print(fee)
-        #earn = (ps - self.priceBought)/self.priceBought
         earn = -earn
-        self.totalEarn += earn#*self.buyPositions
+        self.totalEarn += earn
         self.totalEarn -= fee
-        #self.totalEarn -= 0.0005
+
         self.dealsAmount += 1
         if earn > 0:
             self.bilance += 1
         else:
             self.bilance -=1
+            
         self.totalEarnValues.append(self.totalEarn)
         time = str(data.get("tonce")).replace("2020","")
         self.totalEarnTimeValues.append(time)
         self.priceValues.append(float(data.get("pairSell")))
 
-        print(ps - self.priceBought)
+        print(pairBuy - self.priceBought)
         print(earn)
         print(self.totalEarn)
 
@@ -306,6 +300,8 @@ class ValuePair():
         self.isSold = False
         self.buyPositions = 0
         self.sellPositions = 0
+        self.priceBought = 0
+        self.priceSold = 999999999
 
     def setAfterSold(self, data):
         self.isSold = True
@@ -337,52 +333,55 @@ class ValuePair():
         print(data.get("buysAmountDeals"))
 
 if __name__ == '__main__':
+    collectData = False
+    
     coinexRobot = CoinexPerpetualApi()
-    binanceRobot = BinancePerpetualApi()
+   # binanceRobot = BinancePerpetualApi()
 
+    coinexBTCTrade = ValuePair(coinexRobot, "coinexTrade", 'BTCUSD')
     coinexBTC = ValuePair(coinexRobot, "coinex", 'BTCUSD')
     coinexETH = ValuePair(coinexRobot, "coinex", 'ETHUSD')
 
-    binanceBTC = ValuePair(binanceRobot, "binance", 'BTCUSD_PERP')
-
-    coinexBTC2 = ValuePair(coinexRobot, "coinex", 'BTCUSD')
-    coinexETH2 = ValuePair(coinexRobot, "coinex", 'ETHUSD')
-
-    #ogarnąć data tonce
-    #checkDepthData(coinexETH, 10, "coinex", 0.85, False, False)
-    #checkDepthData(coinexBTC, 10, "coinex", 0.95, False, False) 
-    #checkDepthData(coinexETH, 10, "coinex", 0.95, False, False) 
-
-    checkDealsData(coinexBTC, 20, "coinex", 0.95, 0.95, minimumVolume=20000, useStopLoss=False, stopLossPercent=0.02, useTakeProfit=False, takeProfitPercent = 0.02, periodLimited=True, lastDay=7, lastMonth=1, useCumulativePosition=True, cumulativePositionCount=3)  #20k volume, 0.996/7 best -> 998
-    checkDealsData(coinexBTC2, 20, "coinex", 0.95, 0.95, minimumVolume=20000, useStopLoss=False, stopLossPercent=0.015, useTakeProfit=False, takeProfitPercent = 0.02, periodLimited=True, lastDay=7, lastMonth=1, useCumulativePosition=True, cumulativePositionCount=10)
-
-    plt.plot(coinexBTC.totalEarnValues, label = "1")
-    plt.plot(coinexBTC2.totalEarnValues, label = "2")
-
-    # checkDealsData(coinexETH, 20, "coinex", 0.95, 0.95, minimumVolume = 20000, periodLimited=True, lastDay=7, lastMonth=1, useCumulativePosition=True, cumulativePositionCount=15) #20k 0.993
-    # checkDealsData(coinexETH2, 20, "coinex", 0.935, 0.935, minimumVolume = 0, periodLimited=True, lastDay=7, lastMonth=1, useCumulativePosition=True, cumulativePositionCount=15)
-
-    # plt.plot(coinexETH.totalEarnValues, label = "1")
-    # plt.plot(coinexETH2.totalEarnValues, label = "2")
-
-    plt.xticks(rotation=90)
-    plt.legend()
-    plt.show()
-    # while True:
-    #     coinexRobot.collectDepthData(coinexBTC, 10)
-    #     coinexRobot.collectDepthData(coinexBTC, 20)
-    #     coinexRobot.collectDepthData(coinexETH, 10)
-    #     coinexRobot.collectDepthData(coinexETH, 20)
-    #     coinexRobot.collectKlineData(coinexBTC, 1)
-    #     coinexRobot.collectKlineData(coinexBTC, 5)
-    #     coinexRobot.collectKlineData(coinexBTC, 15)
-
-    #     binanceRobot.collectDepthData(binanceBTC, 10)
-    #     binanceRobot.collectDepthData(binanceBTC, 20)
-
-    #     binanceRobot.collectKlineData(binanceBTC, 1)
-    #     binanceRobot.collectKlineData(binanceBTC, 5)
-    #     binanceRobot.collectKlineData(binanceBTC, 15)
+    #binanceBTC = ValuePair(binanceRobot, "binance", 'BTCUSD_PERP')
+    
+    if(collectData == False):
+        coinexBTC2 = ValuePair(coinexRobot, "coinex", 'BTCUSD')
+    
+        #checkDepthData(coinexETH, 10, "coinex", 0.85, False, False)
+        #checkDepthData(coinexBTC, 10, "coinex", 0.95, False, False) 
+        #checkDepthData(coinexETH, 10, "coinex", 0.95, False, False) 
+    
+        checkDealsData(coinexBTC, 20, "coinex", 0.95, 0.95, minimumVolume=20000, useStopLoss=False, stopLossPercent=0.02, useTakeProfit=False, takeProfitPercent = 0.02, periodLimited=True, lastDay=8, lastMonth=1, useCumulativePosition=True, cumulativePositionCount=10)  #20k volume, 0.996/7 best -> 998
+        checkDealsData(coinexBTC2, 20, "coinex", 0.95, 0.95, minimumVolume=20000, useStopLoss=False, stopLossPercent=0.015, useTakeProfit=False, takeProfitPercent = 0.02, periodLimited=True, lastDay=8, lastMonth=1, useCumulativePosition=True, cumulativePositionCount=15)
+    
+        plt.plot(coinexBTC.totalEarnValues, label = "1")
+        plt.plot(coinexBTC2.totalEarnValues, label = "2")
+    
+        # checkDealsData(coinexETH, 20, "coinex", 0.95, 0.95, minimumVolume = 20000, periodLimited=True, lastDay=7, lastMonth=1, useCumulativePosition=True, cumulativePositionCount=15) #20k 0.993
+        # checkDealsData(coinexETH2, 20, "coinex", 0.935, 0.935, minimumVolume = 0, periodLimited=True, lastDay=7, lastMonth=1, useCumulativePosition=True, cumulativePositionCount=15)
+    
+        # plt.plot(coinexETH.totalEarnValues, label = "1")
+        # plt.plot(coinexETH2.totalEarnValues, label = "2")
+    
+        plt.xticks(rotation=90)
+        plt.legend()
+        plt.show()
+    else:
+        while True:
+            coinexRobot.collectDepthData(coinexBTCTrade, 20)
+            coinexRobot.collectDepthData(coinexBTC, 20)
+            coinexRobot.collectDepthData(coinexETH, 10)
+            coinexRobot.collectDepthData(coinexETH, 20)
+        #     coinexRobot.collectKlineData(coinexBTC, 1)
+        #     coinexRobot.collectKlineData(coinexBTC, 5)
+        #     coinexRobot.collectKlineData(coinexBTC, 15)
+    
+        #     binanceRobot.collectDepthData(binanceBTC, 10)
+        #     binanceRobot.collectDepthData(binanceBTC, 20)
+    
+        #     binanceRobot.collectKlineData(binanceBTC, 1)
+        #     binanceRobot.collectKlineData(binanceBTC, 5)
+        #     binanceRobot.collectKlineData(binanceBTC, 15)
 
 
 
