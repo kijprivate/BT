@@ -245,13 +245,14 @@ class ValuePair():
         self.totalEarnTimeValues = []
         self.priceValues = []
         self.bilance = 0
-        self.contractAmount = 100
+        self.contractAmount = 50
 
     def closeShort(self, data):
         print("close " + self.pair + " short")
         priceSell = data.get("pairSell")
-        earn = (self.contractAmount*self.sellPositions)/(self.leverage*priceSell) - (self.contractAmount*self.sellPositions)/(self.leverage*self.priceSold)
-        fee = 0.0005*((self.contractAmount*self.sellPositions)/(self.leverage*self.priceSold))
+        earn = (self.contractAmount*self.sellPositions)/(priceSell) - (self.contractAmount*self.sellPositions)/(self.priceSold)
+        fee = 2*0.00035*((self.contractAmount*self.sellPositions)/(self.priceSold))
+        #fee = 0.0005*((2*self.contractAmount*self.sellPositions)/(self.leverage*self.priceSold))
         self.totalEarn += earn
         self.totalEarn -= fee
 
@@ -267,16 +268,17 @@ class ValuePair():
         self.totalEarnTimeValues.append(time)
         self.priceValues.append(float(data.get("pairSell")))
 
-        print(priceSell - self.priceSold)
-        print(earn)
-        print(self.totalEarn)
+        print("fee " + str(fee))
+        print("earn " + str(earn))
+        print("total earn " + str(self.totalEarn))
 
     def closeLong(self, data):
         print("close " + self.pair + " long")
         pairBuy = data.get("pairBuy")
-        earn = (self.contractAmount*self.buyPositions)/(self.leverage*pairBuy) - (self.contractAmount*self.buyPositions)/(self.leverage*self.priceBought)
-        fee = 0.0005*((self.contractAmount*self.buyPositions)/(self.leverage*self.priceBought))
-        earn = -earn
+        earn = (self.contractAmount*self.buyPositions)/(self.priceBought) - (self.contractAmount*self.buyPositions)/(pairBuy)
+        fee = 2*0.00035*((self.contractAmount*self.buyPositions)/(self.priceBought))
+        #fee = 0.0005*((2*self.contractAmount*self.buyPositions)/(self.leverage*self.priceBought))
+        #earn = -earn
         self.totalEarn += earn
         self.totalEarn -= fee
 
@@ -291,9 +293,9 @@ class ValuePair():
         self.totalEarnTimeValues.append(time)
         self.priceValues.append(float(data.get("pairSell")))
 
-        print(pairBuy - self.priceBought)
-        print(earn)
-        print(self.totalEarn)
+        print("fee " + str(fee))
+        print("earn " + str(earn))
+        print("total earn " + str(self.totalEarn))
 
     def resetAfterClose(self):
         self.isBought = False
@@ -351,8 +353,8 @@ if __name__ == '__main__':
         #checkDepthData(coinexBTC, 10, "coinex", 0.95, False, False) 
         #checkDepthData(coinexETH, 10, "coinex", 0.95, False, False) 
     
-        checkDealsData(coinexBTC, 20, "coinex", 0.95, 0.95, minimumVolume=20000, useStopLoss=False, stopLossPercent=0.02, useTakeProfit=False, takeProfitPercent = 0.02, periodLimited=True, lastDay=8, lastMonth=1, useCumulativePosition=True, cumulativePositionCount=10)  #20k volume, 0.996/7 best -> 998
-        checkDealsData(coinexBTC2, 20, "coinex", 0.95, 0.95, minimumVolume=20000, useStopLoss=False, stopLossPercent=0.015, useTakeProfit=False, takeProfitPercent = 0.02, periodLimited=True, lastDay=8, lastMonth=1, useCumulativePosition=True, cumulativePositionCount=15)
+        checkDealsData(coinexBTC, 20, "coinex", 0.95, 0.95, minimumVolume=20000, useStopLoss=False, stopLossPercent=0.02, useTakeProfit=False, takeProfitPercent = 0.02, periodLimited=False, lastDay=10, lastMonth=1, useCumulativePosition=True, cumulativePositionCount=15)  #20k volume, 0.996/7 best -> 998
+        checkDealsData(coinexBTC2, 20, "coinex", 0.95, 0.95, minimumVolume=20000, useStopLoss=False, stopLossPercent=0.015, useTakeProfit=False, takeProfitPercent = 0.02, periodLimited=False, lastDay=10, lastMonth=1, useCumulativePosition=True, cumulativePositionCount=15)
     
         plt.plot(coinexBTC.totalEarnValues, label = "1")
         plt.plot(coinexBTC2.totalEarnValues, label = "2")

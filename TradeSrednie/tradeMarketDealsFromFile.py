@@ -136,23 +136,22 @@ class ValuePair():
     def closeShort(self):
         print("close " + self.pair + " short")
         priceSell = self.robot.get_pair_sell(self.pair)
-        earn = (self.contractAmount*self.sellPositions)/(self.leverage*priceSell) - (self.contractAmount*self.sellPositions)/(self.leverage*self.priceSold)
-        fee = 0.0005*((self.contractAmount*self.sellPositions)/(self.leverage*self.priceSold))
+        earn = (self.contractAmount*self.sellPositions)/(priceSell) - (self.contractAmount*self.sellPositions)/(self.priceSold)
+        fee = 2*0.00035*((self.contractAmount*self.sellPositions)/(self.priceSold))
         self.totalEarn += earn
         self.totalEarn -= fee
-        print(earn)
-        print(self.totalEarn)
+        print("earn " + str(earn))
+        print("totalEarn " + str(self.totalEarn))
 
     def closeLong(self):
         print("close " + self.pair + " long")
         pairBuy = self.robot.get_pair_buy(self.pair)
-        earn = (self.contractAmount*self.buyPositions)/(self.leverage*pairBuy) - (self.contractAmount*self.buyPositions)/(self.leverage*self.priceBought)
-        fee = 0.0005*((self.contractAmount*self.buyPositions)/(self.leverage*self.priceBought))
-        earn = -earn
+        earn = (self.contractAmount*self.buyPositions)/(self.priceBought) - (self.contractAmount*self.buyPositions)/(pairBuy)
+        fee = 2*0.00035*((self.contractAmount*self.buyPositions)/(self.priceBought))
         self.totalEarn += earn
         self.totalEarn -= fee
-        print(earn)
-        print(self.totalEarn)
+        print("earn " + str(earn))
+        print("totalEarn " + str(self.totalEarn))
 
     def resetAfterClose(self):
         self.isBought = False
