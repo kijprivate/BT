@@ -3,8 +3,9 @@ import time
 import json
 from datetime import datetime
 from lib import CoinexPerpetualApi
+from lib import BinancePerpetualApi
 import csv
-#from lib import request_client_coinex
+
 
 def tradeDeals(robot, vp, lim, percent, minVolume):    
     try:
@@ -109,7 +110,7 @@ def tradeDealsFromFile(robot, vp, lim, percent, minVolume = 0, useCumulativePosi
             vp.setAfterSold(data)
             
             print("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%")
-                                            
+                                                
     except:
         print(1)
 
@@ -128,8 +129,8 @@ class ValuePair():
         self.lastBuyTime = ""
         self.lastSellTime = ""
         self.totalEarn = 0 
-        self.realTotalEarn = 0.00071303
-        self.realTotalEarnWithFee = 0.0005929
+        self.realTotalEarn = 0
+        self.realTotalEarnWithFee = 0
         self.leverage = 10
         self.contractAmount = _contractAmount
 
@@ -219,16 +220,16 @@ class ValuePair():
         
 if __name__ == '__main__':
     robot = CoinexPerpetualApi()
+    binanceRobot = BinancePerpetualApi()
 
     vp1 = ValuePair(robot, "coinexTrade", 'BTCUSD', 20)
-    #vp2 = ValuePair(robot, "coinex", 'ETHUSD', 100)
     
+    binanceBTC = ValuePair(binanceRobot, "coinexTrade", 'BTCUSD', 1)
+
     print(time.time())
-
-
     while True:
         tradeDealsFromFile(robot, vp1, 20, 0.95, minVolume=20000, useCumulativePosition=True, cumulativePositionCount=15)
-        #tradeDealsFromFile(robot, vp2, 20, 0.995, 20000)
+        tradeDealsFromFile(binanceRobot, binanceBTC, 20, 0.95, minVolume=20000, useCumulativePosition=True, cumulativePositionCount=15)
 
         
             
