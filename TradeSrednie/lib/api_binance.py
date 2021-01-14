@@ -4,8 +4,8 @@ import csv
 import time
 
 class BinancePerpetualApi(object):
-    ORDER_DIRECTION_SELL = 1
-    ORDER_DIRECTION_BUY = 2
+    ORDER_DIRECTION_SELL = "SELL"
+    ORDER_DIRECTION_BUY = "BUY"
 
     MARGIN_ADJUST_TYPE_INCRESE = 1
     MARGIN_ADJUST_TYPE_DECREASE = 2
@@ -13,8 +13,8 @@ class BinancePerpetualApi(object):
     POSITION_TYPE_ISOLATED = 1
     POSITION_TYPE_CROSS_MARGIN = 2
 
-    access_id = '92D0E39AF1634EA9B7D037EDDBECD261'
-    secret_key = 'B7B13884C89347FE86E6E34A7C9FE7DD28A43B301CB70611' 
+    access_id = '0Ibonw6SbiZHLAsG7ybpHS9VTvjtZ50HvNdMatBUVtmKbl16YoJn25zK4k5Mqrgz'
+    secret_key = 'xxSG5Z1Uf45OtrANbuETilx2KK2c8u8R7lukWNLw4HSHzdbMAE26RgXskOoX0B5G' 
 
     def __init__(self, logger=None):
         self.request_client = RequestClient(self.access_id, self.secret_key, logger)
@@ -106,7 +106,13 @@ class BinancePerpetualApi(object):
         }
         return self.request_client.get(path, params, sign=False)
 
+    def get_server_time(self):
+        path = '/dapi/v1/time'
+        params = {}
+        return self.request_client.get(path, params, sign=False)
+
     def get_market_deals(self, market, limit):
+        market = market + "_PERP"
         path = '/dapi/v1/trades'
         params = {
             'symbol': market,
@@ -119,6 +125,7 @@ class BinancePerpetualApi(object):
         return self.request_client.get(path, sign=False)
 
     def depth(self, market, merge=0, limit=50):
+        market = market + "_PERP"
         path = '/dapi/v1/depth'
         params = {
             'symbol': market,
@@ -127,6 +134,7 @@ class BinancePerpetualApi(object):
         return self.request_client.get(path, params, sign=False)
 
     def kline(self, market, kline_type, limit):
+        market = market + "_PERP"
         path = '/dapi/v1/klines'
         params = {
             'symbol': market,
@@ -149,12 +157,12 @@ class BinancePerpetualApi(object):
         return self.request_client.get(path)
 
     # Trading API
-    def putMarketOrder(self, vp, side, leverage):
+    def putMarketOrder(self, vp, side, leverage, amount):
         if(vp.realTrade == False):
             return "Trading disabled"
 
-        self.adjust_leverage(vp.pair, 1, leverage)
-        self.adjust_leverage(vp.pair, 2, leverage)
+        self.adjust_leverage(vp.pair, leverage)
+        self.adjust_leverage(vp.pair, leverage)
         result = self.put_market_order(
             vp.pair,
             side,
@@ -176,12 +184,13 @@ class BinancePerpetualApi(object):
         return self.request_client.post(path, data)
 
     def put_market_order(self, market, side, amount):
-        path = '/v1/order/put_market'
+        market = market + "_PERP"
+        path = '/dapi/v1/order'
         data = {
-            'market': market,
-            'amount': str(amount),
+            'symbol': market,
             'side': side,
-            'use_cet': 1
+            'type': "MARKET",
+            'quantity': amount
         }
         return self.request_client.post(path, data)
 
@@ -286,11 +295,19 @@ class BinancePerpetualApi(object):
         }
         return self.request_client.post(path, data)
 
-    def adjust_leverage(self, market, position_type, leverage):
-        path = '/v1/market/adjust_leverage'
+    def adjust_leverage(self, market, leverage):
+        market = market + "_PERP"
+        path = '/dapi/v1/leverage'
         data = {
-            'market': market,
-            'position_type': position_type,
-            'leverage': leverage
+            'leverage': leverage,
+            'symbol': market
         }
         return self.request_client.post(path, data)
+
+    def get_all_orders(self, market):
+        market = market + "_PERP"
+        path = '/dapi/v1/allOrders'
+        data = {
+            'symbol': market
+        }
+        return self.request_client.get(path, data)

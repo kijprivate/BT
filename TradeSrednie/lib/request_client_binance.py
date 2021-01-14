@@ -8,6 +8,7 @@ import logging
 import requests
 import time
 import traceback
+import hmac
 
 
 class RequestClient(object):
@@ -30,22 +31,20 @@ class RequestClient(object):
 
     @staticmethod
     def get_sign(params, secret_key):
-        data = ['='.join([str(k), str(v)]) for k, v in params.items()]
-
-        str_params = "{0}&secret_key={1}".format(
-            '&'.join(data), secret_key).encode()
-
-        token = hashlib.sha256(str_params).hexdigest()
-        return token
+        query_string = '&'.join(["{}={}".format(d[0], d[1]) for d in params.items()])
+        token = hmac.new(secret_key.encode('utf-8'), query_string.encode('utf-8'), hashlib.sha256)
+        return token.hexdigest()
 
     def set_authorization(self, params, headers):
-        headers['AccessId'] = self.access_id
-        headers['Authorization'] = self.get_sign(params, self.secret_key)
+        headers['X-MBX-APIKEY'] = self.access_id
+        #headers['timestamp'] = str(int(time.time()*1000))
+        #headers['signature'] = self.get_sign(params, self.secret_key)
 
     def get(self, path, params=None, sign=True):
         url = self.host + path
         params = params or {}
         params['timestamp'] = int(time.time()*1000)
+        params['signature'] = self.get_sign(params, self.secret_key)
         headers = copy.copy(self.headers)
         if sign:
             self.set_authorization(params, headers)
@@ -74,11 +73,13 @@ class RequestClient(object):
         url = self.host + path
         data = data or {}
         data['timestamp'] = int(time.time()*1000)
+        #data = dict(sorted(data.items()))
+        data['signature'] = self.get_sign(data, self.secret_key)
         headers = copy.copy(self.headers)
         self.set_authorization(data, headers)
         try:
             response = self.http_client.post(
-                url, data=data, headers=headers, timeout=10)
+                url, params=data, headers=headers, timeout=10)
             # self.logger.info(response.request.url)
             if response.status_code == requests.codes.ok:
                 return response.json()
@@ -97,56 +98,3 @@ class RequestClient(object):
                 url=url, trace_info=trace_info))
             return None
             
-    def postOculus(self, path, data=None):
-        url = self.hostOculus + path
-        data = data or {}
-        data['timestamp'] = int(time.time()*1000)
-        headers = copy.copy(self.headers)
-        self.set_authorization(data, headers)
-        try:
-            response = self.http_client.post(
-                url, data=data, headers=headers, timeout=10)
-            # self.logger.info(response.request.url)
-            if response.status_code == requests.codes.ok:
-                return response.json()
-            else:
-                self.logger.error(
-                    'URL: {0}\nSTATUS_CODE: {1}\nResponse: {2}'.format(
-                        response.request.url,
-                        response.status_code,
-                        response.text
-                    )
-                )
-                return None
-        except Exception as ex:
-            trace_info = traceback.format_exc()
-            self.logger.error('POST {url} failed: \n{trace_info}'.format(
-                url=url, trace_info=trace_info))
-            return None
-
-    def delete(self, path, data=None):
-        url = self.host + path
-        data = data or {}
-        data['timestamp'] = int(time.time()*1000)
-        headers = copy.copy(self.headers)
-        self.set_authorization(data, headers)
-        try:
-            response = self.http_client.delete(
-                url, data=data, headers=headers, timeout=10)
-            # self.logger.info(response.request.url)
-            if response.status_code == requests.codes.ok:
-                return response.json()
-            else:
-                self.logger.error(
-                    'URL: {0}\nSTATUS_CODE: {1}\nResponse: {2}'.format(
-                        response.request.url,
-                        response.status_code,
-                        response.text
-                    )
-                )
-                return None
-        except Exception as ex:
-            trace_info = traceback.format_exc()
-            self.logger.error('POST {url} failed: \n{trace_info}'.format(
-                url=url, trace_info=trace_info))
-            return None
