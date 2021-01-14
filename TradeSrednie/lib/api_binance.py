@@ -161,12 +161,10 @@ class BinancePerpetualApi(object):
         if(vp.realTrade == False):
             return "Trading disabled"
 
-        self.adjust_leverage(vp.pair, leverage)
-        self.adjust_leverage(vp.pair, leverage)
         result = self.put_market_order(
             vp.pair,
             side,
-            vp.contractAmount
+            amount
         )
         print(result)
         return result
