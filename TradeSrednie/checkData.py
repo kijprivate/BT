@@ -163,7 +163,7 @@ def checkDealsData(vp, limit, stockName, percent, percent2, minimumVolume = 0, m
             if(useCumulativePosition):
                 if(vp.buyPositions > 0):
                     buyPositionPercentage = (vp.priceBought - data.get("pairSell"))/vp.priceBought
-                    if(sells > percent) and ((useVolume and totalVolume > minimumVolume) or useVolume == False) and vp.isBought == True and vp.buyPositions < cumulativePositionCount and vp.lastBuyTime != data.get("tonce") and buyPositionPercentage > cumulativeLosingPercentage:
+                    if((useVolume and totalVolume > minimumVolume) or useVolume == False) and vp.isBought == True and vp.buyPositions < cumulativePositionCount and vp.lastBuyTime != data.get("tonce") and buyPositionPercentage > cumulativeLosingPercentage:
                         print("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%")
 
                         vp.printDebug(data, vp.robot.ORDER_DIRECTION_BUY)
@@ -172,14 +172,14 @@ def checkDealsData(vp, limit, stockName, percent, percent2, minimumVolume = 0, m
 
                 if(vp.sellPositions > 0):
                     sellPositionPercentage = (data.get("pairBuy") - vp.priceSold)/vp.priceSold
-                    if(buys > percent) and ((useVolume and totalVolume > minimumVolume) or useVolume == False) and vp.isSold == True and vp.sellPositions < cumulativePositionCount and vp.lastSellTime != data.get("tonce") and sellPositionPercentage > cumulativeLosingPercentage:
+                    if((useVolume and totalVolume > minimumVolume) or useVolume == False) and vp.isSold == True and vp.sellPositions < cumulativePositionCount and vp.lastSellTime != data.get("tonce") and sellPositionPercentage > cumulativeLosingPercentage:
                         print("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%")
 
                         vp.printDebug(data, vp.robot.ORDER_DIRECTION_SELL)
                         vp.setAfterSold(data)
                         print("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%55")        
 
-            if(sells > percent) and totalVolume > minimumVolume and totalVolume < maximumVolume  and vp.isBought == False:
+            if(sells > percent) and totalVolume > minimumVolume and totalVolume < maximumVolume and vp.isBought == False:
                 print("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%")
                 if(vp.isSold):
                     vp.closeShort(data)
@@ -257,7 +257,7 @@ class ValuePair():
         print("close " + self.pair + " short")
         priceSell = data.get("pairSell")
         earn = (self.contractAmount*self.sellPositions)/(priceSell) - (self.contractAmount*self.sellPositions)/(self.priceSold)
-        fee = 2*0.00035*((self.contractAmount*self.sellPositions)/(self.priceSold))
+        fee = 2*0.0005*((self.contractAmount*self.sellPositions)/(self.priceSold))
         #fee = 0.0005*((2*self.contractAmount*self.sellPositions)/(self.leverage*self.priceSold))
         self.totalEarn += earn
         self.totalEarn -= fee
@@ -282,7 +282,7 @@ class ValuePair():
         print("close " + self.pair + " long")
         pairBuy = data.get("pairBuy")
         earn = (self.contractAmount*self.buyPositions)/(self.priceBought) - (self.contractAmount*self.buyPositions)/(pairBuy)
-        fee = 2*0.00035*((self.contractAmount*self.buyPositions)/(self.priceBought))
+        fee = 2*0.0005*((self.contractAmount*self.buyPositions)/(self.priceBought))
         #fee = 0.0005*((2*self.contractAmount*self.buyPositions)/(self.leverage*self.priceBought))
         #earn = -earn
         self.totalEarn += earn
@@ -366,24 +366,23 @@ if __name__ == '__main__':
     coinexBTCTrade = ValuePair(coinexRobot, "coinexTrade", 'BTCUSD')
     coinexBTC = ValuePair(coinexRobot, "coinex", 'BTCUSD')
     coinexETH = ValuePair(coinexRobot, "coinex", 'ETHUSD')
-
+    coinexETH2 = ValuePair(coinexRobot, "coinex", 'ETHUSD')
     #binanceBTC = ValuePair(binanceRobot, "binance", 'BTCUSD_PERP')
     
     if(collectData == False):
         coinexBTC2 = ValuePair(coinexRobot, "coinex", 'BTCUSD')
-    
+        coinexBTC3 = ValuePair(coinexRobot, "coinex", 'BTCUSD')
         #checkDepthData(coinexETH, 10, "coinex", 0.85, False, False)
         #checkDepthData(coinexBTC, 10, "coinex", 0.95, False, False) 
         #checkDepthData(coinexETH, 10, "coinex", 0.95, False, False) 
     
-        checkDealsData(coinexBTC, 20, "coinex", 0.99, 0.99, minimumVolume=30000, useStopLoss=False, stopLossPercent=0.02, useTakeProfit=False, takeProfitPercent = 0.02, periodLimited=False, lastDay=15, lastMonth=1, useCumulativePosition=True, cumulativePositionCount=30, cumulativeLosingPercentage=0.005, useVolume=False)
-        checkDealsData(coinexBTC2, 20, "coinex", 0.99, 0.99, minimumVolume=30000, useStopLoss=False, stopLossPercent=0.015, useTakeProfit=False, takeProfitPercent = 0.01, periodLimited=False, lastDay=15, lastMonth=1, useCumulativePosition=True, cumulativePositionCount=30, cumulativeLosingPercentage=0.005, useVolume=False)
-    
+        checkDealsData(coinexBTC, 20, "coinex", 0.99, 0.99, minimumVolume=35000, maximumVolume=250000, useStopLoss=False, stopLossPercent=0.025, useTakeProfit=False, takeProfitPercent = 0.02, periodLimited=False, lastDay=11, lastMonth=1, useCumulativePosition=True, cumulativePositionCount=30, cumulativeLosingPercentage=0.015, useVolume=False)
+        checkDealsData(coinexBTC2, 20, "coinex", 0.99, 0.99, minimumVolume=35000, maximumVolume=250000, useStopLoss=False, stopLossPercent=0.015, useTakeProfit=False, takeProfitPercent = 0.01, periodLimited=False, lastDay=11, lastMonth=1, useCumulativePosition=True, cumulativePositionCount=30, cumulativeLosingPercentage=0.015, useVolume=False)
         plt.plot(coinexBTC.totalEarnValues, label = "1")
         plt.plot(coinexBTC2.totalEarnValues, label = "2")
-    
-        # checkDealsData(coinexETH, 20, "coinex", 0.95, 0.95, minimumVolume = 20000, periodLimited=True, lastDay=7, lastMonth=1, useCumulativePosition=True, cumulativePositionCount=15) #20k 0.993
-        # checkDealsData(coinexETH2, 20, "coinex", 0.935, 0.935, minimumVolume = 0, periodLimited=True, lastDay=7, lastMonth=1, useCumulativePosition=True, cumulativePositionCount=15)
+
+        # checkDealsData(coinexETH, 20, "coinex", 0.99, 0.99, minimumVolume = 20000, maximumVolume=50000, periodLimited=False, lastDay=7, lastMonth=1, useCumulativePosition=True, cumulativePositionCount=30, cumulativeLosingPercentage=0.01, useVolume=False)
+        # checkDealsData(coinexETH2, 20, "coinex", 0.99, 0.99, minimumVolume = 20000, maximumVolume=50000, periodLimited=False, lastDay=7, lastMonth=1, useCumulativePosition=True, cumulativePositionCount=30, cumulativeLosingPercentage=0.01, useVolume=False)
     
         # plt.plot(coinexETH.totalEarnValues, label = "1")
         # plt.plot(coinexETH2.totalEarnValues, label = "2")
