@@ -44,7 +44,7 @@ def tradeDeals(robot, vp, lim, percent, minVolume):
     except:
         print(1)
 
-def tradeDealsFromFile(robot, vp, lim, percent, minVolume = 0, useCumulativePosition = False, cumulativePositionCount = 3):    
+def tradeDealsFromFile(robot, vp, lim, percent, minVolume = 0, maximumVolume = 99999999999999999999999999999999999999999999, useCumulativePosition = False, cumulativePositionCount = 3, cumulativeLosingPercentage = 0.01):    
     try:
         fileName = "depthData_" + vp.pair + "_" + str(lim) + "_" + vp.stockName + ".csv"
 
@@ -65,25 +65,28 @@ def tradeDealsFromFile(robot, vp, lim, percent, minVolume = 0, useCumulativePosi
         totalVolume = buysAmount + sellsAmount
 
         if(useCumulativePosition == True):
-            if(sellsPercentDeals > percent) and totalVolume > minVolume and vp.isBought == True and vp.buyPositions < cumulativePositionCount and vp.lastBuyTime != tonce and vp.priceBought > data.get("pairSell"):
-                print("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%")
-                vp.printDebug(robot.ORDER_DIRECTION_BUY)
-                
-                robot.putMarketOrder(vp, robot.ORDER_DIRECTION_BUY, vp.leverage, vp.contractAmount)
-                vp.setAfterBought(data)
-                
-                print("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%")
-                
-            elif(buysPercentDeals > percent) and totalVolume > minVolume and vp.isSold == True and vp.sellPositions < cumulativePositionCount and vp.lastSellTime != tonce and vp.priceSold < data.get("pairBuy"):
-                print("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%")
-                vp.printDebug(robot.ORDER_DIRECTION_SELL)
-                
-                robot.putMarketOrder(vp, robot.ORDER_DIRECTION_SELL, vp.leverage, vp.contractAmount)
-                vp.setAfterSold(data)
-                
-                print("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%")
+            if(vp.buyPositions > 0):
+                buyPositionPercentage = (vp.priceBought - data.get("pairSell"))/vp.priceBought
+                if vp.isBought == True and vp.buyPositions < cumulativePositionCount and vp.lastBuyTime != tonce and buyPositionPercentage > cumulativeLosingPercentage:
+                    print("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%")
+                    vp.printDebug(robot.ORDER_DIRECTION_BUY)
+                    
+                    robot.putMarketOrder(vp, robot.ORDER_DIRECTION_BUY, vp.leverage, vp.contractAmount)
+                    vp.setAfterBought(data)
+                    
+                    print("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%")
+            if(vp.sellPositions > 0):
+                sellPositionPercentage = (data.get("pairBuy") - vp.priceSold)/vp.priceSold 
+                if vp.isSold == True and vp.sellPositions < cumulativePositionCount and vp.lastSellTime != tonce and sellPositionPercentage > cumulativeLosingPercentage:
+                    print("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%")
+                    vp.printDebug(robot.ORDER_DIRECTION_SELL)
+                    
+                    robot.putMarketOrder(vp, robot.ORDER_DIRECTION_SELL, vp.leverage, vp.contractAmount)
+                    vp.setAfterSold(data)
+                    
+                    print("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%")
 
-        if(sellsPercentDeals > percent) and totalVolume > minVolume and vp.isBought == False:
+        if(sellsPercentDeals > percent) and totalVolume > minVolume and totalVolume < maximumVolume and vp.isBought == False:
             print("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%")
             if(vp.isSold):
                 vp.closeShort()
@@ -97,7 +100,7 @@ def tradeDealsFromFile(robot, vp, lim, percent, minVolume = 0, useCumulativePosi
             
             print("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%")
             
-        elif(buysPercentDeals > percent) and totalVolume > minVolume and vp.isSold == False:
+        elif(buysPercentDeals > percent) and totalVolume > minVolume and totalVolume < maximumVolume and vp.isSold == False:
             print("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%")
             if(vp.isBought):
                 vp.closeLong()
@@ -118,7 +121,7 @@ class ValuePair():
     def __init__(self, _robot, _stockName, _pair, _contractAmount, _isBought = False, _priceBought = 0, _isSold = False, _priceSold = 999999999):
         self.robot = _robot
         self.stockName = _stockName
-        self.realTrade = True
+        self.realTrade = False
         self.pair = _pair
         self.isBought = _isBought
         self.isSold = _isSold
@@ -126,6 +129,8 @@ class ValuePair():
         self.priceSold = _priceSold
         self.buyPositions = 0
         self.sellPositions = 0
+        self.buyPositionsArr = []
+        self.sellPositionsArr = []
         self.lastBuyTime = ""
         self.lastSellTime = ""
         self.totalEarn = 0 
@@ -138,7 +143,7 @@ class ValuePair():
         print("close " + self.pair + " short")
         priceSell = self.robot.get_pair_sell(self.pair)
         earn = (self.contractAmount*self.sellPositions)/(priceSell) - (self.contractAmount*self.sellPositions)/(self.priceSold)
-        fee = 2*0.00035*((self.contractAmount*self.sellPositions)/(self.priceSold))
+        fee = 2*0.0005*((self.contractAmount*self.sellPositions)/(self.priceSold))
         self.totalEarn += earn
         self.totalEarn -= fee
         print("earn " + str(earn))
@@ -148,7 +153,7 @@ class ValuePair():
         print("close " + self.pair + " long")
         pairBuy = self.robot.get_pair_buy(self.pair)
         earn = (self.contractAmount*self.buyPositions)/(self.priceBought) - (self.contractAmount*self.buyPositions)/(pairBuy)
-        fee = 2*0.00035*((self.contractAmount*self.buyPositions)/(self.priceBought))
+        fee = 2*0.0005*((self.contractAmount*self.buyPositions)/(self.priceBought))
         self.totalEarn += earn
         self.totalEarn -= fee
         print("earn " + str(earn))
@@ -159,24 +164,36 @@ class ValuePair():
         self.isSold = False
         self.buyPositions = 0
         self.sellPositions = 0
+        self.buyPositionsArr = []
+        self.sellPositionsArr = []
         self.priceBought = 0
         self.priceSold = 999999999
     
     def setAfterSold(self, data):
         self.isSold = True
         self.sellPositions += 1
+        self.sellPositionsArr.append(self.robot.get_pair_buy(self.pair))
         self.lastSellTime = data.get("tonce")
         if self.sellPositions > 1:
-            self.priceSold = (self.priceSold + self.robot.get_pair_buy(self.pair))/2
+            posSum = 0
+            for element in self.sellPositionsArr:
+                posSum += self.contractAmount/element
+
+            self.priceSold = (self.contractAmount*self.sellPositions)/posSum
         else:
             self.priceSold = self.robot.get_pair_buy(self.pair)
     
     def setAfterBought(self, data):
         self.isBought = True
         self.buyPositions += 1
+        self.buyPositionsArr.append(self.robot.get_pair_sell(self.pair))
         self.lastBuyTime = data.get("tonce")
         if self.buyPositions > 1:
-            self.priceBought = (self.priceBought + self.robot.get_pair_sell(self.pair))/2
+            posSum = 0
+            for element in self.buyPositionsArr:
+                posSum += self.contractAmount/element
+
+            self.priceBought = (self.contractAmount*self.buyPositions)/posSum
         else:
             self.priceBought = self.robot.get_pair_sell(self.pair)
 
@@ -228,8 +245,8 @@ if __name__ == '__main__':
 
     print(time.time())
     while True:
-        tradeDealsFromFile(robot, vp1, 20, 0.95, minVolume=20000, useCumulativePosition=True, cumulativePositionCount=15)
-        tradeDealsFromFile(binanceRobot, binanceBTC, 20, 0.95, minVolume=20000, useCumulativePosition=True, cumulativePositionCount=15)
+        tradeDealsFromFile(robot, vp1, 20, 0.99, minVolume=35000, maximumVolume=250000, useCumulativePosition=True, cumulativePositionCount=30, cumulativeLosingPercentage=0.015)
+        #tradeDealsFromFile(binanceRobot, binanceBTC, 20, 0.95, minVolume=20000, useCumulativePosition=True, cumulativePositionCount=15)
 
         
             
