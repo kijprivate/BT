@@ -98,7 +98,7 @@ def checkDepthData(vp, limit, stockName, percent, useStopLoss, useTakeProfit, pe
     print(vp.dealsAmount)
     print(vp.totalEarn)
 
-def checkDealsData(vp, limit, stockName, percent, percent2, minimumVolume = 0, maximumVolume = 99999999999999999999999999999999999999999999, useStopLoss = False, stopLossPercent = 0.02, useTakeProfit = False, takeProfitPercent = 0.02, periodLimited = False, lastDay = 28, lastMonth = 1, useCumulativePosition = False, cumulativePositionCount = 3):
+def checkDealsData(vp, limit, stockName, percent, percent2, minimumVolume = 0, maximumVolume = 99999999999999999999999999999999999999999999, useStopLoss = False, stopLossPercent = 0.02, useTakeProfit = False, takeProfitPercent = 0.02, periodLimited = False, lastDay = 28, lastMonth = 1, useCumulativePosition = False, cumulativePositionCount = 3, cumulativeLosingPercentage = 0.01, useVolume = True):
     fileName = "depthData_" + vp.pair + "_" + str(limit) + "_" + stockName + ".csv"
 
     with open(fileName, 'r') as csv_file:
@@ -161,19 +161,23 @@ def checkDealsData(vp, limit, stockName, percent, percent2, minimumVolume = 0, m
                         print("&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&")
 
             if(useCumulativePosition):
-                if(sells > percent) and totalVolume > minimumVolume and totalVolume < maximumVolume and vp.isBought == True and vp.buyPositions < cumulativePositionCount and vp.lastBuyTime != data.get("tonce") and vp.priceBought > data.get("pairSell"):
-                    print("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%")
+                if(vp.buyPositions > 0):
+                    buyPositionPercentage = (vp.priceBought - data.get("pairSell"))/vp.priceBought
+                    if(sells > percent) and ((useVolume and totalVolume > minimumVolume) or useVolume == False) and vp.isBought == True and vp.buyPositions < cumulativePositionCount and vp.lastBuyTime != data.get("tonce") and buyPositionPercentage > cumulativeLosingPercentage:
+                        print("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%")
 
-                    vp.printDebug(data, vp.robot.ORDER_DIRECTION_BUY)
-                    vp.setAfterBought(data)
-                    print("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%")
+                        vp.printDebug(data, vp.robot.ORDER_DIRECTION_BUY)
+                        vp.setAfterBought(data)
+                        print("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%")
 
-                if(buys > percent) and totalVolume > minimumVolume and totalVolume < maximumVolume and vp.isSold == True and vp.sellPositions < cumulativePositionCount and vp.lastSellTime != data.get("tonce") and vp.priceSold < data.get("pairBuy"):
-                    print("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%")
+                if(vp.sellPositions > 0):
+                    sellPositionPercentage = (data.get("pairBuy") - vp.priceSold)/vp.priceSold
+                    if(buys > percent) and ((useVolume and totalVolume > minimumVolume) or useVolume == False) and vp.isSold == True and vp.sellPositions < cumulativePositionCount and vp.lastSellTime != data.get("tonce") and sellPositionPercentage > cumulativeLosingPercentage:
+                        print("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%")
 
-                    vp.printDebug(data, vp.robot.ORDER_DIRECTION_SELL)
-                    vp.setAfterSold(data)
-                    print("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%55")        
+                        vp.printDebug(data, vp.robot.ORDER_DIRECTION_SELL)
+                        vp.setAfterSold(data)
+                        print("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%55")        
 
             if(sells > percent) and totalVolume > minimumVolume and totalVolume < maximumVolume  and vp.isBought == False:
                 print("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%")
@@ -236,6 +240,8 @@ class ValuePair():
         self.priceSold = 99999999999
         self.buyPositions = 0
         self.sellPositions = 0
+        self.buyPositionsArr = []
+        self.sellPositionsArr = []
         self.lastBuyTime = ""
         self.lastSellTime = ""
         self.totalEarn = 0
@@ -245,7 +251,7 @@ class ValuePair():
         self.totalEarnTimeValues = []
         self.priceValues = []
         self.bilance = 0
-        self.contractAmount = 50
+        self.contractAmount = 30
 
     def closeShort(self, data):
         print("close " + self.pair + " short")
@@ -302,24 +308,41 @@ class ValuePair():
         self.isSold = False
         self.buyPositions = 0
         self.sellPositions = 0
+        self.buyPositionsArr = []
+        self.sellPositionsArr = []
         self.priceBought = 0
         self.priceSold = 999999999
 
     def setAfterSold(self, data):
         self.isSold = True
         self.sellPositions += 1
+        self.sellPositionsArr.append(data.get("pairBuy"))
         self.lastSellTime = data.get("tonce")
         if self.sellPositions > 1:
-            self.priceSold = (self.priceSold + float(data.get("pairBuy")))/2
+            posSum = 0
+            for element in self.sellPositionsArr:
+                posSum += self.contractAmount/element
+            print("posSum " + str(posSum))
+            self.priceSold = (self.contractAmount*self.sellPositions)/posSum
+            print("averagePricesold " + str(self.priceSold))
+
+            #self.priceSold = (self.priceSold + float(data.get("pairBuy")))/2
         else:
             self.priceSold = float(data.get("pairBuy"))
 
     def setAfterBought(self, data):
         self.isBought = True
         self.buyPositions += 1
+        self.buyPositionsArr.append(data.get("pairSell"))
         self.lastBuyTime = data.get("tonce")
         if self.buyPositions > 1:
-            self.priceBought = (self.priceBought + float(data.get("pairSell")))/2
+            posSum = 0
+            for element in self.buyPositionsArr:
+                posSum += self.contractAmount/element
+            print("posSum " + str(posSum))
+            self.priceBought = (self.contractAmount*self.buyPositions)/posSum
+            print("averagePriceBought " + str(self.priceBought))
+            #self.priceBought = (self.priceBought + float(data.get("pairSell")))/2
         else:
             self.priceBought = float(data.get("pairSell"))
 
@@ -353,8 +376,8 @@ if __name__ == '__main__':
         #checkDepthData(coinexBTC, 10, "coinex", 0.95, False, False) 
         #checkDepthData(coinexETH, 10, "coinex", 0.95, False, False) 
     
-        checkDealsData(coinexBTC, 20, "coinex", 0.95, 0.95, minimumVolume=20000, useStopLoss=False, stopLossPercent=0.02, useTakeProfit=False, takeProfitPercent = 0.02, periodLimited=False, lastDay=10, lastMonth=1, useCumulativePosition=True, cumulativePositionCount=15)  #20k volume, 0.996/7 best -> 998
-        checkDealsData(coinexBTC2, 20, "coinex", 0.95, 0.95, minimumVolume=20000, useStopLoss=False, stopLossPercent=0.015, useTakeProfit=False, takeProfitPercent = 0.02, periodLimited=False, lastDay=10, lastMonth=1, useCumulativePosition=True, cumulativePositionCount=15)
+        checkDealsData(coinexBTC, 20, "coinex", 0.99, 0.99, minimumVolume=30000, useStopLoss=False, stopLossPercent=0.02, useTakeProfit=False, takeProfitPercent = 0.02, periodLimited=False, lastDay=15, lastMonth=1, useCumulativePosition=True, cumulativePositionCount=30, cumulativeLosingPercentage=0.005, useVolume=False)
+        checkDealsData(coinexBTC2, 20, "coinex", 0.99, 0.99, minimumVolume=30000, useStopLoss=False, stopLossPercent=0.015, useTakeProfit=False, takeProfitPercent = 0.01, periodLimited=False, lastDay=15, lastMonth=1, useCumulativePosition=True, cumulativePositionCount=30, cumulativeLosingPercentage=0.005, useVolume=False)
     
         plt.plot(coinexBTC.totalEarnValues, label = "1")
         plt.plot(coinexBTC2.totalEarnValues, label = "2")
