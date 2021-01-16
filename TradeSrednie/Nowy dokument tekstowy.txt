@@ -1,0 +1,114 @@
+close BTCUSD long
+earn 7.895259374057773e-06
+totalEarn 0.00014137487693102188
+{'code': 0, 'data': {'order_id': 2214365366, 'position_id': 0, 'market': 'BTCUSD', 'type': 2, 'side': 1, 'target': 0, 'effect_type': 0, 'user_id': 510054, 'create_time': 1610770930.746306, 'update_time': 1610770930.746321, 'source': 'API', 'price': '0.00000000000000000000', 'amount': '330', 'taker_fee': '0.00050', 'maker_fee': '0.00000000000000000000', 'left': '0', 'deal_stock': '0.00908307712633459303', 'deal_fee': '0.00000454153856316729', 'deal_profit': '-0.00000950159429008949', 'last_deal_amount': '330', 'last_deal_price': '36331.3', 'last_deal_time': 1610770930.746321, 'last_deal_id': 25121611, 'last_deal_type': 4, 'last_deal_role': 2, 'client_id': '', 'fee_asset': 'CET', 'fee_discount': '0.70000', 'deal_asset_fee': '0.00000000000000000000', 'leverage': '10', 'position_type': 2}, 'message': 'OK'}
+-3.3720461753723334e-05
+-0.00016820994800437373
+{'orderId': 3049725095, 'symbol': 'BTCUSD_PERP', 'pair': 'BTCUSD', 'status': 'NEW', 'clientOrderId': 'WNbuECFaCV5IVaNKInGt3V', 'price': '0', 'avgPrice': '0.0', 'origQty': '11', 'executedQty': '0', 'cumQty': '0', 'cumBase': '0', 'timeInForce': 'GTC', 'type': 'MARKET', 'reduceOnly': False, 'closePosition': False, 'side': 'SELL', 'positionSide': 'BOTH', 'stopPrice': '0', 'workingType': 'CONTRACT_PRICE', 'priceProtect': False, 'origType': 'MARKET', 'updateTime': 1610770931558}
+BTCUSD sell
+36331.4
+36331.3
+2021-01-16 05:22:12.013972
+{'code': 0, 'data': {'order_id': 2214365437, 'position_id': 0, 'market': 'BTCUSD', 'type': 2, 'side': 1, 'target': 0, 'effect_type': 0, 'user_id': 510054, 'create_time': 1610770933.263377, 'update_time': 1610770933.263379, 'source': 'API', 'price': '0.00000000000000000000', 'amount': '30', 'taker_fee': '0.00050', 'maker_fee': '0.00000000000000000000', 'left': '0', 'deal_stock': '0.00082573428421223573', 'deal_fee': '0.00000041286714210611', 'deal_profit': '0.00000000000000000000', 'last_deal_amount': '30', 'last_deal_price': '36331.3', 'last_deal_time': 1610770933.263379, 'last_deal_id': 25121614, 'last_deal_type': 1, 'last_deal_role': 2, 'client_id': '', 'fee_asset': 'CET', 'fee_discount': '0.70000', 'deal_asset_fee': '0.00000000000000000000', 'leverage': '10', 'position_type': 2}, 'message': 'OK'}
+-3.3720461753723334e-05
+-0.00016862281514647986
+{'orderId': 3049727311, 'symbol': 'BTCUSD_PERP', 'pair': 'BTCUSD', 'status': 'NEW', 'clientOrderId': 'NpZRlsUUOEWzCwA7qllEYq', 'price': '0', 'avgPrice': '0.0', 'origQty': '1', 'executedQty': '0', 'cumQty': '0', 'cumBase': '0', 'timeInForce': 'GTC', 'type': 'MARKET', 'reduceOnly': False, 'closePosition': False, 'side': 'SELL', 'positionSide': 'BOTH', 'stopPrice': '0', 'workingType': 'CONTRACT_PRICE', 'priceProtect': False, 'origType': 'MARKET', 'updateTime': 1610770933972}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+BTCUSD sell
+36339.5
+36339.4
+2021-01-16 05:33:09.282107
+{'code': 0, 'data': {'order_id': 2214380665, 'position_id': 0, 'market': 'BTCUSD', 'type': 2, 'side': 1, 'target': 0, 'effect_type': 0, 'user_id': 510054, 'create_time': 1610771590.501975, 'update_time': 1610771590.501994, 'source': 'API', 'price': '0.00000000000000000000', 'amount': '30', 'taker_fee': '0.00050', 'maker_fee': '0.00000000000000000000', 'left': '0', 'deal_stock': '0.00082555022922778031', 'deal_fee': '0.00000041277511461389', 'deal_profit': '0.00000000000000000000', 'last_deal_amount': '30', 'last_deal_price': '36339.4', 'last_deal_time': 1610771590.501994, 'last_deal_id': 25122173, 'last_deal_type': 2, 'last_deal_role': 2, 'client_id': '', 'fee_asset': 'CET', 'fee_discount': '0.70000', 'deal_asset_fee': '0.00000000000000000000', 'leverage': '10', 'position_type': 2}, 'message': 'OK'}
+-3.3720461753723334e-05
+-0.00016903559026109374
+{'orderId': 3050353601, 'symbol': 'BTCUSD_PERP', 'pair': 'BTCUSD', 'status': 'NEW', 'clientOrderId': 'SGObEYTWdQwPk2cqd4EQw7', 'price': '0', 'avgPrice': '0.0', 'origQty': '1', 'executedQty': '0', 'cumQty': '0', 'cumBase': '0', 'timeInForce': 'GTC', 'type': 'MARKET', 'reduceOnly': False, 'closePosition': False, 'side': 'SELL', 'positionSide': 'BOTH', 'stopPrice': '0', 'workingType': 'CONTRACT_PRICE', 'priceProtect': False, 'origType': 'MARKET', 'updateTime': 1610771591300}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+BTCUSD sell
+36344.4
+36344.3
+2021-01-16 05:34:14.729835
+{'code': 0, 'data': {'order_id': 2214382098, 'position_id': 0, 'market': 'BTCUSD', 'type': 2, 'side': 1, 'target': 0, 'effect_type': 0, 'user_id': 510054, 'create_time': 1610771655.956568, 'update_time': 1610771655.956583, 'source': 'API', 'price': '0.00000000000000000000', 'amount': '30', 'taker_fee': '0.00050', 'maker_fee': '0.00000000000000000000', 'left': '0', 'deal_stock': '0.00082546618202629935', 'deal_fee': '0.00000041273309101314', 'deal_profit': '0.00000000000000000000', 'last_deal_amount': '30', 'last_deal_price': '36343.1', 'last_deal_time': 1610771655.956583, 'last_deal_id': 25122223, 'last_deal_type': 2, 'last_deal_role': 2, 'client_id': '', 'fee_asset': 'CET', 'fee_discount': '0.70000', 'deal_asset_fee': '0.00000000000000000000', 'leverage': '10', 'position_type': 2}, 'message': 'OK'}
+-3.3720461753723334e-05
+-0.00016944832335210688
+{'orderId': 3050412264, 'symbol': 'BTCUSD_PERP', 'pair': 'BTCUSD', 'status': 'NEW', 'clientOrderId': 'zqs0M1ZMh8529YwvZqvgXK', 'price': '0', 'avgPrice': '0.0', 'origQty': '1', 'executedQty': '0', 'cumQty': '0', 'cumBase': '0', 'timeInForce': 'GTC', 'type': 'MARKET', 'reduceOnly': False, 'closePosition': False, 'side': 'SELL', 'positionSide': 'BOTH', 'stopPrice': '0', 'workingType': 'CONTRACT_PRICE', 'priceProtect': False, 'origType': 'MARKET', 'updateTime': 1610771656618}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+BTCUSD sell
+36382.7
+36382.6
+2021-01-16 05:35:03.869797
+{'code': 0, 'data': {'order_id': 2214382937, 'position_id': 0, 'market': 'BTCUSD', 'type': 2, 'side': 1, 'target': 0, 'effect_type': 0, 'user_id': 510054, 'create_time': 1610771705.105315, 'update_time': 1610771705.105331, 'source': 'API', 'price': '0.00000000000000000000', 'amount': '30', 'taker_fee': '0.00050', 'maker_fee': '0.00000000000000000000', 'left': '0', 'deal_stock': '0.00082456998675190887', 'deal_fee': '0.00000041228499337595', 'deal_profit': '0.00000000000000000000', 'last_deal_amount': '30', 'last_deal_price': '36382.6', 'last_deal_time': 1610771705.105331, 'last_deal_id': 25122261, 'last_deal_type': 2, 'last_deal_role': 2, 'client_id': '', 'fee_asset': 'CET', 'fee_discount': '0.70000', 'deal_asset_fee': '0.00000000000000000000', 'leverage': '10', 'position_type': 2}, 'message': 'OK'}
+-3.3720461753723334e-05
+-0.00016986060834548282
+{'orderId': 3050443844, 'symbol': 'BTCUSD_PERP', 'pair': 'BTCUSD', 'status': 'NEW', 'clientOrderId': 'CYIq6cCo6V2IBS2OuYef8J', 'price': '0', 'avgPrice': '0.0', 'origQty': '1', 'executedQty': '0', 'cumQty': '0', 'cumBase': '0', 'timeInForce': 'GTC', 'type': 'MARKET', 'reduceOnly': False, 'closePosition': False, 'side': 'SELL', 'positionSide': 'BOTH', 'stopPrice': '0', 'workingType': 'CONTRACT_PRICE', 'priceProtect': False, 'origType': 'MARKET', 'updateTime': 1610771705779}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+BTCUSD sell
+36388.1
+36384.4
+2021-01-16 05:38:20.684024
+{'code': 0, 'data': {'order_id': 2214386159, 'position_id': 0, 'market': 'BTCUSD', 'type': 2, 'side': 1, 'target': 0, 'effect_type': 0, 'user_id': 510054, 'create_time': 1610771901.896276, 'update_time': 1610771901.896292, 'source': 'API', 'price': '0.00000000000000000000', 'amount': '30', 'taker_fee': '0.00050', 'maker_fee': '0.00000000000000000000', 'left': '0', 'deal_stock': '0.00082452919383032288', 'deal_fee': '0.00000041226459691516', 'deal_profit': '0.00000000000000000000', 'last_deal_amount': '30', 'last_deal_price': '36384.4', 'last_deal_time': 1610771901.896292, 'last_deal_id': 25122418, 'last_deal_type': 2, 'last_deal_role': 2, 'client_id': '', 'fee_asset': 'CET', 'fee_discount': '0.70000', 'deal_asset_fee': '0.00000000000000000000', 'leverage': '10', 'position_type': 2}, 'message': 'OK'}
+-3.3720461753723334e-05
+-0.00017027287294239799
+{'orderId': 3050559432, 'symbol': 'BTCUSD_PERP', 'pair': 'BTCUSD', 'status': 'NEW', 'clientOrderId': 'USon2g9D8zoQFRNalOy90x', 'price': '0', 'avgPrice': '0.0', 'origQty': '1', 'executedQty': '0', 'cumQty': '0', 'cumBase': '0', 'timeInForce': 'GTC', 'type': 'MARKET', 'reduceOnly': False, 'closePosition': False, 'side': 'SELL', 'positionSide': 'BOTH', 'stopPrice': '0', 'workingType': 'CONTRACT_PRICE', 'priceProtect': False, 'origType': 'MARKET', 'updateTime': 1610771902561}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+BTCUSD sell
+36390.3
+36388.3
+2021-01-16 05:39:14.837234
+{'code': 0, 'data': {'order_id': 2214387000, 'position_id': 0, 'market': 'BTCUSD', 'type': 2, 'side': 1, 'target': 0, 'effect_type': 0, 'user_id': 510054, 'create_time': 1610771956.055097, 'update_time': 1610771956.055113, 'source': 'API', 'price': '0.00000000000000000000', 'amount': '30', 'taker_fee': '0.00050', 'maker_fee': '0.00000000000000000000', 'left': '0', 'deal_stock': '0.00082444082301179225', 'deal_fee': '0.00000041222041150589', 'deal_profit': '0.00000000000000000000', 'last_deal_amount': '30', 'last_deal_price': '36388.3', 'last_deal_time': 1610771956.055113, 'last_deal_id': 25122456, 'last_deal_type': 2, 'last_deal_role': 2, 'client_id': '', 'fee_asset': 'CET', 'fee_discount': '0.70000', 'deal_asset_fee': '0.00000000000000000000', 'leverage': '10', 'position_type': 2}, 'message': 'OK'}
+-3.3720461753723334e-05
+-0.00017068509335390388
+{'orderId': 3050583618, 'symbol': 'BTCUSD_PERP', 'pair': 'BTCUSD', 'status': 'NEW', 'clientOrderId': '9KYSidNIymvJetD5XKQXST', 'price': '0', 'avgPrice': '0.0', 'origQty': '1', 'executedQty': '0', 'cumQty': '0', 'cumBase': '0', 'timeInForce': 'GTC', 'type': 'MARKET', 'reduceOnly': False, 'closePosition': False, 'side': 'SELL', 'positionSide': 'BOTH', 'stopPrice': '0', 'workingType': 'CONTRACT_PRICE', 'priceProtect': False, 'origType': 'MARKET', 'updateTime': 1610771957193}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+BTCUSD sell
+36500.0
+36499.9
+2021-01-16 05:48:11.857958
+{'code': 0, 'data': {'order_id': 2214397745, 'position_id': 0, 'market': 'BTCUSD', 'type': 2, 'side': 1, 'target': 0, 'effect_type': 0, 'user_id': 510054, 'create_time': 1610772493.096855, 'update_time': 1610772493.09687, 'source': 'API', 'price': '0.00000000000000000000', 'amount': '30', 'taker_fee': '0.00050', 'maker_fee': '0.00000000000000000000', 'left': '0', 'deal_stock': '0.00082187952889865403', 'deal_fee': '0.00000041093976444932', 'deal_profit': '0.00000000000000000000', 'last_deal_amount': '30', 'last_deal_price': '36501.7', 'last_deal_time': 1610772493.09687, 'last_deal_id': 25122893, 'last_deal_type': 2, 'last_deal_role': 2, 'client_id': '', 'fee_asset': 'CET', 'fee_discount': '0.70000', 'deal_asset_fee': '0.00000000000000000000', 'leverage': '10', 'position_type': 2}, 'message': 'OK'}
+-3.3720461753723334e-05
+-0.0001710960331183532
+{'orderId': 3051017353, 'symbol': 'BTCUSD_PERP', 'pair': 'BTCUSD', 'status': 'NEW', 'clientOrderId': '5HPJ96q07f5E65kiJyCVHA', 'price': '0', 'avgPrice': '0.0', 'origQty': '1', 'executedQty': '0', 'cumQty': '0', 'cumBase': '0', 'timeInForce': 'GTC', 'type': 'MARKET', 'reduceOnly': False, 'closePosition': False, 'side': 'SELL', 'positionSide': 'BOTH', 'stopPrice': '0', 'workingType': 'CONTRACT_PRICE', 'priceProtect': False, 'origType': 'MARKET', 'updateTime': 1610772493911}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+BTCUSD sell
+36509.7
+36505.9
+2021-01-16 05:51:50.705908
+{'code': 0, 'data': {'order_id': 2214401235, 'position_id': 0, 'market': 'BTCUSD', 'type': 2, 'side': 1, 'target': 0, 'effect_type': 0, 'user_id': 510054, 'create_time': 1610772711.922915, 'update_time': 1610772711.922932, 'source': 'API', 'price': '0.00000000000000000000', 'amount': '30', 'taker_fee': '0.00050', 'maker_fee': '0.00000000000000000000', 'left': '0', 'deal_stock': '0.00082170168941867344', 'deal_fee': '0.00000041085084470933', 'deal_profit': '0.00000000000000000000', 'last_deal_amount': '30', 'last_deal_price': '36509.6', 'last_deal_time': 1610772711.922932, 'last_deal_id': 25123073, 'last_deal_type': 2, 'last_deal_role': 2, 'client_id': '', 'fee_asset': 'CET', 'fee_discount': '0.70000', 'deal_asset_fee': '0.00000000000000000000', 'leverage': '10', 'position_type': 2}, 'message': 'OK'}
+-3.3720461753723334e-05
+-0.00017150688396306253
+{'orderId': 3051147824, 'symbol': 'BTCUSD_PERP', 'pair': 'BTCUSD', 'status': 'NEW', 'clientOrderId': 'GELRaP3fgnLPlhorBOtwQ6', 'price': '0', 'avgPrice': '0.0', 'origQty': '1', 'executedQty': '0', 'cumQty': '0', 'cumBase': '0', 'timeInForce': 'GTC', 'type': 'MARKET', 'reduceOnly': False, 'closePosition': False, 'side': 'SELL', 'positionSide': 'BOTH', 'stopPrice': '0', 'workingType': 'CONTRACT_PRICE', 'priceProtect': False, 'origType': 'MARKET', 'updateTime': 1610772712675}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+BTCUSD sell
+36509.7
+36509.6
+2021-01-16 05:52:01.754888
+{'code': 0, 'data': {'order_id': 2214401407, 'position_id': 0, 'market': 'BTCUSD', 'type': 2, 'side': 1, 'target': 0, 'effect_type': 0, 'user_id': 510054, 'create_time': 1610772722.965486, 'update_time': 1610772722.965508, 'source': 'API', 'price': '0.00000000000000000000', 'amount': '30', 'taker_fee': '0.00050', 'maker_fee': '0.00000000000000000000', 'left': '0', 'deal_stock': '0.00082170168941867344', 'deal_fee': '0.00000041085084470933', 'deal_profit': '0.00000000000000000000', 'last_deal_amount': '30', 'last_deal_price': '36509.6', 'last_deal_time': 1610772722.965508, 'last_deal_id': 25123084, 'last_deal_type': 2, 'last_deal_role': 2, 'client_id': '', 'fee_asset': 'CET', 'fee_discount': '0.70000', 'deal_asset_fee': '0.00000000000000000000', 'leverage': '10', 'position_type': 2}, 'message': 'OK'}
+-3.3720461753723334e-05
+-0.00017191773480777187
+{'orderId': 3051151668, 'symbol': 'BTCUSD_PERP', 'pair': 'BTCUSD', 'status': 'NEW', 'clientOrderId': 'cpyHT9yWkEJ7xtAfci1HOp', 'price': '0', 'avgPrice': '0.0', 'origQty': '1', 'executedQty': '0', 'cumQty': '0', 'cumBase': '0', 'timeInForce': 'GTC', 'type': 'MARKET', 'reduceOnly': False, 'closePosition': False, 'side': 'SELL', 'positionSide': 'BOTH', 'stopPrice': '0', 'workingType': 'CONTRACT_PRICE', 'priceProtect': False, 'origType': 'MARKET', 'updateTime': 1610772723618}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+BTCUSD sell
+36561.0
+36550.5
+2021-01-16 05:53:02.492146
+{'code': 0, 'data': {'order_id': 2214402794, 'position_id': 0, 'market': 'BTCUSD', 'type': 2, 'side': 1, 'target': 0, 'effect_type': 0, 'user_id': 510054, 'create_time': 1610772783.716261, 'update_time': 1610772783.716276, 'source': 'API', 'price': '0.00000000000000000000', 'amount': '30', 'taker_fee': '0.00050', 'maker_fee': '0.00000000000000000000', 'left': '0', 'deal_stock': '0.00082078220544178602', 'deal_fee': '0.00000041039110272089', 'deal_profit': '0.00000000000000000000', 'last_deal_amount': '30', 'last_deal_price': '36550.5', 'last_deal_time': 1610772783.716276, 'last_deal_id': 25123135, 'last_deal_type': 2, 'last_deal_role': 2, 'client_id': '', 'fee_asset': 'CET', 'fee_discount': '0.70000', 'deal_asset_fee': '0.00000000000000000000', 'leverage': '10', 'position_type': 2}, 'message': 'OK'}
+-3.3720461753723334e-05
+-0.00017232812591049275
+{'orderId': 3051211784, 'symbol': 'BTCUSD_PERP', 'pair': 'BTCUSD', 'status': 'NEW', 'clientOrderId': 'uCTsSnQDYANKJO7EbFQDQ0', 'price': '0', 'avgPrice': '0.0', 'origQty': '1', 'executedQty': '0', 'cumQty': '0', 'cumBase': '0', 'timeInForce': 'GTC', 'type': 'MARKET', 'reduceOnly': False, 'closePosition': False, 'side': 'SELL', 'positionSide': 'BOTH', 'stopPrice': '0', 'workingType': 'CONTRACT_PRICE', 'priceProtect': False, 'origType': 'MARKET', 'updateTime': 1610772784382}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+close BTCUSD short
+earn 5.8124256788860684e-05
+totalEarn 0.00019374930501285203
+{'code': 0, 'data': {'order_id': 2214430217, 'position_id': 0, 'market': 'BTCUSD', 'type': 2, 'side': 2, 'target': 0, 'effect_type': 0, 'user_id': 510054, 'create_time': 1610774320.76235, 'update_time': 1610774320.762364, 'source': 'API', 'price': '0.00000000000000000000', 'amount': '300', 'taker_fee': '0.00050', 'maker_fee': '0.00000000000000000000', 'left': '0', 'deal_stock': '0.00827216526683247762', 'deal_fee': '0.00000413608263341623', 'deal_profit': '0.00003580945459435130', 'last_deal_amount': '300', 'last_deal_price': '36266.2', 'last_deal_time': 1610774320.762364, 'last_deal_id': 25124385, 'last_deal_type': 4, 'last_deal_role': 2, 'client_id': '', 'fee_asset': 'CET', 'fee_discount': '0.70000', 'deal_asset_fee': '0.00000000000000000000', 'leverage': '10', 'position_type': 2}, 'message': 'OK'}
+2.0889928406279666e-06
+-0.00014065475394955766
+{'orderId': 3052241686, 'symbol': 'BTCUSD_PERP', 'pair': 'BTCUSD', 'status': 'NEW', 'clientOrderId': 'P8bF2onNdlr9VmFoNNILtO', 'price': '0', 'avgPrice': '0.0', 'origQty': '10', 'executedQty': '0', 'cumQty': '0', 'cumBase': '0', 'timeInForce': 'GTC', 'type': 'MARKET', 'reduceOnly': False, 'closePosition': False, 'side': 'BUY', 'positionSide': 'BOTH', 'stopPrice': '0', 'workingType': 'CONTRACT_PRICE', 'priceProtect': False, 'origType': 'MARKET', 'updateTime': 1610774321608}
